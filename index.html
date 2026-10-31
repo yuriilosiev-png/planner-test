@@ -777,6 +777,137 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .bk-opt b{display:block;font-size:16px;margin-bottom:4px}
 .bk-opt span{display:block;font-size:13px;color:var(--muted);line-height:1.4}
 .bk-sub{font-size:12px;font-weight:600;opacity:.75;margin-left:2px}
+/* ===== 1.7.8: экран «Награды» ===== */
+.rw-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 14px;margin-top:4px}
+.rw-bal{display:flex;align-items:center;justify-content:center;gap:8px}
+.rw-star{font-size:30px;line-height:1}
+.rw-num{font-size:44px;font-weight:900;letter-spacing:-1px;line-height:1}
+.rw-sub{text-align:center;color:var(--muted);font-size:14px;font-weight:600;margin-top:4px}
+.rw-week{display:flex;justify-content:space-between;gap:4px;margin-top:14px}
+.rw-d{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rw-d span{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;
+  border:2px solid var(--line);color:var(--muted)}
+.rw-d i{font-style:normal;font-size:11px;color:var(--muted);font-weight:700}
+.rw-d.ok span{background:var(--ok);border-color:var(--ok);color:#fff}
+.rw-d.miss span{background:var(--danger);border-color:var(--danger);color:#fff}
+.rw-d.off span{border-style:dashed}
+.rw-d.fut span{opacity:.45}
+.rw-d.today span{box-shadow:0 0 0 3px var(--accent-dim);border-color:var(--accent)}
+.rw-d.today i{color:var(--accent)}
+.rw-wnote{text-align:center;font-size:13px;color:var(--muted);font-weight:600;margin-top:10px}
+.rw-warn{margin-top:12px;background:rgba(255,92,92,.14);border:1px solid var(--danger);border-radius:12px;padding:10px 12px;font-size:13.5px;font-weight:600;line-height:1.4}
+.rw-warn.soft{background:rgba(255,182,72,.16);border-color:var(--warn)}
+.rw-shop{display:flex;flex-direction:column;gap:8px}
+.rw-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;cursor:pointer}
+.rw-emo{font-size:28px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:12px;flex:0 0 40px}
+.rw-body{flex:1;min-width:0}
+.rw-name{font-weight:700;font-size:16px;line-height:1.25}
+.rw-price{font-size:13px;color:var(--muted);font-weight:700;margin-top:2px}
+.rw-take{background:#f5b301;color:#3a2600;font-weight:800;font-size:14px;border-radius:999px;padding:8px 16px;flex:0 0 auto}
+.rw-need{font-size:12.5px;color:var(--muted);font-weight:700;flex:0 0 auto}
+.rw-add,.rw-more{display:block;width:100%;margin-top:8px;padding:11px;border-radius:var(--r);border:1px dashed var(--line);color:var(--accent);font-weight:700;font-size:15px;background:transparent}
+.rw-log{display:flex;flex-direction:column;gap:8px}
+.rw-day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.rw-dh{display:flex;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:4px}
+.rw-dh b{color:var(--ok)} .rw-dh b.neg{color:var(--danger)}
+.rw-row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);padding:3px 0;font-weight:500}
+.rw-row em{font-style:normal;opacity:.8}
+.rw-row b{color:var(--txt);font-weight:800;flex:0 0 auto}
+.rw-row.penalty b,.rw-row.buy b{color:var(--danger)}
+.rw-row.bonus b{color:#d99a00}
+.rw-empty{color:var(--muted);font-size:14px;text-align:center;padding:14px}
+.rw-rules{margin:16px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.rw-rules summary{font-weight:800;font-size:15px;cursor:pointer}
+.rw-rules p{font-size:14px;line-height:1.45;margin-top:9px;color:var(--txt)}
+.rw-emos{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.rw-eb{font-size:24px;width:44px;height:44px;border-radius:12px;background:var(--surface2);border:2px solid transparent}
+.rw-eb.on{border-color:var(--accent)}
+.rw-in{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--txt);margin:4px 0 12px}
+/* «Незавершённые» внутри «Истории» */
+.un-hist{margin:4px 0 6px}
+.un-hist-h{width:100%;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-weight:800;font-size:15px;text-align:left}
+.un-hist-h span:first-child{flex:1}
+.un-cnt{background:var(--danger);color:#fff;font-size:12px;border-radius:999px;padding:1px 8px}
+.un-chev{color:var(--muted);font-size:12px}
+.un-hist .task{margin-top:8px}
+/* ===== 1.7.8: «Помощник» ===== */
+.nav button .badge.rw{background:#f5b301;color:#3a2600;font-weight:800}
+.hp-card{border-radius:var(--r);border:1px solid var(--line);background:var(--surface);margin-top:4px;overflow:hidden}
+.hp-hero{display:flex;align-items:flex-end;gap:6px;padding:12px 12px 0 4px;min-height:228px;
+  background:radial-gradient(120% 90% at 20% 100%, color-mix(in srgb,var(--cc) 30%,transparent) 0%, transparent 70%), var(--surface)}
+.hp-fig{height:220px;width:auto;max-width:46%;object-fit:contain;object-position:bottom;flex:0 0 auto;cursor:pointer;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));transform-origin:50% 100%}
+.hp-jump{animation:hpJump .45s ease}
+@keyframes hpJump{0%{transform:scale(1)}40%{transform:scale(1.05,0.95) translateY(-6px)}100%{transform:none}}
+.hp-say{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding-bottom:12px;align-self:center}
+.hp-say>b{font-size:13px;color:color-mix(in srgb,var(--cc) 55%,var(--txt));font-weight:800;letter-spacing:.2px}
+.hp-bub{position:relative;background:var(--surface2);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:10px 12px;font-size:15px;line-height:1.4}
+.hp-go{background:var(--cc);color:#fff;font-weight:800;font-size:14px;border-radius:12px;padding:10px 12px;text-align:center;line-height:1.25}
+.hp-intro{padding:14px}
+.hp-ttl{font-size:18px;font-weight:800}
+.hp-sub{color:var(--muted);font-size:13.5px;line-height:1.4;margin-top:4px}
+.hp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.hp-mate{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 8px;border-radius:12px;background:var(--surface2);
+  border:2px solid transparent;text-align:center;min-width:0}
+.hp-mate.on{border-color:var(--cc)}
+.hp-mate img{height:120px;width:100%;object-fit:contain;object-position:bottom}
+.hp-mate b{font-size:12px;line-height:1.2;font-weight:800}
+.hp-mate i{font-style:normal;font-size:11px;color:var(--muted);line-height:1.25}
+.hp-team.sm .hp-mate img{height:78px}
+.hp-team.sm .hp-mate b{font-size:11px}
+.hp-set{margin:16px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.hp-set summary{font-weight:800;font-size:15px;cursor:pointer}
+.hp-set .th-label{display:block;margin-top:12px}
+.hp-seg{display:flex;gap:6px;margin-top:6px}
+.hp-seg button{flex:1;padding:9px 4px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-weight:700;font-size:13.5px;color:var(--txt)}
+.hp-seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hp-hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.35}
+.hp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-weight:600;font-size:14px}
+.hp-row input{width:22px;height:22px;accent-color:var(--accent)}
+/* реплика на других экранах */
+.hp-pop{position:fixed;left:8px;right:8px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:250;display:flex;align-items:flex-end;gap:4px;
+  transform:translateY(150%);opacity:0;transition:transform .4s cubic-bezier(.2,1.3,.4,1),opacity .25s;pointer-events:none}
+.hp-pop.show{transform:none;opacity:1;pointer-events:auto}
+.hp-pop img{height:132px;width:auto;max-width:34%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 12px rgba(0,0,0,.45));animation:hpBob 2.6s ease-in-out infinite}
+@keyframes hpBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.hp-pbub{flex:1;background:var(--surface2);color:var(--txt);border:1px solid var(--line);border-left:3px solid var(--cc);border-radius:16px 16px 16px 4px;
+  padding:10px 12px;font-size:14.5px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-bottom:10px}
+.hp-pbub b{display:block;font-size:12px;color:color-mix(in srgb,var(--cc) 55%,var(--txt));margin-bottom:2px}
+.hp-px{position:absolute;right:2px;top:-10px;width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:12px}
+/* опрос */
+.hq-ov{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;background:var(--bg);color:var(--txt)}
+.hq-ov.show{display:flex}
+.hq-top{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line)}
+.hq-top b{flex:1;font-size:17px;color:var(--txt)}
+.hq-top b::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--cc);margin-right:8px;vertical-align:1px}
+.hq-prog{font-size:12.5px;font-weight:800;color:var(--muted);background:var(--surface2);border-radius:999px;padding:2px 9px}
+.hq-x{font-size:20px;color:var(--muted);padding:2px 6px}
+.hq-stage{flex:1;min-height:0;display:flex;align-items:flex-end;gap:4px;padding-left:4px}
+.hq-fig{height:min(42vh,260px);width:auto;max-width:34%;object-fit:contain;object-position:bottom;flex:0 0 auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.hq-chat{flex:1;min-width:0;height:100%;overflow-y:auto;padding:12px 10px 12px 0;display:flex;flex-direction:column;gap:9px}
+.hq-m{display:flex;max-width:96%}
+.hq-m.me{align-self:flex-end}
+.hq-bub{background:var(--surface2);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:15px;line-height:1.4}
+.hq-m.me .hq-bub{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:16px 16px 4px 16px}
+.hq-bottom{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+.hq-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.hq-chips button{background:var(--surface2);border:1.5px solid var(--line);border-radius:999px;padding:8px 13px;font-size:14px;font-weight:700;color:var(--txt)}
+.hq-chips.days button{width:44px;padding:8px 0}
+.hq-chips.days button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hq-in{display:flex;gap:8px}
+.hq-in input,.hq-in select{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface2);color:var(--txt);font-size:15px}
+.hq-in select{flex:0 0 92px}
+.hq-in button{width:46px;border-radius:12px;background:var(--accent);color:#fff;font-size:18px}
+.hq-go{width:100%;background:var(--accent);color:#fff;font-weight:800;border-radius:12px;padding:12px;font-size:15.5px}
+.hq-ghost{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:800;font-size:15.5px;color:var(--txt)}
+.hq-row2{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.hq-sum{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:4px}
+.hq-sum-t{font-size:17px;font-weight:800}
+.hq-sum-why{font-style:italic;color:var(--muted);margin:4px 0 6px;font-size:14px}
+.hq-sum-row{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:7px 0;border-top:1px solid var(--line)}
+.hq-sum-row span{color:var(--muted)}
+.hq-sum-row b{text-align:right}
+.hq-sum-row.big b{font-size:17px;color:var(--ok)}
 </style>
 </head>
 <body>
@@ -801,6 +932,7 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 
   <!-- SCREEN 3: UNFINISHED -->
   <div class="screen" id="s-undone"></div>
+  <div class="screen" id="s-helper"></div>
 
   <!-- SCREEN 4: HISTORY -->
   <div class="screen" id="s-history"></div>
@@ -818,9 +950,9 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
   <button data-screen="goals" onclick="switchScreen('goals')">
     <span class="ic">🎯</span><span>Цели</span>
   </button>
-  <button data-screen="undone" onclick="switchScreen('undone')">
-    <span class="ic">⏰</span><span>Незавершённые</span>
-    <span class="badge" id="undoneBadge" style="display:none">0</span>
+  <button data-screen="helper" onclick="switchScreen('helper')">
+    <span class="ic">🤝</span><span>Помощник</span>
+    <span class="badge rw" id="rewardsBadge" style="display:none">0</span>
   </button>
   <button data-screen="history" onclick="switchScreen('history')">
     <span class="ic">📚</span><span>История</span>
@@ -4002,7 +4134,7 @@ function setLang(l){
 
 // подписи, которые лежат в статическом HTML (нижняя навигация)
 function applyStaticI18n(){
-  const map={today:'nav.today',goals:'nav.goals',undone:'nav.undone',history:'nav.history',calendar:'nav.calendar'};
+  const map={today:'nav.today',goals:'nav.goals',helper:'nav.helper',history:'nav.history',calendar:'nav.calendar'};
   for(const k in map){
     const btn=document.querySelector('.nav button[data-screen="'+k+'"] span:not(.ic):not(.badge)');
     if(btn) btn.textContent = t(map[k]);
@@ -4061,6 +4193,7 @@ const DEFAULT_THEMES = {
   today:   {mode:'gradient', top:{hue:222, sat:16}, bottom:{hue:152, sat:59}},
   goals:   {mode:'gradient', top:{hue:152, sat:27}, bottom:{hue:320, sat:40}},
   undone:  {mode:'gradient', top:{hue:30,  sat:80}, bottom:{hue:265, sat:40}},
+  helper:  {mode:'gradient', top:{hue:30,  sat:80}, bottom:{hue:265, sat:40}},
   history: {mode:'gradient', top:{hue:108, sat:74}, bottom:{hue:265, sat:40}},
   calendar:{mode:'gradient', top:{hue:15,  sat:12}, bottom:{hue:200, sat:40}},
   tree:    {mode:'gradient', top:{hue:142, sat:14}, bottom:{hue:200, sat:40}},
@@ -4647,7 +4780,12 @@ function buildBackup(){
       achieved: state.achieved || [],
       tree: state.tree || [],
       lastGen: state.lastGen || null,
-      themes: state.themes || null
+      themes: state.themes || null,
+      // 1.7.8: награды и помощник
+      rewards: state.rewards || null,
+      rewardBuys: state.rewardBuys || [],
+      rewardsStart: state.rewardsStart || null,
+      helper: {coach: state.coach || null, style: state.helperStyle || 'normal', freq: (state.helperFreq===undefined?1:state.helperFreq), morning: state.helperMorning!==false}
     }
   };
 }
@@ -4880,6 +5018,12 @@ function applyImport(){
     state.tree     = Array.isArray(d.tree) ? d.tree : [];
     state.lastGen  = d.lastGen || null;
     if(d.themes) state.themes = d.themes;
+    // 1.7.8: награды и помощник (в старых копиях их нет — оставляем текущие)
+    if(Array.isArray(d.rewards)) state.rewards = d.rewards;
+    if(Array.isArray(d.rewardBuys)) state.rewardBuys = d.rewardBuys;
+    if(d.rewardsStart) state.rewardsStart = d.rewardsStart;
+    if(d.helper){ state.coach = d.helper.coach || state.coach; state.helperStyle = d.helper.style || 'normal';
+      state.helperFreq = (d.helper.freq===undefined ? 1 : d.helper.freq); state.helperMorning = d.helper.morning!==false; }
     // прогнать миграцию (проставит недостающие поля, нормализует темы)
     if(!state.cats || !state.cats.length) state.cats = JSON.parse(JSON.stringify(DEFAULT_CATS));
     if(!state.themes) state.themes = JSON.parse(JSON.stringify(DEFAULT_THEMES));
@@ -5408,16 +5552,766 @@ function runDailyGen(){
    ============================================================ */
 function catById(id){ return state.cats.find(c=>c.id===id) || {get name(){return t('cat.none');},color:'#8b93a3'}; }
 
+/* ============================================================
+   ПОМОЩНИК — реплики персонажей (RU, EN; остальные языки → EN)
+   ============================================================
+   HL[lang][ключ][персонаж] = строка или массив строк (берётся одна,
+   одинаковая в течение дня). {d} {t} {n} {g} {rate} {tip} — подстановки. */
+const HL = {
+ru:{
+  name:{coach:'Тренер Макс', nadia:'Ассистент Надежда', guru:'Гуру', genie:'Джин'},
+  tag:{coach:'Строго и по делу', nadia:'Вежливо, всё по полочкам', guru:'Спокойно и со смыслом', genie:'Весело, с шутками'},
+  pick:{coach:'Без оправданий. Ставим цель, считаем норму, выполняем. Сделал — похвалю, пропустил — спрошу.',
+        nadia:'Я запомню вашу цель, посчитаю норму на каждый день и прослежу за результатом. Вам останется только выполнять.',
+        guru:'Путь в тысячу ли начинается с первого шага. Я помогу видеть этот шаг каждый день.',
+        genie:'Три желания не обещаю. Но одно настоящее исполним вместе — по кусочку в день!'},
+  hello:{coach:['Новый день. Задачи ждут — работаем.','Подъём. План на сегодня готов, осталось сделать.','Сегодня считается только то, что сделано.'],
+         nadia:['Доброе утро! План на сегодня готов, я рядом.','Здравствуйте! Сегодняшние задачи уже на месте.','Хорошего дня! Начнём с самой простой задачи?'],
+         guru:['Новый день — новый шаг. Не торопись, но иди.','Утро тихое. Самое время начать.','Сделай сегодня одно дело хорошо.'],
+         genie:['Пуф! ✨ Новый день, новые желания!','Доброе утро! Лампа натёрта, задачи ждут 🪔','Я проснулся в отличном настроении. А ты?']},
+  partial:{coach:'{d} из {t}. Неплохо, но день не закончен.',
+           nadia:'Выполнено {d} из {t}. Осталось совсем немного.',
+           guru:'{d} шагов из {t}. Путь продолжается.',
+           genie:'{d} из {t}! Ещё немного волшебства — и день наш ✨'},
+  dayDone:{coach:['{d} из {t}. Вот так и работаем.','Всё закрыто. Зачёт.','{t} из {t}. Завтра так же.'],
+           nadia:['Все задачи выполнены. Прекрасный день!','{d} из {t} — день закрыт. Я горжусь вами.','Всё сделано. Можно отдыхать со спокойной душой.'],
+           guru:['День прожит не зря. {d} шагов сделано.','Всё сделано. Теперь отдохни — это тоже часть пути.','Гора становится ниже с каждым таким днём.'],
+           genie:['✨ {d} из {t}! Лампа сияет от гордости!','Все галочки на месте! Да ты сам почти джин 🧞','Готово! Исполняю твоё желание: заслуженный отдых ✨']},
+  week:{coach:'Неделя без пропусков. +10 баллов. Не расслабляйся.',
+        nadia:'Поздравляю: неделя без пропусков! Начислено +10 баллов.',
+        guru:'Семь дней — ни одного пропуска. Так рождается привычка.',
+        genie:'Неделя без пропусков! Держи +10 волшебных баллов 🌟'},
+  miss1:{coach:'Вчера пусто. Бывает. Сегодня — хотя бы одна задача.',
+         nadia:'Вчера задачи остались невыполненными. Сегодня достаточно одной, чтобы ничего не потерять.',
+         guru:'Вчерашний день прошёл. Сегодняшний ещё твой.',
+         genie:'Вчера моя лампа скучала 🥺 Сегодня хоть одну галочку?'},
+  miss2:{coach:'Два дня тишины. Ещё один — и начнём терять баллы. Одна задача. Сейчас.',
+         nadia:'У меня для вас кое-что есть… но только если сегодня будет хоть одна выполненная задача. Вы ведь не хотите узнать, что будет на третий день?',
+         guru:'Два дня ты стоишь на месте. Один маленький шаг — и путь продолжится.',
+         genie:'Два дня без волшебства… Я джин, а не диван для лежания! Одну галочку, а? 😉'},
+  miss3:{coach:'{n} дней подряд без результата. Баллы уходят. Хватит — одна задача прямо сейчас.',
+         nadia:'Уже {n} дней подряд без выполненных задач, баллы списываются. Одна задача — и списание остановится.',
+         guru:'{n} дней ты стоишь на месте, и баллы уходят. Сделай шаг — любой.',
+         genie:'{n} дней без галочек — мои баллы тают, как мороженое! Спасай одной задачей 🙏'},
+  noTasks:{coach:'На сегодня задач нет. Поставь цель — и будет работа.',
+           nadia:'На сегодня задач нет. Хотите, составим план вместе?',
+           guru:'Сегодня путь чист. Может, пора выбрать новую вершину?',
+           genie:'Задач нет — значит, пора загадать новое желание! ✨'},
+  joke:{genie:['Знаешь, почему джинны не опаздывают? У нас дедлайны вечные — по тысяче лет!',
+               'Сидел я как-то в лампе десять веков. Вот это был день без пропусков… в лампе.',
+               'Говорят, желания сами не сбываются. Правильно говорят — их сбывают галочками ✅',
+               'Я бы тебе помог с задачей, но у меня лапки… то есть дым вместо ног.',
+               'Три желания — это пережиток. Сейчас в моде одна задача в день!',
+               'Меня однажды попросили бесконечно много желаний. Я выдал список задач на каждый день.',
+               'Магия — это просто привычка, которую делаешь каждый день. Ну и немного дыма для красоты.',
+               'Если потереть лампу — появлюсь я. Если потереть задачу — она сама не выполнится, проверял.',
+               'Мой любимый спорт — разминка для желаний. Ты сегодня разминался?',
+               'Фокус-покус! Задача исчезла… а нет, её надо сделать 😅',
+               'Джинн без лампы — как планер без задач. Грустно и некуда возвращаться.',
+               'Я хотел взять выходной, но вспомнил, что ты сегодня ещё не отметился ✨']},
+  // опрос
+  iHello:{coach:'Работаем. Семь вопросов, две минуты — и у тебя готовый план.',
+          nadia:'Здравствуйте! Задам семь коротких вопросов и соберу из ответов готовый план. Это займёт пару минут.',
+          guru:'Присядь. Семь вопросов — и туман вокруг цели рассеется.',
+          genie:'Пуф! ✨ Семь вопросов — и твоё желание превращается в план!'},
+  iGoal:{coach:'Какая цель? Коротко, одной строкой.', nadia:'Какую цель хотите достичь? Можно выбрать пример или написать свою.',
+         guru:'Чего ты хочешь достичь на самом деле?', genie:'Итак, твоё желание? Говори смело!'},
+  iWhy:{coach:'Зачем тебе это? Без «зачем» бросишь на второй неделе.', nadia:'Что изменится, когда цель будет достигнута? Я напомню вам об этом в трудный день.',
+        guru:'Представь, что цель достигнута. Что изменилось?', genie:'А что будет, когда желание сбудется? Опиши — я спрячу это в лампу 🪔'},
+  iNum:{coach:'Цифры. Сколько всего и в чём считаем?', nadia:'Как будем измерять результат? Укажите число и единицу.',
+        guru:'Как ты поймёшь, что пришёл? Назови число.', genie:'Магия любит точность! Сколько и чего?'},
+  iWhen:{coach:'Срок. К какой дате?', nadia:'К какому сроку хотите успеть?', guru:'Сколько времени ты даёшь этому пути?', genie:'Когда должно сбыться? Даже у джиннов есть дедлайны ⏳'},
+  iDays:{coach:'В какие дни работаешь? Выбирай честно, не геройствуй.', nadia:'В какие дни недели вам удобно заниматься?',
+         guru:'В какие дни ты готов идти? Лучше реже, но всегда.', genie:'В какие дни будем колдовать? Отметь!'},
+  iObst:{coach:'Что тебе помешает? Назови главного врага.', nadia:'Что чаще всего мешает в таких делах? Предусмотрим заранее.',
+         guru:'Какое препятствие ты встретишь на пути?', genie:'Какой злой колдун может всё испортить? 😈'},
+  iPlan:{coach:'Когда это случится — что делаешь? Мой совет: «{tip}».', nadia:'Предлагаю правило на этот случай: «{tip}». Можно оставить или написать своё.',
+         guru:'Подготовь ответ заранее. Например: «{tip}».', genie:'У меня есть контрзаклинание: «{tip}». Или придумай своё!'},
+  iDone:{coach:'Готово. Норма — {rate} в день. Завтра начинаем.', nadia:'План готов! Каждый день — {rate}. Я буду следить за прогрессом.',
+         guru:'Путь ясен: {rate} каждый день. Остальное — дело привычки.', genie:'Та-дам! ✨ Желание разложено на шаги: {rate} в день. Поехали!'},
+  iOk:{coach:'Принято.', nadia:'Записала.', guru:'Хорошо.', genie:'Записано в свиток! 📜'},
+  iSly:{coach:'Хорошая попытка. Вернёмся к цифрам.', nadia:'Интересная мысль. Но давайте вернёмся к цели.',
+        guru:'Река тоже любит извиваться. Но течёт к морю.', genie:'Хе-хе, хитро! Но меня не проведёшь 😏'},
+},
+en:{
+  name:{coach:'Coach Max', nadia:'Assistant Nadia', guru:'Guru', genie:'Genie'},
+  tag:{coach:'Strict and to the point', nadia:'Polite and well organized', guru:'Calm and meaningful', genie:'Cheerful, full of jokes'},
+  pick:{coach:'No excuses. We set a goal, count the daily norm and do it. Done — I praise. Skipped — I ask why.',
+        nadia:'I will remember your goal, work out the daily norm and keep track of the result. All you need to do is the work.',
+        guru:'A journey of a thousand miles begins with one step. I will help you see that step every day.',
+        genie:'I can’t promise three wishes. But one real wish we’ll grant together — a little piece every day!'},
+  hello:{coach:['New day. Tasks are waiting — let’s work.','Rise and shine. The plan is ready, now do it.','Today only what’s done counts.'],
+         nadia:['Good morning! Today’s plan is ready, I’m here.','Hello! Today’s tasks are already in place.','Have a good day! Shall we start with the easiest task?'],
+         guru:['A new day is a new step. Don’t hurry, but walk.','The morning is quiet. A good time to begin.','Do one thing well today.'],
+         genie:['Poof! ✨ New day, new wishes!','Good morning! The lamp is polished, the tasks are waiting 🪔','I woke up in a great mood. And you?']},
+  partial:{coach:'{d} of {t}. Not bad, but the day isn’t over.', nadia:'{d} of {t} done. Just a little left.',
+           guru:'{d} steps of {t}. The path goes on.', genie:'{d} of {t}! A bit more magic and the day is ours ✨'},
+  dayDone:{coach:['{d} of {t}. That’s how we work.','Everything closed. Well done.','{t} of {t}. Same again tomorrow.'],
+           nadia:['All tasks are done. A wonderful day!','{d} of {t} — day complete. I’m proud of you.','Everything is done. You can rest with a clear mind.'],
+           guru:['The day was not wasted. {d} steps taken.','All done. Now rest — that is part of the path too.','The mountain gets lower with every day like this.'],
+           genie:['✨ {d} of {t}! The lamp is glowing with pride!','All ticks in place! You’re almost a genie yourself 🧞','Done! Granting your wish: a well-deserved rest ✨']},
+  week:{coach:'A week with no misses. +10 points. Don’t relax.', nadia:'Congratulations: a week with no misses! +10 points added.',
+        guru:'Seven days without a miss. This is how a habit is born.', genie:'A week with no misses! Here are +10 magic points 🌟'},
+  miss1:{coach:'Nothing yesterday. It happens. Today — at least one task.', nadia:'Yesterday’s tasks stayed undone. Today one is enough to lose nothing.',
+         guru:'Yesterday has passed. Today is still yours.', genie:'My lamp missed you yesterday 🥺 At least one tick today?'},
+  miss2:{coach:'Two days of silence. One more and you start losing points. One task. Now.',
+         nadia:'I have something for you… but only if at least one task gets done today. You don’t want to find out what happens on day three, do you?',
+         guru:'For two days you have been standing still. One small step and the path goes on.',
+         genie:'Two days without magic… I’m a genie, not a couch! One tick, please? 😉'},
+  miss3:{coach:'{n} days in a row with nothing. Points are going. Enough — one task right now.',
+         nadia:'{n} days in a row without completed tasks, points are being deducted. One task will stop it.',
+         guru:'{n} days standing still, and the points are fading. Take a step — any step.',
+         genie:'{n} days without ticks — my points are melting like ice cream! Save them with one task 🙏'},
+  noTasks:{coach:'No tasks today. Set a goal — and there will be work.', nadia:'No tasks for today. Shall we make a plan together?',
+           guru:'The path is clear today. Maybe it’s time to choose a new peak?', genie:'No tasks — time to make a new wish! ✨'},
+  joke:{genie:['Know why genies are never late? Our deadlines last a thousand years!',
+               'I once sat in a lamp for ten centuries. Talk about a streak… of sitting.',
+               'They say wishes don’t come true by themselves. Right — they come true with ticks ✅',
+               'I’d help with your task, but I have smoke instead of legs.',
+               'Three wishes are old school. One task a day is the new trend!',
+               'Someone once wished for infinite wishes. I gave them a daily to-do list.',
+               'Magic is just a habit you do every day. Plus a little smoke for style.',
+               'Rub the lamp and I appear. Rub a task and it still won’t do itself — I checked.',
+               'My favourite sport is warming up for wishes. Have you warmed up today?',
+               'Hocus-pocus! The task disappeared… oh no, you still have to do it 😅',
+               'A genie without a lamp is like a planner without tasks. Sad and nowhere to go home.',
+               'I wanted a day off, but then I remembered you haven’t ticked anything yet ✨']},
+  iHello:{coach:'Let’s work. Seven questions, two minutes — and you have a plan.', nadia:'Hello! I’ll ask seven short questions and turn the answers into a ready plan. It takes a couple of minutes.',
+          guru:'Sit down. Seven questions — and the fog around your goal will clear.', genie:'Poof! ✨ Seven questions and your wish turns into a plan!'},
+  iGoal:{coach:'What’s the goal? Short, one line.', nadia:'What goal would you like to reach? Pick an example or write your own.',
+         guru:'What do you truly want to achieve?', genie:'So, what’s your wish? Speak up!'},
+  iWhy:{coach:'Why do you need it? Without a “why” you’ll quit in week two.', nadia:'What will change when you reach it? I’ll remind you on a hard day.',
+        guru:'Imagine the goal is reached. What has changed?', genie:'What happens when the wish comes true? Tell me — I’ll keep it in my lamp 🪔'},
+  iNum:{coach:'Numbers. How much in total, and in what?', nadia:'How will we measure the result? Enter a number and a unit.',
+        guru:'How will you know you have arrived? Name a number.', genie:'Magic loves precision! How much of what?'},
+  iWhen:{coach:'Deadline. By what date?', nadia:'By when would you like to make it?', guru:'How much time do you give this path?', genie:'When should it come true? Even genies have deadlines ⏳'},
+  iDays:{coach:'Which days do you work? Choose honestly, no heroics.', nadia:'Which days of the week suit you?',
+         guru:'Which days are you ready to walk? Fewer, but always.', genie:'Which days do we do magic? Pick them!'},
+  iObst:{coach:'What will get in your way? Name the main enemy.', nadia:'What usually gets in the way? Let’s plan for it now.',
+         guru:'What obstacle will you meet on the path?', genie:'Which evil wizard could ruin everything? 😈'},
+  iPlan:{coach:'When it happens — what do you do? My advice: “{tip}”.', nadia:'I suggest a rule for that case: “{tip}”. Keep it or write your own.',
+         guru:'Prepare your answer in advance. For example: “{tip}”.', genie:'I have a counter-spell: “{tip}”. Or invent your own!'},
+  iDone:{coach:'Done. The norm is {rate} a day. We start tomorrow.', nadia:'Your plan is ready! Every day — {rate}. I’ll keep track of progress.',
+         guru:'The path is clear: {rate} every day. The rest is habit.', genie:'Ta-da! ✨ Your wish is split into steps: {rate} a day. Let’s go!'},
+  iOk:{coach:'Got it.', nadia:'Noted.', guru:'Good.', genie:'Written in the scroll! 📜'},
+  iSly:{coach:'Nice try. Back to the numbers.', nadia:'Interesting thought. But let’s get back to the goal.',
+        guru:'A river likes to wind too. But it flows to the sea.', genie:'Heh, sneaky! But you can’t fool me 😏'},
+},
+};
+
+/* ============================================================
+   НАГРАДЫ (1.7.8) — баллы за выполненное и свои награды за баллы
+   ============================================================
+   Баланс НЕ хранится: каждый раз пересчитывается из истории задач + покупок
+   (rewardsLedger). Поэтому отметки из шторки/виджета, правка задним числом,
+   восстановление из копии ничего не ломают — правила просто применяются заново.
+
+   Правила (согласованы 21.10.2026):
+   • +1 балл за выполненную задачу; у чек-листа +1 за каждый отмеченный пункт.
+   • Пропуск = день, где были задачи, но не выполнено ни одной (пропущенные ⊘
+     тоже не выполнены). Дни без задач нейтральны: цепочку пропусков не рвут
+     и не продлевают. Сегодня пропуском не считается, пока день не кончился.
+   • 1-й день пропуска подряд — ничего.
+   • 2 дня подряд — «заморозка»: в день возвращения баллы ×½ (с округлением вверх).
+   • С 3-го дня подряд — списание столько, сколько дали бы задачи этого дня,
+     но за одну серию пропусков не больше, чем заработано за 7 дней до неё.
+   • Хотя бы одна выполненная задача — день не пропуск, серия обнуляется.
+   • Неделя (пн–вс) без единого пропуска — бонус +10 в воскресенье.
+   • Баланс никогда не уходит ниже 0.
+   • Считаем с даты включения наград (state.rewardsStart), не задним числом.
+*/
+const RW_WEEK_BONUS = 10;
+const RW_DEFAULTS = [
+  {emoji:'🍫', key:'rw.d1', price:30},
+  {emoji:'☕', key:'rw.d2', price:20},
+  {emoji:'🎬', key:'rw.d3', price:50},
+  {emoji:'📚', key:'rw.d4', price:120},
+];
+function rwName(r){ return (r && (r.name || (r.nameKey ? t(r.nameKey) : ''))) || ''; }
+const RW_EMOJIS = ['🍫','☕','🎬','📚','🍰','🎮','🛁','🍕','🎧','👟','🏖️','🎁'];
+
+function rwInit(){
+  if(!state.rewardsStart) state.rewardsStart = todayStr();
+  if(!Array.isArray(state.rewards)){
+    // стандартные награды хранят ключ перевода, а не текст — при смене языка название меняется;
+    // как только человек переименует награду, в name появится его текст
+    state.rewards = RW_DEFAULTS.map((d,i)=>({id:'rw'+Date.now().toString(36)+i, emoji:d.emoji, name:'', nameKey:d.key, price:d.price}));
+  }
+  if(!Array.isArray(state.rewardBuys)) state.rewardBuys = [];
+}
+
+/* баллы задачи: сколько дала (got) и сколько могла дать (max) */
+function rwTaskPoints(tk){
+  if(tk.kind==='checklist' && Array.isArray(tk.items) && tk.items.length){
+    return {got: tk.skipped ? 0 : tk.items.filter(i=>i.done).length, max: tk.items.length};
+  }
+  return {got: (!tk.skipped && (tk.done || tk.status)) ? 1 : 0, max: 1};
+}
+
+/* Главная функция: весь журнал баллов с даты старта по сегодня.
+   → {balance, entries:[{date, kind, delta, title, note}], days:{date:{earned,missed,planned}}, chain, todayEarned} */
+function rewardsLedger(){
+  const today = todayStr();
+  const start = state.rewardsStart || today;
+  const byDate = {};
+  state.tasks.forEach(tk=>{ if(tk.date>=start && tk.date<=today) (byDate[tk.date]=byDate[tk.date]||[]).push(tk); });
+  const buys = (state.rewardBuys||[]).slice().sort((a,b)=>a.at-b.at);
+  const entries=[], days={};
+  let bal=0, chain=0, chainCap=0, chainSpent=0;
+  const earnedOn = {};              // чистый заработок по датам (для потолка списаний)
+  const add=(e)=>{ const before=bal; bal=Math.max(0, bal+e.delta); e.delta = bal-before; if(e.delta!==0 || e.kind==='buy') entries.push(e); };
+
+  for(let d=start; d<=today; d=addDays(d,1)){
+    const list = byDate[d] || [];
+    let got=0, max=0;
+    const perTask = list.map(tk=>{ const p=rwTaskPoints(tk); got+=p.got; max+=p.max; return {tk,p}; });
+    const planned = list.length>0;
+    const isPast = d<today;
+    let missed = planned && got===0 && isPast;
+    days[d] = {planned, earned:0, missed, max};
+
+    if(planned && got>0){
+      const half = chain>=2;
+      perTask.forEach(({tk,p})=>{
+        if(!p.got) return;
+        const pts = half ? Math.ceil(p.got/2) : p.got;
+        add({date:d, kind:'earn', delta:pts, title:tk.title, note: (tk.kind==='checklist' ? p.got+'/'+p.max : '') + (half ? ' · ½' : '')});
+        days[d].earned += pts;
+      });
+      earnedOn[d] = days[d].earned;
+      chain = 0; chainSpent = 0;
+    } else if(missed){
+      chain++;
+      if(chain===1){
+        // потолок на всю серию: заработок за 7 дней до её начала
+        chainCap = 0; for(let k=1;k<=7;k++) chainCap += earnedOn[addDays(d,-k)]||0;
+        chainSpent = 0;
+      }
+      if(chain>=3){
+        const pen = Math.min(max, Math.max(0, chainCap-chainSpent));
+        if(pen>0){ chainSpent += pen; add({date:d, kind:'penalty', delta:-pen, title:t('rw.penDay',{n:chain})}); }
+      }
+    }
+    // бонус за неделю: в воскресенье, если неделя прошла и в ней не было ни одного пропуска
+    if(dowIndex(d)===6 && d<today){
+      const ws = addDays(d,-6);
+      let anyPlanned=false, anyMissed=false;
+      for(let k=0;k<7;k++){ const x=addDays(ws,k); if(x<start) { anyMissed=true; break; } const dd=days[x]; if(dd&&dd.planned) anyPlanned=true; if(dd&&dd.missed) anyMissed=true; }
+      if(anyPlanned && !anyMissed) add({date:d, kind:'bonus', delta:RW_WEEK_BONUS, title:t('rw.weekBonus')});
+    }
+    // покупки этого дня
+    buys.filter(b=>b.date===d).forEach(b=>add({date:d, kind:'buy', delta:-b.price, title:(b.emoji?b.emoji+' ':'')+b.name}));
+  }
+  return {balance:bal, entries, days, chain, todayEarned:(days[today]&&days[today].earned)||0};
+}
+
+function updateRewardsBadge(){
+  const b = document.getElementById('rewardsBadge'); if(!b) return;
+  const n = rewardsLedger().balance;
+  if(n>0){ b.style.display='flex'; b.textContent = n>999 ? Math.floor(n/1000)+'k' : n; } else b.style.display='none';
+}
+
+let rwLogOpen = false;
+function renderRewards(){
+  const el = document.getElementById('hpRewards'); if(!el) return;   // блок внутри экрана «Помощник»
+  rwInit();
+  const L = rewardsLedger(), today = todayStr();
+  const ws = weekStartOf(today);
+  // точки недели
+  let dots='', weekMiss=false, weekPlanned=false;
+  const WD = (typeof WEEKDAYS!=='undefined') ? WEEKDAYS : ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  for(let k=0;k<7;k++){
+    const d=addDays(ws,k), dd=L.days[d];
+    let cls='rw-d', mark='';
+    if(d>today){ cls+=' fut'; }
+    else if(d<(state.rewardsStart||today)){ cls+=' fut'; }
+    else if(!dd || !dd.planned){ cls+=' off'; mark='–'; }
+    else if(dd.missed){ cls+=' miss'; mark='✕'; weekMiss=true; weekPlanned=true; }
+    else if(dd.earned>0){ cls+=' ok'; mark='✓'; weekPlanned=true; }
+    else { cls+=' now'; weekPlanned=true; }
+    if(d===today) cls+=' today';
+    dots += `<div class="${cls}"><span>${mark}</span><i>${WD[k]}</i></div>`;
+  }
+  const weekNote = weekMiss ? t('rw.weekLost') : t('rw.weekOn',{n:RW_WEEK_BONUS});
+  // предупреждение о серии пропусков
+  let warn='';
+  const todayDone = L.todayEarned>0;
+  if(!todayDone && L.chain>=3) warn = `<div class="rw-warn">⚠️ ${t('rw.warnPen',{n:L.chain})}</div>`;
+  else if(!todayDone && L.chain===2) warn = `<div class="rw-warn">⚠️ ${t('rw.warnChain')}</div>`;
+  else if(!todayDone && L.chain===1) warn = `<div class="rw-warn soft">${t('rw.warnOne')}</div>`;
+
+  const bal = L.balance;
+  const shop = (state.rewards||[]).map(r=>{
+    const can = bal>=r.price;
+    return `<div class="rw-item" onclick="rwEdit('${r.id}')">
+      <div class="rw-emo">${esc(r.emoji||'🎁')}</div>
+      <div class="rw-body"><div class="rw-name">${esc(rwName(r))}</div><div class="rw-price">${r.price} ⭐</div></div>
+      ${can ? `<button class="rw-take" onclick="event.stopPropagation();rwBuy('${r.id}')">${t('rw.take')}</button>`
+            : `<div class="rw-need">${t('rw.need',{n:r.price-bal})}</div>`}
+    </div>`;
+  }).join('');
+
+  // журнал по дням (последние 14 дней с движением)
+  const byDay={};
+  L.entries.forEach(e=>{ (byDay[e.date]=byDay[e.date]||[]).push(e); });
+  const dates = Object.keys(byDay).sort().reverse().slice(0, rwLogOpen?60:5);
+  const log = dates.map(d=>{
+    const sum = byDay[d].reduce((s,e)=>s+e.delta,0);
+    const rows = byDay[d].map(e=>`<div class="rw-row ${e.kind}"><span>${esc(e.title)}${e.note?` <em>${esc(e.note)}</em>`:''}</span><b>${e.delta>0?'+':''}${e.delta}</b></div>`).join('');
+    return `<div class="rw-day"><div class="rw-dh"><span>${d===today?t('rw.today'):fmtDateHuman(d)}</span><b class="${sum<0?'neg':''}">${sum>0?'+':''}${sum}</b></div>${rows}</div>`;
+  }).join('') || `<div class="rw-empty">${t('rw.logEmpty')}</div>`;
+
+  el.innerHTML = `
+  <div class="rw-card">
+    <div class="rw-bal"><span class="rw-star">⭐</span><span class="rw-num">${bal}</span></div>
+    <div class="rw-sub">${t('rw.balance')} · ${t('rw.todayPlus',{n:L.todayEarned})}</div>
+    <div class="rw-week">${dots}</div>
+    <div class="rw-wnote">${weekNote}</div>
+    ${warn}
+  </div>
+  <div class="sec-title">${t('rw.shop')}</div>
+  <div class="rw-shop">${shop}</div>
+  <button class="rw-add" onclick="rwEdit()">＋ ${t('rw.add')}</button>
+  <div class="sec-title">${t('rw.log')}</div>
+  <div class="rw-log">${log}</div>
+  ${Object.keys(byDay).length>5 ? `<button class="rw-more" onclick="rwLogOpen=!rwLogOpen;renderRewards()">${rwLogOpen?t('rw.less'):t('rw.more')}</button>`:''}
+  <details class="rw-rules"><summary>${t('rw.rulesT')}</summary><div>${t('rw.rules',{n:RW_WEEK_BONUS})}</div></details>
+  `;
+}
+
+function rwBuy(id){
+  const r=(state.rewards||[]).find(x=>x.id===id); if(!r) return;
+  const bal=rewardsLedger().balance;
+  if(bal<r.price){ toast(t('rw.need',{n:r.price-bal})); return; }
+  showModal(`<h2>${esc(r.emoji)} ${esc(rwName(r))}</h2>
+    <div class="hint">${t('rw.buyQ',{p:r.price, b:bal-r.price})}</div>
+    <div class="modal-btns"><button class="ghost" onclick="closeModal()">${t('btn.cancel')}</button>
+    <button class="primary" onclick="rwBuyDo('${r.id}')">${t('rw.take')}</button></div>`);
+}
+function rwBuyDo(id){
+  const r=(state.rewards||[]).find(x=>x.id===id); if(!r) return;
+  state.rewardBuys.push({id:'b'+Date.now().toString(36), rewardId:r.id, emoji:r.emoji, name:rwName(r), price:r.price, date:todayStr(), at:Date.now()});
+  save(); closeModal(); render(); toast(t('rw.enjoy',{e:r.emoji||'🎁'}));
+}
+
+let rwPickEmoji='🎁';
+function rwEdit(id){
+  const r = id ? (state.rewards||[]).find(x=>x.id===id) : null;
+  rwPickEmoji = r ? (r.emoji||'🎁') : RW_EMOJIS[0];
+  const emo = RW_EMOJIS.map(e=>`<button class="rw-eb${e===rwPickEmoji?' on':''}" onclick="rwPickEmoji='${e}';document.querySelectorAll('.rw-eb').forEach(b=>b.classList.toggle('on',b.textContent==='${e}'))">${e}</button>`).join('');
+  showModal(`<h2>${r?t('rw.editT'):t('rw.addT')}</h2>
+    <div class="rw-emos">${emo}</div>
+    <label class="th-label">${t('rw.name')}</label>
+    <input id="rwName" class="rw-in" maxlength="40" value="${r?esc(rwName(r)):''}" placeholder="${t('rw.namePh')}">
+    <label class="th-label">${t('rw.price')}</label>
+    <input id="rwPrice" class="rw-in" type="number" inputmode="numeric" min="1" max="9999" value="${r?r.price:20}">
+    <div class="modal-btns">
+      ${r?`<button class="ghost" style="color:var(--danger)" onclick="rwDel('${r.id}')">${t('rw.del')}</button>`:`<button class="ghost" onclick="closeModal()">${t('btn.cancel')}</button>`}
+      <button class="primary" onclick="rwSave(${r?`'${r.id}'`:'null'})">${t('rw.save')}</button>
+    </div>`);
+}
+function rwSave(id){
+  const name=(document.getElementById('rwName').value||'').trim();
+  const price=Math.max(1, Math.min(9999, parseInt(document.getElementById('rwPrice').value,10)||0));
+  if(!name){ toast(t('rw.nameReq')); return; }
+  if(id){ const r=state.rewards.find(x=>x.id===id); if(r){ if(name!==rwName(r)) { r.name=name; delete r.nameKey; } r.price=price; r.emoji=rwPickEmoji; } }
+  else state.rewards.push({id:'rw'+Date.now().toString(36), emoji:rwPickEmoji, name, price});
+  save(); closeModal(); renderRewards();
+}
+function rwDel(id){ state.rewards=state.rewards.filter(x=>x.id!==id); save(); closeModal(); renderRewards(); }
+
+/* «Незавершённые» переезжают в «Историю» — сворачиваемый блок сверху */
+let unInHistOpen = false;
+function undoneSectionHTML(){
+  const today=todayStr();
+  const list = state.tasks.filter(tk=>!tk.done && (tk.date<today || tk.skipped)).sort((a,b)=>a.date<b.date?1:-1);
+  if(!list.length) return '';
+  let html = `<div class="un-hist"><button class="un-hist-h" onclick="unInHistOpen=!unInHistOpen;renderHistory()">
+      <span>⏰ ${t('title.undone')}</span><span class="un-cnt">${list.length}</span><span class="un-chev">${unInHistOpen?'▲':'▼'}</span></button>`;
+  if(unInHistOpen){
+    list.forEach(tk=>{
+      const cat=catById(tk.catId), sel=tk.id===selectedTaskId?' sel':'';
+      const catName = tk.fromTree ? tr('today.fromTree') : esc(catLabel(cat));
+      const skipMark = tk.skipped ? '<span class="ud-skip">'+tr('un.skipped')+'</span> ' : '';
+      const extra = (tk.kind==='checklist'&&tk.items) ? ` <span class="ud-prog">${tk.items.filter(i=>i.done).length}/${tk.items.length}</span>` : '';
+      html += `<div class="task${sel}${tk.skipped?' skipped':''}" data-id="${tk.id}" onclick="taskTap('${tk.id}',event)" ondblclick="taskDblTap('${tk.id}',event)">
+        <span class="cat-dot" style="background:${cat.color}"></span>
+        <div class="body"><div class="ttl">${esc(tk.title)}${extra}</div>
+        <div class="meta"><span class="catname">${skipMark}${catName}</span><span style="color:var(--warn)">${fmtShort(tk.date)}</span></div></div>
+        <div class="check">✓</div></div>`;
+      if(tk.id===selectedTaskId) html += actionBarHTML(tk);
+    });
+  }
+  return html + '</div>';
+}
+
+Object.assign(I18N.ru, {
+  'rw.d1':'Плитка шоколада', 'rw.d2':'Кофе в кофейне', 'rw.d3':'Вечер с фильмом', 'rw.d4':'Новая книга',
+  'rw.balance':'баллов', 'rw.todayPlus':'сегодня +{n}',
+  'rw.weekOn':'Неделя без пропусков — +{n} ⭐ по итогам воскресенья',
+  'rw.weekLost':'На этой неделе был пропуск — бонуса не будет',
+  'rw.warnOne':'Вчера пропуск. Сделай сегодня хотя бы одну задачу — и ничего не потеряешь.',
+  'rw.warnChain':'Два дня подряд без выполненных задач. Сегодня баллы начислятся ×½, а если пропустить и сегодня — начнётся списание.',
+  'rw.warnPen':'Пропущено дней подряд: {n} — баллы списываются. Выполни хотя бы одну задачу, чтобы остановить списание.',
+  'rw.shop':'Мои награды', 'rw.take':'Взять', 'rw.need':'ещё {n} ⭐', 'rw.add':'Добавить награду',
+  'rw.log':'История баллов', 'rw.today':'Сегодня', 'rw.logEmpty':'Пока пусто — выполни задачу, и здесь появятся первые баллы.',
+  'rw.more':'Показать всё', 'rw.less':'Свернуть',
+  'rw.penDay':'Пропуск, {n}-й день подряд', 'rw.weekBonus':'🔥 Неделя без пропусков',
+  'rw.buyQ':'Спишется {p} ⭐, останется {b} ⭐. Наслаждайся — ты это заработал.',
+  'rw.enjoy':'{e} Приятного!',
+  'rw.addT':'Новая награда', 'rw.editT':'Награда', 'rw.name':'Название', 'rw.namePh':'Например, серия сериала',
+  'rw.price':'Цена в баллах', 'rw.save':'Сохранить', 'rw.del':'Удалить', 'rw.nameReq':'Напиши название',
+  'rw.rulesT':'Как начисляются баллы',
+  'rw.rules':'<p><b>+1 ⭐</b> за каждую выполненную задачу. У чек-листа — за каждый отмеченный пункт: тренировка из 5 упражнений даёт 5 баллов.</p>'
+    +'<p><b>+{n} ⭐</b> за неделю (пн–вс) без единого пропуска.</p>'
+    +'<p><b>Пропуск</b> — день, когда были задачи, но не выполнена ни одна. Дни без задач не считаются.</p>'
+    +'<p>1 день пропуска — ничего не теряешь.<br>2 дня подряд — в день возвращения баллы ×½.<br>С 3-го дня подряд — списывается столько, сколько дали бы задачи этого дня, но не больше, чем заработано за неделю до пропусков.</p>'
+    +'<p>Хотя бы одна выполненная задача за день — и списания нет. Баланс не уходит ниже нуля.</p>'
+    +'<p>Награды придумываешь сам: что угодно, что тебя радует. Нажми на награду, чтобы изменить её или удалить.</p>',
+});
+
+/* ============================================================
+   ПОМОЩНИК (1.7.8) — вкладка вместо «Незавершённых»
+   ============================================================
+   Сверху персонаж в полный рост с репликой по ситуации, ниже баланс
+   и награды (renderRewards), внизу настройки помощника.
+   Работает без сети и без ИИ: реплики готовые (HL), эмоция выбирается
+   по состоянию дня и серии пропусков из rewardsLedger().
+   Картинки: coach/<персонаж>-<эмоция>.webp (440×920, у части шире). */
+const HP_LIST = ['coach','nadia','guru','genie'];
+const HP = {
+  coach:{color:'#ff7a45', sig:'strict', emos:['hello','think','happy','proud','sad','strict','sly']},
+  nadia:{color:'#9b6bff', sig:'mystery', emos:['hello','think','happy','proud','sad','mystery','sly']},
+  guru: {color:'#3fa34d', sig:'stern', emos:['hello','think','happy','proud','sad','stern','sly']},
+  genie:{color:'#3cc6c0', sig:'tease', emos:['hello','think','happy','proud','sad','tease','sly','joke']},
+};
+function hpImg(p, emo){ return 'coach/'+p+'-'+emo+'.webp'; }
+function hpName(p){ return hpLine('name', p); }
+
+/* строка персонажа; массив → один вариант на день (стабильно, не прыгает при перерисовке) */
+function hpLine(key, p, vars, salt){
+  const src = HL[curLang()] || HL.en;
+  let v = (src[key] && src[key][p]!==undefined) ? src[key][p] : (HL.en[key] ? HL.en[key][p] : '');
+  if(Array.isArray(v)){
+    const seed = todayStr()+key+p+(salt||'');
+    let h=0; for(let i=0;i<seed.length;i++) h=(h*31+seed.charCodeAt(i))|0;
+    v = v[Math.abs(h)%v.length];
+  }
+  v = String(v||'');
+  for(const k in (vars||{})) v = v.split('{'+k+'}').join(vars[k]);
+  return v;
+}
+
+function hpInit(){
+  if(state.helperStyle===undefined) state.helperStyle='normal';   // soft | normal | strict
+  if(state.helperFreq===undefined)  state.helperFreq=1;           // 0 | 1 | 3 реплик в день на других экранах
+  if(state.helperMorning===undefined) state.helperMorning=true;
+  if(!state.helperSeen || state.helperSeen.date!==todayStr()) state.helperSeen={date:todayStr(), n:0, keys:[]};
+  if(state.themes && !state.themes.helper)
+    state.themes.helper = JSON.parse(JSON.stringify(state.themes.undone || DEFAULT_THEMES.helper));
+}
+
+/* Настроение дня → {emo, key, vars} */
+function hpMood(p){
+  const L = rewardsLedger(), today = todayStr();
+  const list = state.tasks.filter(tk=>tk.date===today);
+  const done = list.filter(tk=>tk.done).length;
+  const style = state.helperStyle;
+  const sig = HP[p].sig;
+  const todayOk = L.todayEarned>0;
+  if(!todayOk && L.chain>=3) return {emo:sig, key:'miss3', vars:{n:L.chain}};
+  if(!todayOk && L.chain===2) return style==='soft' ? {emo:'sad', key:'miss1'} : {emo:sig, key:'miss2'};
+  if(!todayOk && L.chain===1) return style==='strict' ? {emo:sig, key:'miss2'} : {emo:'sad', key:'miss1'};
+  const y = addDays(today,-1);
+  if(L.entries.some(e=>e.kind==='bonus' && e.date===y)) return {emo:'proud', key:'week'};
+  if(list.length && done===list.length) return {emo:'happy', key:'dayDone', vars:{d:done, t:list.length}};
+  if(done>0) return {emo:'think', key:'partial', vars:{d:done, t:list.length}};
+  if(!list.length) return {emo:'hello', key:'noTasks'};
+  if(p==='genie'){
+    let h=0; const s=today+'joke'; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0;
+    if(Math.abs(h)%3===0) return {emo:'joke', key:'joke'};
+  }
+  return {emo:'hello', key:'hello'};
+}
+
+/* ---------- экран ---------- */
+let hpSetOpen = false;
+function renderHelper(){
+  const el = document.getElementById('s-helper'); if(!el) return;
+  hpInit(); rwInit();
+  const p = state.coach;
+  let hero;
+  if(!p || !HP[p]){
+    hero = `<div class="hp-card hp-intro"><div class="hp-ttl">${t('hp.pickT')}</div><div class="hp-sub">${t('hp.pickSub')}</div>
+      <div class="hp-team">${HP_LIST.map(id=>`<button class="hp-mate" onclick="hpChoose('${id}')" style="--cc:${HP[id].color}">
+        <img src="${hpImg(id,'hello')}" alt="" loading="lazy"><b>${esc(hpName(id))}</b><i>${esc(hpLine('tag',id))}</i></button>`).join('')}</div></div>`;
+  } else {
+    const m = hpMood(p);
+    const line = m.key==='joke' ? hpLine('joke','genie',null) : hpLine(m.key, p, m.vars);
+    hero = `<div class="hp-card hp-hero" style="--cc:${HP[p].color}">
+      <img class="hp-fig" src="${hpImg(p,m.emo)}" alt="" onclick="hpPoke()">
+      <div class="hp-say"><b>${esc(hpName(p))}</b><div class="hp-bub">${esc(line)}</div>
+        <button class="hp-go" onclick="hpStart()">🎯 ${t('hp.newGoal')}</button></div>
+    </div>`;
+  }
+  el.innerHTML = hero + `<div id="hpRewards"></div>` + hpSettingsHTML();
+  renderRewards();
+}
+/* тап по персонажу — Джин шутит, остальные повторяют реплику дня с другой фразой */
+let hpPokeN = 0;
+function hpPoke(){
+  const p=state.coach; if(!p) return;
+  hpPokeN++;
+  const fig=document.querySelector('.hp-fig'), bub=document.querySelector('.hp-bub');
+  if(p==='genie'){ if(fig) fig.src=hpImg('genie','joke'); if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); }
+  else { const k=['hello','pick'][hpPokeN%2]; if(fig) fig.src=hpImg(p, hpPokeN%2?'think':'hello'); if(bub) bub.textContent=hpLine(k,p,null,'poke'+hpPokeN); }
+  if(fig){ fig.classList.remove('hp-jump'); void fig.offsetWidth; fig.classList.add('hp-jump'); }
+}
+function hpChoose(id){ state.coach=id; save(); renderHelper(); }
+
+function hpSettingsHTML(){
+  const seg=(key,opts)=>`<div class="hp-seg">${opts.map(o=>`<button class="${state[key]===o.v?'on':''}" onclick="hpSet('${key}',${JSON.stringify(o.v).replace(/"/g,"'")})">${o.l}</button>`).join('')}</div>`;
+  const p = state.coach;
+  return `<details class="hp-set" ${hpSetOpen?'open':''} ontoggle="hpSetOpen=this.open">
+    <summary>⚙️ ${t('hp.settings')}</summary>
+    <label class="th-label">${t('hp.sChar')}</label>
+    <div class="hp-team sm">${HP_LIST.map(id=>`<button class="hp-mate${p===id?' on':''}" onclick="hpChoose('${id}')" style="--cc:${HP[id].color}">
+      <img src="${hpImg(id,'hello')}" alt="" loading="lazy"><b>${esc(hpName(id))}</b></button>`).join('')}</div>
+    <label class="th-label">${t('hp.sStyle')}</label>
+    ${seg('helperStyle',[{v:'soft',l:t('hp.soft')},{v:'normal',l:t('hp.normal')},{v:'strict',l:t('hp.strict')}])}
+    <div class="hp-hint">${t('hp.styleHint.'+state.helperStyle)}</div>
+    <label class="th-label">${t('hp.sFreq')}</label>
+    ${seg('helperFreq',[{v:0,l:t('hp.f0')},{v:1,l:t('hp.f1')},{v:3,l:t('hp.f3')}])}
+    <label class="hp-row"><span>${t('hp.sMorning')}</span><input type="checkbox" ${state.helperMorning?'checked':''} onchange="hpSet('helperMorning',this.checked)"></label>
+  </details>`;
+}
+function hpSet(key,val){ state[key]=val; save(); renderHelper(); }
+
+/* ---------- реплика на других экранах ---------- */
+let hpPopTimer=null;
+function hpPop(key, vars, emo){
+  const p=state.coach; if(!p || !HP[p]) return;
+  let el=document.getElementById('hpPop');
+  if(!el){ el=document.createElement('div'); el.id='hpPop'; el.className='hp-pop'; document.body.appendChild(el); }
+  const text = key==='joke' ? hpLine('joke','genie',null,'pop') : hpLine(key,p,vars);
+  el.style.setProperty('--cc', HP[p].color);
+  el.innerHTML = `<img src="${hpImg(p,emo||'hello')}" alt="" onclick="hpPopClose();switchScreen('helper')">
+    <div class="hp-pbub"><b>${esc(hpName(p))}</b>${esc(text)}</div>
+    <button class="hp-px" onclick="hpPopClose()" aria-label="close">✕</button>`;
+  requestAnimationFrame(()=>el.classList.add('show'));
+  clearTimeout(hpPopTimer); hpPopTimer=setTimeout(hpPopClose, 8000);
+}
+function hpPopClose(){ const el=document.getElementById('hpPop'); if(el) el.classList.remove('show'); }
+
+/* Вызывается после каждой перерисовки: решает, сказать ли что-то на текущем экране.
+   Утреннее слово — один раз в день при открытии; «день закрыт» и «неделя» — один раз,
+   с лимитом по частоте. На экране «Помощник» всплывашек нет — там он и так на виду. */
+function hpCheck(){
+  const p=state.coach; if(!p || !HP[p] || curScreen==='helper') return;
+  if(document.getElementById('modalBg') && document.getElementById('modalBg').classList.contains('show')) return;
+  hpInit();
+  const S=state.helperSeen, seen=k=>S.keys.indexOf(k)>=0, mark=k=>{ S.keys.push(k); save(); };
+  const m=hpMood(p);
+  if(state.helperMorning && !seen('morning')){
+    mark('morning');
+    if(m.key==='dayDone'||m.key==='partial') return;  // уже работает — не отвлекаем
+    hpPop(m.key, m.vars, m.emo); return;
+  }
+  if(state.helperFreq<=0 || S.n>=state.helperFreq) return;
+  if(m.key==='dayDone' && !seen('dayDone')){ mark('dayDone'); S.n++; save(); hpPop('dayDone', m.vars, 'happy'); return; }
+  if(m.key==='week' && !seen('week')){ mark('week'); S.n++; save(); hpPop('week', null, 'proud'); }
+}
+
+/* ---------- опрос «новая цель» ---------- */
+let hq=null;
+const HQ_ORDER=['goal','why','num','when','days','obst','plan','sum'];
+function hpStart(){
+  if(!state.coach) return;
+  hq={step:'goal', emo:'hello', msgs:[], g:{title:'', why:'', target:0, unit:'', deadline:'', days:[0,1,2,3,4], obst:'', plan:'', type:null}};
+  hqSay('iHello'); hqNext('goal');
+}
+function hqSay(key, vars){ hq.msgs.push({who:'bot', text:hpLine(key, state.coach, vars)}); }
+function hqNext(step){ hq.step=step; hq.emo='think'; hqSay('i'+step.charAt(0).toUpperCase()+step.slice(1), step==='plan'?{tip:hq.tip}:null); hqRender(); }
+function hqRender(){
+  const p=state.coach, c=HP[p];
+  const msgs = hq.msgs.map(m=> m.who==='bot'
+    ? `<div class="hq-m bot"><div class="hq-bub">${esc(m.text)}</div></div>`
+    : `<div class="hq-m me"><div class="hq-bub">${esc(m.text)}</div></div>`).join('');
+  const chips=(arr)=>`<div class="hq-chips">${arr.map((x,i)=>`<button onclick="hqChip(${i})">${esc(x)}</button>`).join('')}</div>`;
+  const field=(ph,type)=>`<div class="hq-in"><input id="hqIn" type="${type||'text'}" placeholder="${esc(ph)}" onkeydown="if(event.key==='Enter')hqSend()"><button onclick="hqSend()">➤</button></div>`;
+  let input='';
+  hq.chips=[];
+  switch(hq.step){
+    case 'goal': hq.chips=t('hp.goals'); input=chips(hq.chips)+field(t('hp.goalPh')); break;
+    case 'why':  hq.chips=[t('hp.skip')]; input=chips(hq.chips)+field(t('hp.whyPh')); break;
+    case 'num':  input=`<div class="hq-in"><input id="hqIn" type="number" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
+    case 'when': hq.chips=t('hp.whens').map(w=>w[0]); input=chips(hq.chips); break;
+    case 'days': input=`<div class="hq-chips days">${WEEKDAYS.map((w,i)=>`<button class="${hq.g.days.includes(i)?'on':''}" onclick="hqDay(${i})">${w}</button>`).join('')}</div>
+                 <button class="hq-go" onclick="hqDaysDone()">${t('hp.ready')}</button>`; break;
+    case 'obst': hq.chips=t('hp.obst').map(o=>o[0]); input=chips(hq.chips)+field(t('hp.ownPh')); break;
+    case 'plan': hq.chips=[t('hp.keepTip')]; input=chips(hq.chips)+field(t('hp.rulePh')); break;
+    case 'sum':  input=`<div class="hq-row2"><button class="hq-ghost" onclick="hpStart()">${t('hp.again')}</button><button class="hq-go" onclick="hqCreate()">${t('hp.create')}</button></div>`; break;
+  }
+  const i=HQ_ORDER.indexOf(hq.step);
+  hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b><span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
+    <div class="hq-stage"><img class="hq-fig" src="${hpImg(p,hq.emo)}" alt=""><div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
+    <div class="hq-bottom">${input}</div>`);
+  const ch=document.getElementById('hqChat'); if(ch) ch.scrollTop=ch.scrollHeight;
+}
+function hqChip(i){ hqAns(hq.chips[i], i); }
+function hqSend(){
+  const el=document.getElementById('hqIn'); if(!el||!String(el.value).trim()) return;
+  let v=String(el.value).trim();
+  if(hq.step==='num'){ hq.g.unit=document.getElementById('hqUnit').value; v=v+' '+hq.g.unit; }
+  hqAns(v, -1);
+}
+function hqDay(i){ const d=hq.g.days, k=d.indexOf(i); if(k<0) d.push(i); else d.splice(k,1); d.sort(); hqRender(); }
+function hqDaysTxt(){ return hq.g.days.length===7 ? t('hp.everyDay') : hq.g.days.map(i=>WEEKDAYS[i]).join(', '); }
+function hqDaysDone(){ if(!hq.g.days.length){ toast(t('gv.oneDay')); return; } hqAns(hqDaysTxt(), -1); }
+/* «хитрая улыбка»: пропуск вопроса или ответ-отписка */
+function hqSly(){ hq.emo='sly'; hqSay('iSly'); }
+function hqAns(v, chipIdx){
+  const g=hq.g; hq.msgs.push({who:'me', text:v});
+  switch(hq.step){
+    case 'goal':
+      if(v.length<3){ hqSly(); hqRender(); return; }
+      g.title=v; g.type = chipIdx>=0 ? ['travel','physical','learning','learning'][chipIdx] : null;
+      hqSay('iOk'); hqNext('why'); break;
+    case 'why':
+      if(chipIdx===0){ g.why=''; hqSly(); setTimeout(()=>hqNext('num'),900); hqRender(); return; }
+      g.why=v; hqNext('num'); break;
+    case 'num': {
+      const n=parseFloat(String(v).replace(',','.'));
+      if(!(n>0)){ hqSly(); hqRender(); return; }
+      g.target=n; hqNext('when'); break; }
+    case 'when': {
+      const T=todayStr(), w=t('hp.whens')[chipIdx];
+      g.deadline = w[1]>0 ? addDays(T,w[1]) : T.slice(0,4)+'-12-31';
+      if(daysBetween(T,g.deadline)<7) g.deadline=addDays(T,30);
+      hqNext('days'); break; }
+    case 'days': hqSay('iOk'); hqNext('obst'); break;
+    case 'obst': {
+      g.obst=v; const o=chipIdx>=0 ? t('hp.obst')[chipIdx] : null;
+      hq.tip = o ? o[1] : t('hp.tipDefault'); hqNext('plan'); break; }
+    case 'plan': g.plan = chipIdx===0 ? hq.tip : v; hqFinish(); break;
+  }
+}
+function hqCalc(){
+  const g=hq.g, T=addDays(todayStr(),1);
+  const n=activeDaysCount(T, g.deadline, g.days);
+  const per=n>0 ? g.target/n : 0;
+  const nice=per>=10 ? Math.ceil(per) : Math.ceil(per*10)/10;
+  return {n, per:nice, rate:nice+' '+g.unit};
+}
+function hqFinish(){ hq.step='sum'; hq.emo='happy'; hqSay('iDone',{rate:hqCalc().rate}); hqRender(); }
+function hqSummaryHTML(){
+  const g=hq.g, k=hqCalc();
+  return `<div class="hq-sum">
+    <div class="hq-sum-t">🎯 ${esc(g.title)}</div>
+    ${g.why?`<div class="hq-sum-why">«${esc(g.why)}»</div>`:''}
+    <div class="hq-sum-row"><span>${t('hp.sGoal')}</span><b>${g.target} ${esc(g.unit)} · ${fmtFull(g.deadline)}</b></div>
+    <div class="hq-sum-row"><span>${t('hp.sDays')}</span><b>${esc(hqDaysTxt())} · ${k.n}</b></div>
+    <div class="hq-sum-row big"><span>${t('hp.sNorm')}</span><b>${esc(k.rate)}</b></div>
+    ${g.obst?`<div class="hq-sum-row"><span>${esc(g.obst)} →</span><b>${esc(g.plan)}</b></div>`:''}
+  </div>`;
+}
+/* Создаёт обычную числовую цель — дальше она живёт как любая другая */
+function hqCreate(){
+  const g=hq.g, today=todayStr();
+  const units=t('hp.units');
+  let type=g.type;
+  if(!type){ const ui=units.indexOf(g.unit); type = ui<=2 ? 'material' : (ui<=4 ? 'physical' : 'learning'); }
+  let catId=TYPE_TO_CAT[type]; if(!state.cats.some(c=>c.id===catId)) catId=(state.cats[0]||{}).id||'';
+  const vision=[g.why, g.obst ? (g.obst+' → '+g.plan) : ''].filter(Boolean).join('\n');
+  state.goals.push({
+    id:uid(), name:g.title, catId, kind:'numeric', type, vision,
+    start:0, target:g.target, unit:g.unit, numeric:{start:0,target:g.target,unit:g.unit},
+    deadline:g.deadline, days:g.days.slice(), time:null, showInNotif:false,
+    factValue:null, factDate:null,
+    weeklyPlan:{0:[],1:[],2:[],3:[],4:[],5:[],6:[]},
+    created:Date.now(), createdDate:today, byHelper:state.coach
+  });
+  generateForDate(today);
+  save(); hqClose(); switchScreen('goals'); toast(t('gt.created'));
+}
+function hqShow(html){
+  let ov=document.getElementById('hqOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='hqOv'; ov.className='hq-ov'; document.body.appendChild(ov); }
+  ov.innerHTML=html; ov.classList.add('show');
+}
+function hqClose(){ const ov=document.getElementById('hqOv'); if(ov) ov.classList.remove('show'); }
+
+Object.assign(I18N.ru, {
+  'nav.helper':'Помощник', 'title.helper':'Помощник', 'sc.helper':'Помощник',
+  'hp.pickT':'Выбери помощника', 'hp.pickSub':'Он поможет поставить цель, будет хвалить за выполненное и напоминать о пропусках. Сменить можно в настройках ниже.',
+  'hp.newGoal':'Новая цель с помощником', 'hp.settings':'Настройки помощника',
+  'hp.sChar':'Персонаж', 'hp.sStyle':'Стиль', 'hp.soft':'Мягко', 'hp.normal':'Обычно', 'hp.strict':'Строго',
+  'hp.styleHint.soft':'Только поддерживает, без строгих слов.', 'hp.styleHint.normal':'Хвалит за выполненное, с 2-го дня пропусков становится строже.',
+  'hp.styleHint.strict':'Строгий уже после первого пропуска.',
+  'hp.sFreq':'Реплики на других экранах', 'hp.f0':'Нет', 'hp.f1':'Раз в день', 'hp.f3':'До 3 в день', 'hp.sMorning':'Утреннее слово при открытии',
+  'hp.goals':['Накопить на поездку','Бегать 3 раза в неделю','Читать каждый день','Выучить язык'],
+  'hp.goalPh':'Своя цель…', 'hp.whyPh':'Что изменится…', 'hp.skip':'Пропустить', 'hp.numPh':'Сколько',
+  'hp.units':['₽','$','€','км','раз','страниц','минут','часов'],
+  'hp.whens':[['Через месяц',30],['Через 3 месяца',91],['Через полгода',182],['До конца года',0]],
+  'hp.ready':'Готово', 'hp.everyDay':'Каждый день',
+  'hp.obst':[['Устану после работы','если устал — делаю минимум: 10 минут'],['Забуду','напоминание вечером и задача в шторке'],['Не будет времени','делаю утром, до работы'],['Лень','начинаю с 2 минут — дальше само пойдёт']],
+  'hp.ownPh':'Своё…', 'hp.keepTip':'Оставить совет', 'hp.rulePh':'Своё правило…', 'hp.tipDefault':'сделаю хотя бы минимум, но в тот же день',
+  'hp.again':'Заново', 'hp.create':'Создать цель', 'hp.sGoal':'Цель', 'hp.sDays':'Дни', 'hp.sNorm':'Норма в день',
+});
+Object.assign(I18N.en, {
+  'nav.helper':'Helper', 'title.helper':'Helper', 'sc.helper':'Helper',
+  'hp.pickT':'Choose your helper', 'hp.pickSub':'They help you set a goal, praise you for what’s done and remind you about misses. You can change it in the settings below.',
+  'hp.newGoal':'New goal with helper', 'hp.settings':'Helper settings',
+  'hp.sChar':'Character', 'hp.sStyle':'Style', 'hp.soft':'Soft', 'hp.normal':'Normal', 'hp.strict':'Strict',
+  'hp.styleHint.soft':'Only supportive, no strict words.', 'hp.styleHint.normal':'Praises what’s done, gets stricter from the 2nd missed day.',
+  'hp.styleHint.strict':'Strict right after the first miss.',
+  'hp.sFreq':'Messages on other screens', 'hp.f0':'None', 'hp.f1':'Once a day', 'hp.f3':'Up to 3 a day', 'hp.sMorning':'Morning word on opening',
+  'hp.goals':['Save for a trip','Run 3 times a week','Read every day','Learn a language'],
+  'hp.goalPh':'Your own goal…', 'hp.whyPh':'What will change…', 'hp.skip':'Skip', 'hp.numPh':'How much',
+  'hp.units':['$','€','£','km','times','pages','minutes','hours'],
+  'hp.whens':[['In a month',30],['In 3 months',91],['In half a year',182],['By the end of the year',0]],
+  'hp.ready':'Done', 'hp.everyDay':'Every day',
+  'hp.obst':[['Tired after work','if tired — I do the minimum: 10 minutes'],['I’ll forget','an evening reminder and the task in the shade'],['No time','I do it in the morning, before work'],['Laziness','I start with 2 minutes — the rest follows']],
+  'hp.ownPh':'Your own…', 'hp.keepTip':'Keep the advice', 'hp.rulePh':'Your own rule…', 'hp.tipDefault':'I’ll do at least the minimum, but the same day',
+  'hp.again':'Start over', 'hp.create':'Create goal', 'hp.sGoal':'Goal', 'hp.sDays':'Days', 'hp.sNorm':'Daily norm',
+  // награды
+  'rw.d1':'A chocolate bar', 'rw.d2':'Coffee at a café', 'rw.d3':'A movie night', 'rw.d4':'A new book',
+  'rw.balance':'points', 'rw.todayPlus':'today +{n}',
+  'rw.weekOn':'A week with no misses — +{n} ⭐ after Sunday',
+  'rw.weekLost':'There was a miss this week — no bonus',
+  'rw.warnOne':'Yesterday was a miss. Do at least one task today and you lose nothing.',
+  'rw.warnChain':'Two days in a row with no tasks done. Today points count ×½, and if you miss today too, deductions begin.',
+  'rw.warnPen':'Missed days in a row: {n} — points are being deducted. Do at least one task to stop it.',
+  'rw.shop':'My rewards', 'rw.take':'Take', 'rw.need':'{n} ⭐ more', 'rw.add':'Add a reward',
+  'rw.log':'Points history', 'rw.today':'Today', 'rw.logEmpty':'Empty for now — complete a task and your first points will appear here.',
+  'rw.more':'Show all', 'rw.less':'Collapse',
+  'rw.penDay':'Missed, day {n} in a row', 'rw.weekBonus':'🔥 A week with no misses',
+  'rw.buyQ':'{p} ⭐ will be spent, {b} ⭐ will remain. Enjoy — you earned it.',
+  'rw.enjoy':'{e} Enjoy!',
+  'rw.addT':'New reward', 'rw.editT':'Reward', 'rw.name':'Name', 'rw.namePh':'For example, an episode of a series',
+  'rw.price':'Price in points', 'rw.save':'Save', 'rw.del':'Delete', 'rw.nameReq':'Enter a name',
+  'rw.rulesT':'How points are earned',
+  'rw.rules':'<p><b>+1 ⭐</b> for every completed task. For a checklist — for every ticked item: a workout of 5 exercises gives 5 points.</p>'
+    +'<p><b>+{n} ⭐</b> for a week (Mon–Sun) without a single miss.</p>'
+    +'<p><b>A miss</b> is a day that had tasks but none were done. Days without tasks don’t count.</p>'
+    +'<p>1 missed day — you lose nothing.<br>2 days in a row — on the day you return, points count ×½.<br>From the 3rd day in a row — as many points are deducted as that day’s tasks would give, but no more than you earned in the week before the misses.</p>'
+    +'<p>At least one task done in a day — no deduction. The balance never goes below zero.</p>'
+    +'<p>You invent the rewards yourself: anything that makes you happy. Tap a reward to change or delete it.</p>',
+});
+
 function render(){
   fitHeadDate();
   renderToday();
   renderGoals();
   renderUndone();
+  renderHelper();
   renderHistory();
   renderCalendar();
   updateBadge();
+  updateRewardsBadge();
   updateAppBadge();  updateNotificationTasks(); // Этап 2Б: кормим нативное уведомление
   updateDemoBar();   // 1.7.5: плашка «Это пример»
+  try{ hpCheck(); }catch(e){}   // 1.7.8: реплика помощника
 }
 
 function taskCardHTML(t){
@@ -7625,7 +8519,7 @@ function renderHistory(){
       <span class="hc">${esc(catLabel(cat))}</span>
     </div>`;
   });
-  el.innerHTML = html;
+  el.innerHTML = undoneSectionHTML() + html;   // 1.7.8: «Незавершённые» теперь здесь
   renderDiscChart();
 }
 
@@ -7692,6 +8586,7 @@ function updateBadge(){
     !t.done && (t.date<today || t.skipped)
   ).length;
   const b = document.getElementById('undoneBadge');
+  if(!b) return;   // 1.7.8: кнопки «Незавершённые» на панели больше нет
   if(n>0){ b.style.display='flex'; b.textContent=n; } else { b.style.display='none'; }
 }
 
@@ -7885,7 +8780,7 @@ function switchScreen(name){
      «назад» Android, перехватывать его нельзя;
    - мультитач (пинч-зум) пропускаем.
 */
-const SWIPE_SCREENS = ['today','goals','undone','history','calendar'];
+const SWIPE_SCREENS = ['today','goals','helper','history','calendar'];
 const SW_MIN_DIST   = 55;   // px — короче считаем случайным движением
 const SW_RATIO      = 1.8;  // во сколько раз горизонталь должна обгонять вертикаль
 const SW_EDGE       = 22;   // px от края — зона системного жеста
@@ -8823,7 +9718,7 @@ function backToGoal(){
 const SCREEN_LIST=[
   {id:'today',   get name(){return t('nav.today');},    emoji:'✅'},
   {id:'goals',   get name(){return t('nav.goals');},    emoji:'🎯'},
-  {id:'undone',  get name(){return t('sc.undone');},    emoji:'⏰'},
+  {id:'helper',  get name(){return t('sc.helper');},    emoji:'🤝'},
   {id:'history', get name(){return t('nav.history');},  emoji:'📚'},
   {id:'calendar',get name(){return t('nav.calendar');}, emoji:'📅'},
 ];
