@@ -6151,7 +6151,7 @@ const HQ_ORDER=['goal','why','num','when','days','obst','plan','sum'];
    (название цели, число, единицу…). Нет адреса / нет сети / ошибка / лимит —
    тот же ответ обрабатывает обычный сценарий, опрос не ломается. Чипы идут
    мимо AI: там значение и так известно. */
-const HP_AI_URL = '';
+const HP_AI_URL = 'https://planner-ai.yuriilosiev.workers.dev';
 const HQ_AI_STEPS = ['goal','why','num','obst','plan'];
 let hpAILimitShown = false;
 function hpAIOn(){ return !!HP_AI_URL && state.helperAI!=='off' && navigator.onLine!==false; }
