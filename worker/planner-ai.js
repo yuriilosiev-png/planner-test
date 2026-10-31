@@ -10,7 +10,7 @@
      MODEL        модели Gemini через запятую, по очереди при ошибке;
                   по умолчанию gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
      DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 60
-     GLOBAL_LIMIT запросов в день на всех, по умолчанию 1200
+     GLOBAL_LIMIT запросов в день на всех, по умолчанию 500 (бесплатная квота 3.1 Flash Lite)
      ORIGINS      разрешённые Origin через запятую
    KV (необязательно) — привязка с именем RL: дневные счётчики и жалобы.
    Без KV лимиты не считаются, жалобы пишутся в лог Worker'а. */
@@ -94,7 +94,7 @@ async function overLimit(env, device) {
   const kd = 'd:' + day + ':' + device, kg = 'g:' + day;
   const [d, g] = await Promise.all([env.RL.get(kd), env.RL.get(kg)]);
   const nd = +d || 0, ng = +g || 0;
-  if (nd >= (+env.DEVICE_LIMIT || 60) || ng >= (+env.GLOBAL_LIMIT || 1200)) return true;
+  if (nd >= (+env.DEVICE_LIMIT || 60) || ng >= (+env.GLOBAL_LIMIT || 500)) return true;
   await Promise.all([
     env.RL.put(kd, String(nd + 1), { expirationTtl: 172800 }),
     env.RL.put(kg, String(ng + 1), { expirationTtl: 172800 })
