@@ -890,6 +890,9 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hq-bub{background:var(--surface2);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:15px;line-height:1.4}
 .hq-m.me .hq-bub{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:16px 16px 4px 16px}
 .hq-bottom{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+/* клавиатура открыта (onNativeKeyboard): нижняя навигация и отступ под системные кнопки не нужны */
+html.kb .nav{display:none}
+html.kb .hq-bottom{padding-bottom:10px}
 .hq-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
 .hq-chips button{background:var(--surface2);border:1.5px solid var(--line);border-radius:999px;padding:8px 13px;font-size:14px;font-weight:700;color:var(--txt)}
 .hq-chips.days button{width:44px;padding:8px 0}
@@ -5633,6 +5636,8 @@ ru:{
   iOk:{coach:'Принято.', nadia:'Записала.', guru:'Хорошо.', genie:'Записано в свиток! 📜'},
   iSly:{coach:'Хорошая попытка. Вернёмся к цифрам.', nadia:'Интересная мысль. Но давайте вернёмся к цели.',
         guru:'Река тоже любит извиваться. Но течёт к морю.', genie:'Хе-хе, хитро! Но меня не проведёшь 😏'},
+  iAsk:{coach:'Вопросы — потом. Сейчас отвечай на мой.', nadia:'Я умею только составлять план по цели. Давайте вернёмся к вопросу выше.',
+        guru:'Хороший вопрос. Но сегодня спрашиваю я. Ответь на мой.', genie:'Хо-хо, вопросы тут задаю я! 😏 Отвечай на мой — и желание сбудется.'},
 },
 en:{
   name:{coach:'Coach Max', nadia:'Assistant Nadia', guru:'Guru', genie:'Genie'},
@@ -5697,6 +5702,8 @@ en:{
   iOk:{coach:'Got it.', nadia:'Noted.', guru:'Good.', genie:'Written in the scroll! 📜'},
   iSly:{coach:'Nice try. Back to the numbers.', nadia:'Interesting thought. But let’s get back to the goal.',
         guru:'A river likes to wind too. But it flows to the sea.', genie:'Heh, sneaky! But you can’t fool me 😏'},
+  iAsk:{coach:'Questions later. Answer mine first.', nadia:'I can only build a plan for your goal. Let’s get back to the question above.',
+        guru:'A good question. But today I am the one asking. Answer mine.', genie:'Ho-ho, I ask the questions here! 😏 Answer mine and your wish comes true.'},
 },
 };
 
@@ -6183,6 +6190,10 @@ function hqDaysDone(){ if(!hq.g.days.length){ toast(t('gv.oneDay')); return; } h
 function hqSly(){ hq.emo='sly'; hqSay('iSly'); }
 function hqAns(v, chipIdx){
   const g=hq.g; hq.msgs.push({who:'me', text:v});
+  // встречный вопрос вместо ответа — персонаж возвращает к своему
+  if(chipIdx<0 && /[?¿]\s*$/.test(v) && ['goal','why','obst','plan'].includes(hq.step)){
+    hq.emo='sly'; hqSay('iAsk'); hqRender(); return;
+  }
   switch(hq.step){
     case 'goal':
       if(v.length<3){ hqSly(); hqRender(); return; }
@@ -9976,6 +9987,17 @@ function voiceClean(s){
   s = String(s||'').replace(/\s+/g,' ').trim();
   return s.replace(/\b\d(?: \d){2,}\b/g, m=>m.replace(/ /g,''));
 }
+
+/* 1.7.8: APK ужимает WebView над клавиатурой и сообщает об этом сюда */
+window.onNativeKeyboard = function(open){
+  document.documentElement.classList.toggle('kb', !!open);
+  if(!open){ window.scrollTo(0,0); return; }
+  setTimeout(()=>{
+    const ch=document.getElementById('hqChat'); if(ch) ch.scrollTop=ch.scrollHeight;
+    const a=document.activeElement;
+    if(a && a.scrollIntoView && /^(INPUT|TEXTAREA)$/.test(a.tagName)) a.scrollIntoView({block:'nearest'});
+  }, 80);
+};
 
 window.onNativeVoiceResult = function(status, b64){
   const p = voicePending; voicePending = null;

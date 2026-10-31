@@ -44,6 +44,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.speech.RecognizerIntent;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
@@ -155,6 +157,24 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.parseColor("#0f1115"));
         setContentView(webView);
+
+        // ---- КЛАВИАТУРА (1.7.8) ----
+        // При edge-to-edge (LAYOUT_FULLSCREEN, а на Android 15+ всегда) adjustResize
+        // не ужимает окно: клавиатура ложится поверх WebView и закрывает поля внизу
+        // экрана (опрос помощника). Ужимаем сами: нижний отступ контейнера = высота
+        // клавиатуры. Вставки отдаём дальше без изменений — safe-area у страницы
+        // остаётся прежней. Странице сообщаем через onNativeKeyboard(открыта, px).
+        final View content = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            boolean open = insets.isVisible(WindowInsetsCompat.Type.ime());
+            int kb = open ? insets.getInsets(WindowInsetsCompat.Type.ime()).bottom : 0;
+            if (v.getPaddingBottom() != kb) {
+                v.setPadding(0, 0, 0, kb);
+                float d = getResources().getDisplayMetrics().density;
+                callJs("window.onNativeKeyboard&&onNativeKeyboard(" + open + "," + Math.round(kb / d) + ")");
+            }
+            return insets;
+        });
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
