@@ -93,8 +93,9 @@ public class MainActivity extends Activity {
 
     private WebView webView;
 
+    // Путь берётся из сборки: /planner/ у боевой версии, /planner-test/ у тестовой.
     private static final String PAGES_URL =
-        "https://yuriilosiev-png.github.io/planner/index.html";
+        "https://yuriilosiev-png.github.io" + BuildConfig.PAGES_PATH + "index.html";
     private static final String ASSET_URL = "file:///android_asset/index.html";
 
     private volatile boolean loadedOfflineFallback = false;
@@ -331,7 +332,9 @@ public class MainActivity extends Activity {
     private boolean isPagesIndex(Uri u) {
         if (u == null || !PAGES_HOST.equalsIgnoreCase(u.getHost())) return false;
         String path = u.getPath();
-        return "/planner/index.html".equals(path) || "/planner/".equals(path) || "/planner".equals(path);
+        String p = BuildConfig.PAGES_PATH;                     // "/planner/" или "/planner-test/"
+        return (p + "index.html").equals(path) || p.equals(path)
+            || p.substring(0, p.length() - 1).equals(path);
     }
 
     /** Сеть → свежий index.html с Pages; не вышло → офлайн-копия из assets.

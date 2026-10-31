@@ -46,7 +46,7 @@
          ВРЕМЕННО: в 1.8 мигрировать на OnBackInvokedCallback и флаг убрать. -->
     <application
         android:enableOnBackInvokedCallback="false"
-        android:label="Planner"
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar"
         android:hardwareAccelerated="true"
@@ -117,7 +117,7 @@
              виджетов лаунчера. -->
         <receiver
             android:name=".TodayWidget"
-            android:label="Planner"
+            android:label="@string/app_name"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
