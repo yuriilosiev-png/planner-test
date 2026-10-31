@@ -889,6 +889,13 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hq-m.me{align-self:flex-end}
 .hq-bub{background:var(--surface2);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:15px;line-height:1.4}
 .hq-m.me .hq-bub{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:16px 16px 4px 16px}
+.hq-typing{display:flex;gap:5px;padding:13px 14px}
+.hq-typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:hqDot 1.1s infinite}
+.hq-typing i:nth-child(2){animation-delay:.15s}.hq-typing i:nth-child(3){animation-delay:.3s}
+@keyframes hqDot{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+.hq-flag{margin-left:6px;font-size:12px;line-height:1;color:var(--muted);opacity:.55;padding:2px;vertical-align:1px}
+.hq-flag.on{color:#e5484d;opacity:1}
+.hq-ai{font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--cc);color:#fff;margin-right:2px}
 .hq-bottom{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
 /* клавиатура открыта (onNativeKeyboard): нижняя навигация и отступ под системные кнопки не нужны */
 html.kb .nav{display:none}
@@ -4789,7 +4796,7 @@ function buildBackup(){
       rewards: state.rewards || null,
       rewardBuys: state.rewardBuys || [],
       rewardsStart: state.rewardsStart || null,
-      helper: {coach: state.coach || null, style: state.helperStyle || 'normal', freq: (state.helperFreq===undefined?1:state.helperFreq), morning: state.helperMorning!==false}
+      helper: {coach: state.coach || null, style: state.helperStyle || 'normal', freq: (state.helperFreq===undefined?1:state.helperFreq), morning: state.helperMorning!==false, ai: state.helperAI || 'gemini'}
     }
   };
 }
@@ -5027,7 +5034,8 @@ function applyImport(){
     if(Array.isArray(d.rewardBuys)) state.rewardBuys = d.rewardBuys;
     if(d.rewardsStart) state.rewardsStart = d.rewardsStart;
     if(d.helper){ state.coach = d.helper.coach || state.coach; state.helperStyle = d.helper.style || 'normal';
-      state.helperFreq = (d.helper.freq===undefined ? 1 : d.helper.freq); state.helperMorning = d.helper.morning!==false; }
+      state.helperFreq = (d.helper.freq===undefined ? 1 : d.helper.freq); state.helperMorning = d.helper.morning!==false;
+      state.helperAI = d.helper.ai==='off' ? 'off' : 'gemini'; }
     // прогнать миграцию (проставит недостающие поля, нормализует темы)
     if(!state.cats || !state.cats.length) state.cats = JSON.parse(JSON.stringify(DEFAULT_CATS));
     if(!state.themes) state.themes = JSON.parse(JSON.stringify(DEFAULT_THEMES));
@@ -6014,6 +6022,7 @@ function hpInit(){
   if(state.helperStyle===undefined) state.helperStyle='normal';   // soft | normal | strict
   if(state.helperFreq===undefined)  state.helperFreq=1;           // 0 | 1 | 3 реплик в день на других экранах
   if(state.helperMorning===undefined) state.helperMorning=true;
+  if(state.helperAI===undefined) state.helperAI='gemini';         // off | gemini (позже: claude, gpt)
   if(!state.helperSeen || state.helperSeen.date!==todayStr()) state.helperSeen={date:todayStr(), n:0, keys:[]};
   if(state.themes && !state.themes.helper)
     state.themes.helper = JSON.parse(JSON.stringify(state.themes.undone || DEFAULT_THEMES.helper));
@@ -6091,6 +6100,9 @@ function hpSettingsHTML(){
     <label class="th-label">${t('hp.sFreq')}</label>
     ${seg('helperFreq',[{v:0,l:t('hp.f0')},{v:1,l:t('hp.f1')},{v:3,l:t('hp.f3')}])}
     <label class="hp-row"><span>${t('hp.sMorning')}</span><input type="checkbox" ${state.helperMorning?'checked':''} onchange="hpSet('helperMorning',this.checked)"></label>
+    ${HP_AI_URL ? `<label class="th-label">${t('hp.sAI')}</label>
+    ${seg('helperAI',[{v:'off',l:t('hp.aiOff')},{v:'gemini',l:'Gemini'}])}
+    <div class="hp-hint">${t(state.helperAI==='off' ? 'hp.aiHintOff' : 'hp.aiHint')}</div>` : ''}
   </details>`;
 }
 function hpSet(key,val){ state[key]=val; save(); renderHelper(); }
@@ -6133,6 +6145,64 @@ function hpCheck(){
 /* ---------- опрос «новая цель» ---------- */
 let hq=null;
 const HQ_ORDER=['goal','why','num','when','days','obst','plan','sum'];
+/* ===== 1.7.8: AI в опросе =====
+   Свободный ответ уходит в Cloudflare Worker planner-ai (worker/planner-ai.js),
+   тот спрашивает Gemini: персонаж отвечает в своём стиле и достаёт значение
+   (название цели, число, единицу…). Нет адреса / нет сети / ошибка / лимит —
+   тот же ответ обрабатывает обычный сценарий, опрос не ломается. Чипы идут
+   мимо AI: там значение и так известно. */
+const HP_AI_URL = '';
+const HQ_AI_STEPS = ['goal','why','num','obst','plan'];
+let hpAILimitShown = false;
+function hpAIOn(){ return !!HP_AI_URL && state.helperAI!=='off' && navigator.onLine!==false; }
+function hpDev(){
+  try{
+    let d=localStorage.getItem('planner_dev');
+    if(!d){ d=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('planner_dev',d); }
+    return d;
+  }catch(e){ return 'nostore'; }
+}
+async function hpAI(path, body){
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 15000);
+  try{
+    const res=await fetch(HP_AI_URL+path, {method:'POST', signal:ctl.signal, headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({lang:curLang(), persona:state.coach, style:state.helperStyle, model:state.helperAI, device:hpDev()}, body))});
+    if(res.status===429){ if(!hpAILimitShown){ hpAILimitShown=true; toast(t('hp.aiLimit')); } return null; }
+    const j=await res.json().catch(()=>null);
+    return (res.ok && j) ? j : null;
+  }catch(e){ return null; }
+  finally{ clearTimeout(tm); }
+}
+async function hqAsk(v, shown){
+  const step=hq.step, run=hq;
+  const q=[...hq.msgs].reverse().find(m=>m.who==='bot' && !m.ai);
+  hq.busy=true; hq.emo='think';
+  hq.msgs.push({who:'me', text:shown||v}); hq.msgs.push({who:'bot', typing:true}); hqRender();
+  const r = await hpAI('/interview', {step, question:q?q.text:'', answer:v, goal:{title:hq.g.title, why:hq.g.why},
+    units:t('hp.units'), unit:hq.g.unit, tip:hq.tip||''});
+  if(hq!==run) return;                       // опрос закрыли или начали заново
+  hq.busy=false; hq.msgs=hq.msgs.filter(m=>!m.typing);
+  if(!r || typeof r.reply!=='string' || !r.reply.trim()){ hq.msgs.pop(); hqAns(shown||v, -1); return; }
+  hq.msgs.push({who:'bot', text:r.reply, ai:true, step, answer:v});
+  if(!r.ok){ hq.emo='sly'; hqRender(); return; }
+  hq.emo='happy';
+  const g=hq.g, val=String(r.value||'').trim();
+  switch(step){
+    case 'goal': g.title=(val||v).slice(0,80); g.type=r.type||null; hqNext('why'); break;
+    case 'why':  g.why=(val||v).slice(0,200); hqNext('num'); break;
+    case 'num': {
+      const n = r.num>0 ? r.num : hqNum(v);
+      if(!(n>0)){ hq.emo='sly'; hqRender(); return; }
+      g.target=n; if(r.unit) g.unit=r.unit.slice(0,16); hqNext('when'); break; }
+    case 'obst': g.obst=(val||v).slice(0,100); hq.tip=r.tip||t('hp.tipDefault'); hqNext('plan'); break;
+    case 'plan': g.plan=(val||hq.tip).slice(0,120); hqFinish(); break;
+  }
+}
+function hqFlag(i){
+  const m=hq.msgs[i]; if(!m || !m.ai || m.flagged) return;
+  m.flagged=true; hqRender(); toast(t('hp.aiThanks'));
+  hpAI('/report', {step:m.step, answer:m.answer, reply:m.text});
+}
 function hpStart(){
   if(!state.coach) return;
   hq={step:'goal', emo:'hello', msgs:[], g:{title:'', why:'', target:0, unit:'', deadline:'', days:[0,1,2,3,4], obst:'', plan:'', type:null}};
@@ -6142,8 +6212,10 @@ function hqSay(key, vars){ hq.msgs.push({who:'bot', text:hpLine(key, state.coach
 function hqNext(step){ hq.step=step; hq.emo='think'; hqSay('i'+step.charAt(0).toUpperCase()+step.slice(1), step==='plan'?{tip:hq.tip}:null); hqRender(); }
 function hqRender(){
   const p=state.coach, c=HP[p];
-  const msgs = hq.msgs.map(m=> m.who==='bot'
-    ? `<div class="hq-m bot"><div class="hq-bub">${esc(m.text)}</div></div>`
+  const msgs = hq.msgs.map((m,i)=> m.typing
+    ? `<div class="hq-m bot"><div class="hq-bub hq-typing"><i></i><i></i><i></i></div></div>`
+    : m.who==='bot'
+    ? `<div class="hq-m bot"><div class="hq-bub">${esc(m.text)}${m.ai?`<button class="hq-flag${m.flagged?' on':''}" onclick="hqFlag(${i})" aria-label="${esc(t('hp.aiReport'))}" title="${esc(t('hp.aiReport'))}">⚑</button>`:''}</div></div>`
     : `<div class="hq-m me"><div class="hq-bub">${esc(m.text)}</div></div>`).join('');
   const chips=(arr)=>`<div class="hq-chips">${arr.map((x,i)=>`<button onclick="hqChip(${i})">${esc(x)}</button>`).join('')}</div>`;
   const field=(ph,type)=>`<div class="hq-in"><input id="hqIn" type="${type||'text'}" placeholder="${esc(ph)}" onkeydown="if(event.key==='Enter')hqSend()"><button onclick="hqSend()">➤</button></div>`;
@@ -6161,17 +6233,19 @@ function hqRender(){
     case 'sum':  input=`<div class="hq-row2"><button class="hq-ghost" onclick="hpStart()">${t('hp.again')}</button><button class="hq-go" onclick="hqCreate()">${t('hp.create')}</button></div>`; break;
   }
   const i=HQ_ORDER.indexOf(hq.step);
-  hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b><span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
+  hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hpAIOn()?'<span class="hq-ai">AI</span>':''}<span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
     <div class="hq-stage"><img class="hq-fig" src="${hpImg(p,hq.emo)}" alt=""><div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
     <div class="hq-bottom">${input}</div>`);
   const ch=document.getElementById('hqChat'); if(ch) ch.scrollTop=ch.scrollHeight;
 }
-function hqChip(i){ hqAns(hq.chips[i], i); }
+function hqChip(i){ if(hq.busy) return; hqAns(hq.chips[i], i); }
 function hqSend(){
   const el=document.getElementById('hqIn'); if(!el||!String(el.value).trim()) return;
-  let v=String(el.value).trim();
-  if(hq.step==='num'){ hq.g.unit=document.getElementById('hqUnit').value; v=v+' '+hq.g.unit; }
-  hqAns(v, -1);
+  if(hq.busy) return;
+  let v=String(el.value).trim(), shown=v;
+  if(hq.step==='num'){ hq.g.unit=document.getElementById('hqUnit').value; if(/^[\d\s.,]+$/.test(v)) shown=v+' '+hq.g.unit; }
+  if(hpAIOn() && HQ_AI_STEPS.includes(hq.step)){ hqAsk(v, shown); return; }
+  hqAns(shown, -1);
 }
 /* число из ввода или диктовки: «150 000», «1,5», «150 тысяч», «2 млн», «10k» */
 function hqNum(v){
@@ -6271,6 +6345,10 @@ Object.assign(I18N.ru, {
   'hp.styleHint.soft':'Только поддерживает, без строгих слов.', 'hp.styleHint.normal':'Хвалит за выполненное, с 2-го дня пропусков становится строже.',
   'hp.styleHint.strict':'Строгий уже после первого пропуска.',
   'hp.sFreq':'Реплики на других экранах', 'hp.f0':'Нет', 'hp.f1':'Раз в день', 'hp.f3':'До 3 в день', 'hp.sMorning':'Утреннее слово при открытии',
+  'hp.sAI':'Кто отвечает в опросе', 'hp.aiOff':'Сценарий',
+  'hp.aiHint':'Отвечает AI (Google Gemini): ваши ответы в опросе отправляются в Google. Без интернета — обычный сценарий. ⚑ у ответа — пожаловаться.',
+  'hp.aiHintOff':'Готовый сценарий: без интернета и AI.',
+  'hp.aiLimit':'Лимит AI на сегодня исчерпан — дальше по сценарию', 'hp.aiReport':'Пожаловаться на ответ', 'hp.aiThanks':'Спасибо, жалоба отправлена',
   'hp.goals':['Накопить на поездку','Бегать 3 раза в неделю','Читать каждый день','Выучить язык'],
   'hp.goalPh':'Своя цель…', 'hp.whyPh':'Что изменится…', 'hp.skip':'Пропустить', 'hp.numPh':'Сколько',
   'hp.units':['₽','$','€','км','раз','страниц','минут','часов'],
@@ -6288,6 +6366,10 @@ Object.assign(I18N.en, {
   'hp.styleHint.soft':'Only supportive, no strict words.', 'hp.styleHint.normal':'Praises what’s done, gets stricter from the 2nd missed day.',
   'hp.styleHint.strict':'Strict right after the first miss.',
   'hp.sFreq':'Messages on other screens', 'hp.f0':'None', 'hp.f1':'Once a day', 'hp.f3':'Up to 3 a day', 'hp.sMorning':'Morning word on opening',
+  'hp.sAI':'Who answers in the interview', 'hp.aiOff':'Script',
+  'hp.aiHint':'AI answers (Google Gemini): your interview answers are sent to Google. Offline — the usual script. ⚑ on a reply — report it.',
+  'hp.aiHintOff':'Ready-made script: no internet, no AI.',
+  'hp.aiLimit':'Today’s AI limit is used up — continuing with the script', 'hp.aiReport':'Report this reply', 'hp.aiThanks':'Thanks, the report was sent',
   'hp.goals':['Save for a trip','Run 3 times a week','Read every day','Learn a language'],
   'hp.goalPh':'Your own goal…', 'hp.whyPh':'What will change…', 'hp.skip':'Skip', 'hp.numPh':'How much',
   'hp.units':['$','€','£','km','times','pages','minutes','hours'],
