@@ -19,7 +19,7 @@ CI этот код не собирает — он вставляется в Clou
 
 | Имя | По умолчанию | Что |
 |---|---|---|
-| `MODEL` | `gemini-2.5-flash` | модель Gemini |
+| `MODEL` | `gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash` | модели через запятую: первая не ответила — пробуется следующая |
 | `DEVICE_LIMIT` | `60` | запросов в день на устройство |
 | `GLOBAL_LIMIT` | `1200` | запросов в день на всех |
 | `ORIGINS` | `https://yuriilosiev-png.github.io,null` | откуда разрешены запросы (`null` — офлайн-копия в APK) |

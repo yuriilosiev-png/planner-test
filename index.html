@@ -6163,7 +6163,7 @@ function hpDev(){
   }catch(e){ return 'nostore'; }
 }
 async function hpAI(path, body){
-  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 15000);
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 20000);
   try{
     const res=await fetch(HP_AI_URL+path, {method:'POST', signal:ctl.signal, headers:{'Content-Type':'application/json'},
       body:JSON.stringify(Object.assign({lang:curLang(), persona:state.coach, style:state.helperStyle, model:state.helperAI, device:hpDev()}, body))});

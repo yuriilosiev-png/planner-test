@@ -7,7 +7,8 @@
 
    Переменные окружения (Settings → Variables):
      GEMINI_KEY   (секрет, обязательно) — ключ из Google AI Studio
-     MODEL        модель Gemini, по умолчанию gemini-2.5-flash
+     MODEL        модели Gemini через запятую, по очереди при ошибке;
+                  по умолчанию gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
      DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 60
      GLOBAL_LIMIT запросов в день на всех, по умолчанию 1200
      ORIGINS      разрешённые Origin через запятую
@@ -101,10 +102,22 @@ async function overLimit(env, device) {
   return false;
 }
 
-async function gemini(env, sys, user) {
-  const model = env.MODEL || 'gemini-2.5-flash';
+/* Модели пробуются по очереди: первая не ответила (нет такой модели, кончилась
+   бесплатная квота, перегрузка) — берём следующую. Для каждой модели сначала
+   просим не «думать» (быстрее и дешевле), а если модель такой параметр не
+   принимает — повторяем без него. */
+const DEF_MODELS = 'gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash';
+
+async function callModel(env, model, sys, user, thinking) {
+  const gc = {
+    temperature: 0.8,
+    maxOutputTokens: 400,
+    responseMimeType: 'application/json',
+    responseSchema: SCHEMA
+  };
+  if (thinking) gc.thinkingConfig = /^gemini-[3-9]/.test(model) ? { thinkingLevel: 'minimal' } : { thinkingBudget: 0 };
   const ctl = new AbortController();
-  const tm = setTimeout(() => ctl.abort(), 12000);
+  const tm = setTimeout(() => ctl.abort(), 7000);
   try {
     const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
       method: 'POST',
@@ -113,26 +126,33 @@ async function gemini(env, sys, user) {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: sys }] },
         contents: [{ role: 'user', parts: [{ text: user }] }],
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 400,
-          responseMimeType: 'application/json',
-          responseSchema: SCHEMA,
-          thinkingConfig: { thinkingBudget: 0 }
-        }
+        generationConfig: gc
       })
     });
-    if (!r.ok) { console.log('gemini', r.status, (await r.text()).slice(0, 500)); return null; }
+    if (!r.ok) {
+      console.log('gemini', model, thinking ? 'think-off' : 'plain', r.status, (await r.text()).slice(0, 300));
+      return { status: r.status };
+    }
     const j = await r.json();
     const txt = j && j.candidates && j.candidates[0] && j.candidates[0].content &&
       j.candidates[0].content.parts && j.candidates[0].content.parts.map(p => p.text || '').join('');
-    return txt ? JSON.parse(txt) : null;
+    return { out: txt ? JSON.parse(txt) : null };
   } catch (e) {
-    console.log('gemini error', String(e));
-    return null;
+    console.log('gemini error', model, String(e));
+    return { status: 0 };
   } finally {
     clearTimeout(tm);
   }
+}
+
+async function gemini(env, sys, user) {
+  const models = (env.MODEL || DEF_MODELS).split(',').map(s => s.trim()).filter(Boolean);
+  for (const m of models) {
+    let r = await callModel(env, m, sys, user, true);
+    if (r.status === 400) r = await callModel(env, m, sys, user, false);
+    if (r.out) return r.out;
+  }
+  return null;
 }
 
 export default {
