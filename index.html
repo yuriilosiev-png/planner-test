@@ -476,7 +476,7 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 /* Голосовой ввод (1.7.4): микрофон внутри текстового поля.
    Обёртка .vwrap ставится скриптом только на устройствах с распознавателем. */
 .vwrap{position:relative;display:block}
-.wp-item .vwrap{flex:1;min-width:0}
+.wp-item .vwrap,.hq-in .vwrap{flex:1;min-width:0}
 .vwrap>input.vin,.vwrap>textarea.vin{width:100%;padding-right:42px}
 .vmic{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:34px;height:34px;
   border:0;border-radius:50%;background:transparent;color:var(--accent);padding:0;
@@ -898,6 +898,7 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hq-in input,.hq-in select{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface2);color:var(--txt);font-size:15px}
 .hq-in select{flex:0 0 92px}
 .hq-in button{width:46px;border-radius:12px;background:var(--accent);color:#fff;font-size:18px}
+.hq-in .vmic{width:34px;border-radius:50%;background:transparent;color:var(--accent)}
 .hq-go{width:100%;background:var(--accent);color:#fff;font-weight:800;border-radius:12px;padding:12px;font-size:15.5px}
 .hq-ghost{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:800;font-size:15.5px;color:var(--txt)}
 .hq-row2{display:grid;grid-template-columns:1fr 2fr;gap:8px}
@@ -6144,7 +6145,7 @@ function hqRender(){
   switch(hq.step){
     case 'goal': hq.chips=t('hp.goals'); input=chips(hq.chips)+field(t('hp.goalPh')); break;
     case 'why':  hq.chips=[t('hp.skip')]; input=chips(hq.chips)+field(t('hp.whyPh')); break;
-    case 'num':  input=`<div class="hq-in"><input id="hqIn" type="number" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
+    case 'num':  input=`<div class="hq-in"><input id="hqIn" type="text" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
     case 'when': hq.chips=t('hp.whens').map(w=>w[0]); input=chips(hq.chips); break;
     case 'days': input=`<div class="hq-chips days">${WEEKDAYS.map((w,i)=>`<button class="${hq.g.days.includes(i)?'on':''}" onclick="hqDay(${i})">${w}</button>`).join('')}</div>
                  <button class="hq-go" onclick="hqDaysDone()">${t('hp.ready')}</button>`; break;
@@ -6165,6 +6166,16 @@ function hqSend(){
   if(hq.step==='num'){ hq.g.unit=document.getElementById('hqUnit').value; v=v+' '+hq.g.unit; }
   hqAns(v, -1);
 }
+/* число из ввода или диктовки: «150 000», «1,5», «150 тысяч», «2 млн», «10k» */
+function hqNum(v){
+  const s=String(v).toLowerCase().replace(/\u00a0/g,' ');
+  const m=s.match(/\d[\d\s]*(?:[.,]\d+)?/); if(!m) return NaN;
+  let n=parseFloat(m[0].replace(/\s/g,'').replace(',','.'));
+  const rest=s.slice(m.index+m[0].length);
+  if(/^\s*(тыс|thousand|k\b|к\b)/.test(rest)) n*=1e3;
+  else if(/^\s*(млн|миллион|million|m\b|mln)/.test(rest)) n*=1e6;
+  return n;
+}
 function hqDay(i){ const d=hq.g.days, k=d.indexOf(i); if(k<0) d.push(i); else d.splice(k,1); d.sort(); hqRender(); }
 function hqDaysTxt(){ return hq.g.days.length===7 ? t('hp.everyDay') : hq.g.days.map(i=>WEEKDAYS[i]).join(', '); }
 function hqDaysDone(){ if(!hq.g.days.length){ toast(t('gv.oneDay')); return; } hqAns(hqDaysTxt(), -1); }
@@ -6181,7 +6192,7 @@ function hqAns(v, chipIdx){
       if(chipIdx===0){ g.why=''; hqSly(); setTimeout(()=>hqNext('num'),900); hqRender(); return; }
       g.why=v; hqNext('num'); break;
     case 'num': {
-      const n=parseFloat(String(v).replace(',','.'));
+      const n=hqNum(v);
       if(!(n>0)){ hqSly(); hqRender(); return; }
       g.target=n; hqNext('when'); break; }
     case 'when': {
@@ -9884,7 +9895,7 @@ let toastTimer=null;
    Поля выбраны по селектору, а не правкой каждого шаблона: разметку
    модалок строят десятки функций, обёртку ставит MutationObserver.
    g-unit и newcat исключены намеренно — там 2-3 символа. */
-const VOICE_SEL = '#g-name,#g-vision,#tk-title,#vis-text,#tn-title,#tne-name,#tne-vision,'
+const VOICE_SEL = '#g-name,#g-vision,#tk-title,#vis-text,#tn-title,#tne-name,#tne-vision,#hqIn,'
   + '#tr-title,#ev-title,#ev-note,input[oninput^="splitEdit("],input[oninput^="wpEdit("]';
 const VOICE_LANG_TAG = {ru:'ru-RU', en:'en-US', es:'es-419', pt:'pt-BR', de:'de-DE', fr:'fr-FR'};
 const VOICE_MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
