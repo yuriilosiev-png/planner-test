@@ -260,6 +260,19 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .wel-btns button{padding:15px;border-radius:12px;font-size:15px;font-weight:700}
 .wel-btns .primary{background:var(--accent);color:#fff}
 .wel-btns .ghost{background:var(--surface2);border:1px solid var(--line)}
+/* 1.7.8: яркий баннер помощников в приветствии */
+.wel-hp{margin:-4px -4px 0;border-radius:18px;padding:16px 14px 0;color:#fff;overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 110%,rgba(255,255,255,.35),transparent 60%),linear-gradient(135deg,#ff8a3d 0%,#ff4f7b 45%,#7a5cff 100%);
+  box-shadow:0 10px 26px rgba(122,92,255,.35)}
+.wel-hp-t{font-size:21px;font-weight:900;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.25)}
+.wel-hp-s{font-size:14px;line-height:1.35;margin-top:6px;opacity:.95}
+.wel-hp-team{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:6px}
+.wel-hp-team button{display:flex;flex-direction:column;align-items:center;gap:0;padding:0 0 10px;background:none;color:#fff;min-width:0}
+.wel-hp-team img{height:150px;width:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35));transition:transform .15s}
+.wel-hp-team button:active img{transform:scale(1.06) translateY(-4px)}
+.wel-hp-team b{font-size:11px;font-weight:800;line-height:1.15;margin-top:4px;padding:3px 6px;
+  background:color-mix(in srgb,var(--cc) 70%,#000);max-width:100%;text-align:center;border-radius:9px}
+.wel-or{text-align:center;color:var(--muted);font-size:13px;margin-top:14px}
 .tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
 .tpl-grid button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:14px;
   background:var(--surface2);border:1px solid var(--line);font-size:14px;font-weight:700;line-height:1.25}
@@ -1549,6 +1562,9 @@ ru:{
   'wel.text':'Посмотрите, как выглядит приложение после месяца использования, или сразу начните со своей цели.',
   'wel.demo':'Посмотреть на примере',
   'wel.scratch':'Начать с нуля',
+  'wel.hpT':'🎯 Создай первую цель с помощником',
+  'wel.hpSub':'Выбери персонажа — он задаст 7 вопросов и превратит желание в план на каждый день.',
+  'wel.or':'или',
   'wel.offline':'Для примера нужен интернет. Начните с нуля или попробуйте позже.',
   'demo.bar':'🧪 Это пример',
   'demo.start':'Начать своё',
@@ -2036,6 +2052,9 @@ en:{
   'wel.text':'See what the app looks like after a month of use, or start right away with your own goal.',
   'wel.demo':'Explore an example',
   'wel.scratch':'Start from scratch',
+  'wel.hpT':'🎯 Create your first goal with a helper',
+  'wel.hpSub':'Pick a character — 7 questions and your wish becomes a day-by-day plan.',
+  'wel.or':'or',
   'wel.offline':'The example needs an internet connection. Start from scratch or try later.',
   'demo.bar':'🧪 This is an example',
   'demo.start':'Start my own',
@@ -6071,7 +6090,7 @@ function renderHelper(){
         <button class="hp-go" onclick="hpStart()">🎯 ${t('hp.newGoal')}</button></div>
     </div>`;
   }
-  el.innerHTML = hero + `<div id="hpRewards"></div>` + hpSettingsHTML();
+  el.innerHTML = hero + hpSettingsHTML() + `<div id="hpRewards"></div>`;
   renderRewards();
 }
 /* тап по персонажу — Джин шутит, остальные повторяют реплику дня с другой фразой */
@@ -7415,12 +7434,23 @@ function openWelcome(){
   if(state.demo || stateHasData(state)) return;   // данные уже появились (импорт, перенос)
   _welcomeOpen=true;
   showModal(`
-    <h2>${tr('wel.title')}</h2>
-    <div class="hint" style="margin-top:0">${tr('wel.text')}</div>
+    <div class="wel-hp">
+      <div class="wel-hp-t">${t('wel.hpT')}</div>
+      <div class="wel-hp-s">${t('wel.hpSub')}</div>
+      <div class="wel-hp-team">${HP_LIST.map(id=>`<button onclick="welHelper('${id}')" style="--cc:${HP[id].color}">
+        <img src="${hpImg(id,'hello')}" alt=""><b>${esc(hpName(id))}</b></button>`).join('')}</div>
+    </div>
+    <div class="wel-or">${t('wel.or')}</div>
     <div class="wel-btns">
-      <button class="primary" onclick="startDemo()">${tr('wel.demo')}</button>
+      <button class="ghost" onclick="startDemo()">${tr('wel.demo')}</button>
       <button class="ghost" onclick="_welcomeOpen=false;openTemplates()">${tr('wel.scratch')}</button>
     </div>`);
+}
+/* 1.7.8: тап по персонажу в приветствии — выбрать его и сразу начать опрос по цели */
+function welHelper(id){
+  _welcomeOpen=false; closeModal();
+  state.coach=id; hpInit(); save();
+  switchScreen('helper'); hpStart();
 }
 function shiftDemoDates(obj, delta){
   const walk=o=>{
