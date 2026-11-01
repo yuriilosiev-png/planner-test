@@ -6209,7 +6209,7 @@ function hpFigHTML(p, emo, imgCls, still, attrs){
 /* 1.7.8: моргание. Для картинок из списка есть кадры -b1 (веки прикрыты) и -b2 (закрыты),
    нарисованные поверх оригинала, — поза и размер те же. Раз в 2,5–6 с один видимый
    персонаж моргает: b1 → b2 → b1 → исходник. Кадры подгружаются заранее. */
-const HP_BLINK = new Set(["coach-hello", "coach-proud", "coach-sad", "coach-sly", "coach-strict", "coach-think", "genie-happy", "genie-hello", "genie-proud", "genie-sad", "genie-sly", "genie-think", "guru-hello", "guru-proud", "guru-sad", "guru-sly", "guru-stern", "nadia-hello", "nadia-proud", "nadia-sad", "nadia-sly", "nadia-think"]);
+const HP_BLINK = new Set(["coach-hello", "coach-proud", "coach-sad", "coach-sly", "coach-strict", "coach-think", "genie-happy", "genie-hello", "genie-proud", "genie-sad", "genie-sly", "genie-tease", "genie-think", "guru-hello", "guru-proud", "guru-sad", "guru-sly", "guru-stern", "nadia-hello", "nadia-mystery", "nadia-proud", "nadia-sad", "nadia-sly", "nadia-think"]);
 const hpBlinkCache = {};
 function hpBlinkLoad(src){
   if(hpBlinkCache[src]) return hpBlinkCache[src];
