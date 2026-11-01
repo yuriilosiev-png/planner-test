@@ -869,6 +869,20 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hp-team.sm .hp-mate img{height:78px}
 .hp-team.sm .hp-mate b{font-size:11px}
 .hp-set{margin:16px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+/* 1.7.8: цели глазами помощника */
+.hp-gl{margin:14px 0 6px}
+.hp-gl-t{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 4px 8px}
+.hp-gc{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--r);padding:11px 13px;margin-bottom:8px}
+.hp-gc.st-good{border-left-color:var(--ok)} .hp-gc.st-new{border-left-color:#7cc46a} .hp-gc.st-ok{border-left-color:var(--muted)}
+.hp-gc.st-miss{border-left-color:#f5b301} .hp-gc.st-behind{border-left-color:#ff8a3d} .hp-gc.st-lost{border-left-color:var(--danger)}
+.hp-gc-top{display:flex;align-items:center;gap:8px}
+.hp-gc-top b{flex:1;min-width:0;font-size:15px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp-gc-ic{font-size:17px}
+.hp-gc-st{font-size:11.5px;font-weight:800;color:var(--muted);background:var(--surface2);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.hp-gc-line{font-size:14px;line-height:1.4;margin-top:6px;color:var(--txt)}
+.hp-gc-btns{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.hp-gc-btns button{flex:1;min-width:0;padding:9px 6px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-weight:700;font-size:13.5px;color:var(--txt)}
+.hp-gc-btns .hp-gc-go{flex:1 1 100%;background:var(--cc);border-color:var(--cc);color:#fff}
 .hp-set summary{font-weight:800;font-size:15px;cursor:pointer}
 .hp-set .th-label{display:block;margin-top:12px}
 .hp-seg{display:flex;gap:6px;margin-top:6px}
@@ -5663,6 +5677,22 @@ ru:{
   iOk:{coach:'Принято.', nadia:'Записала.', guru:'Хорошо.', genie:'Записано в свиток! 📜'},
   iSly:{coach:'Хорошая попытка. Вернёмся к цифрам.', nadia:'Интересная мысль. Но давайте вернёмся к цели.',
         guru:'Река тоже любит извиваться. Но течёт к морю.', genie:'Хе-хе, хитро! Но меня не проведёшь 😏'},
+  gGood:{coach:'«{g}»: выполнено {r}% за две недели. Так держать.', nadia:'По цели «{g}» всё идёт по плану — выполнено {r}%. Отличная работа.',
+         guru:'«{g}» растёт ровно, как дерево у воды. {r}% — хороший путь.', genie:'«{g}» — {r}%! Лампа светится от гордости ✨'},
+  gOk:{coach:'«{g}»: выполнено {r}%. Можно лучше.', nadia:'«{g}»: выполнено {r}%. Неплохо, есть куда расти.',
+       guru:'«{g}»: {r}%. Путь идёт, хоть и с остановками.', genie:'«{g}»: {r}% — волшебство в процессе!'},
+  gNew:{coach:'«{g}»: старт взят. Первые дни решают.', nadia:'«{g}» только начата — я слежу за прогрессом.',
+        guru:'«{g}»: семя посажено. Поливай каждый день.', genie:'«{g}» — свежее желание! Первые шаги самые волшебные.'},
+  gMiss:{coach:'«{g}»: пропусков подряд — {n}. Разберём, что мешает?', nadia:'По цели «{g}» пропусков подряд: {n}. Давайте проработаем её ещё раз?',
+         guru:'«{g}» ждёт тебя уже {n} дн. Может, тропа слишком крутая?', genie:'Ой-ой, «{g}» скучает уже {n} дн.! Поколдуем над планом?'},
+  gBehind:{coach:'«{g}»: отстаёшь от плана на {d} {u}. Догоняй или меняем план.', nadia:'«{g}» отстаёт от плана на {d} {u}. Можно скорректировать срок или норму.',
+           guru:'«{g}»: до плана не хватает {d} {u}. Не беда — путь можно выпрямить.', genie:'«{g}» отстаёт на {d} {u}. Подкрутим заклинание?'},
+  gLost:{coach:'«{g}»: тишина {n} дн. Либо возвращаемся, либо честно вычёркиваем.', nadia:'К цели «{g}» вы не возвращались {n} дн. Перепланируем или удалим?',
+         guru:'«{g}» молчит {n} дн. Иногда отпустить — тоже путь.', genie:'«{g}» пылится в лампе {n} дн.! Оживим или отпустим?'},
+  iRe:{coach:'Что пошло не так? Говори прямо — подгоним план.', nadia:'Расскажите, что мешает, — и я подстрою план под вашу жизнь.',
+       guru:'Что встало на пути? Расскажи — найдём тропу полегче.', genie:'Что сломало заклинание? Расскажи — переколдуем!'},
+  iReS:{coach:'Пройдёмся по плану. Оставляем цифру или меняем?', nadia:'Давайте пройдёмся по плану. Цель оставляем прежней или меняем?',
+        guru:'Посмотрим на путь заново. Вершина та же?', genie:'Переколдуем! Желание оставляем прежним?'},
   iAsk:{coach:'Вопросы — потом. Сейчас отвечай на мой.', nadia:'Я умею только составлять план по цели. Давайте вернёмся к вопросу выше.',
         guru:'Хороший вопрос. Но сегодня спрашиваю я. Ответь на мой.', genie:'Хо-хо, вопросы тут задаю я! 😏 Отвечай на мой — и желание сбудется.'},
 },
@@ -5729,6 +5759,22 @@ en:{
   iOk:{coach:'Got it.', nadia:'Noted.', guru:'Good.', genie:'Written in the scroll! 📜'},
   iSly:{coach:'Nice try. Back to the numbers.', nadia:'Interesting thought. But let’s get back to the goal.',
         guru:'A river likes to wind too. But it flows to the sea.', genie:'Heh, sneaky! But you can’t fool me 😏'},
+  gGood:{coach:'“{g}”: {r}% done in two weeks. Keep it up.', nadia:'“{g}” is on track — {r}% done. Great work.',
+         guru:'“{g}” grows steadily, like a tree by the water. {r}% — a good path.', genie:'“{g}” — {r}%! The lamp glows with pride ✨'},
+  gOk:{coach:'“{g}”: {r}% done. You can do better.', nadia:'“{g}”: {r}% done. Not bad, there’s room to grow.',
+       guru:'“{g}”: {r}%. The path goes on, with some stops.', genie:'“{g}”: {r}% — magic in progress!'},
+  gNew:{coach:'“{g}”: you’ve started. The first days decide.', nadia:'“{g}” has just started — I’m keeping track.',
+        guru:'“{g}”: the seed is planted. Water it every day.', genie:'“{g}” — a fresh wish! First steps are the most magical.'},
+  gMiss:{coach:'“{g}”: {n} misses in a row. Let’s see what’s in the way?', nadia:'“{g}” has {n} misses in a row. Shall we rework it?',
+         guru:'“{g}” has waited for you {n} days. Maybe the trail is too steep?', genie:'Oh no, “{g}” has been lonely for {n} days! Shall we tweak the spell?'},
+  gBehind:{coach:'“{g}”: {d} {u} behind plan. Catch up or we change the plan.', nadia:'“{g}” is {d} {u} behind plan. We can adjust the deadline or the norm.',
+           guru:'“{g}”: {d} {u} short of the plan. No matter — the path can be straightened.', genie:'“{g}” is {d} {u} behind. Shall we tune the spell?'},
+  gLost:{coach:'“{g}”: silent for {n} days. Either we come back or honestly cross it out.', nadia:'You haven’t returned to “{g}” for {n} days. Replan or delete?',
+         guru:'“{g}” has been silent for {n} days. Letting go is a path too.', genie:'“{g}” has gathered dust in the lamp for {n} days! Revive or release?'},
+  iRe:{coach:'What went wrong? Tell me straight — we’ll fit the plan.', nadia:'Tell me what gets in the way, and I’ll fit the plan to your life.',
+       guru:'What stands in your way? Tell me — we’ll find an easier trail.', genie:'What broke the spell? Tell me — we’ll recast it!'},
+  iReS:{coach:'Let’s go through the plan. Keep the number or change it?', nadia:'Let’s go through the plan. Keep the goal as it is or change it?',
+        guru:'Let’s look at the path again. Same summit?', genie:'Recasting time! Keep the wish as it is?'},
   iAsk:{coach:'Questions later. Answer mine first.', nadia:'I can only build a plan for your goal. Let’s get back to the question above.',
         guru:'A good question. But today I am the one asking. Answer mine.', genie:'Ho-ho, I ask the questions here! 😏 Answer mine and your wish comes true.'},
 },
@@ -6070,6 +6116,75 @@ function hpMood(p){
   return {emo:'hello', key:'hello'};
 }
 
+/* ---------- 1.7.8: взгляд помощника на цели ----------
+   Только по данным в телефоне, без ИИ: задачи цели за 14 дней, пропуски подряд,
+   дни без активности, темп (для числовых — факт против плана).
+   Порядок важности: забыта → пропуски → отставание → старт → в процессе → по плану.
+   «Оставить» прячет предупреждения по цели на 7 дней (state.hpSnooze). */
+const HP_G_ORDER = {lost:0, miss:1, behind:2, new:3, ok:4, good:5};
+const HP_G_ICON  = {lost:'💤', miss:'⚠️', behind:'🐢', new:'🌱', ok:'🙂', good:'🔥'};
+function hpTaskDone(t){ return rwTaskPoints(t).got>0; }
+function hpGoalProgress(g){
+  // для числовых: сколько уже пройдено — факт, отмеченные задачи (их значение по плану) или старт
+  let v = Number(g.start)||0;
+  if(g.factValue!==null && g.factValue!==undefined && g.factValue!=='' && !isNaN(Number(g.factValue))) v = Number(g.factValue);
+  state.tasks.forEach(t=>{ if(t.goalId===g.id && t.segmentVal!=null && hpTaskDone(t)){
+    const sv=Number(t.segmentVal); if(!isNaN(sv) && (g.target>=g.start ? sv>v : sv<v)) v=sv; } });
+  return v;
+}
+function hpGoalStat(g){
+  // после перепланирования счёт начинается заново — старые пропуски не в счёт
+  const T=todayStr(), c0=g.createdDate||T, created = (g.replanned && g.replanned>c0) ? g.replanned : c0;
+  const age=Math.max(0, daysBetween(created,T));
+  const from = addDays(T,-14) > created ? addDays(T,-14) : created;
+  const past = state.tasks.filter(t=>t.goalId===g.id && t.date<T && t.date>=created).sort((a,b)=>a.date<b.date?1:-1);
+  const todayDone = state.tasks.some(t=>t.goalId===g.id && t.date===T && hpTaskDone(t));
+  let chain=0; if(!todayDone) for(const t of past){ if(hpTaskDone(t)) break; chain++; }
+  const last = past.find(hpTaskDone);
+  const quiet = todayDone ? 0 : daysBetween(last ? last.date : created, T);
+  const win = past.filter(t=>t.date>=from), planned=win.length, done=win.filter(hpTaskDone).length;
+  const rate = planned ? Math.round(done/planned*100) : 0;
+  const unit = (g.numeric&&g.numeric.unit) || g.unit || '';
+  const pace = (g.kind||'numeric')==='numeric' ? paceInfo(g,T) : null;
+  let st;
+  if(age>=7 && quiet>=14) st='lost';
+  else if(chain>=2) st='miss';
+  else if(pace && pace.status==='behind' && pace.diff>0 && pace.factAgeDays<=14) st='behind';
+  else if(age<3 || planned<2) st='new';
+  else if(rate>=80) st='good';
+  else st='ok';
+  const snoozed = (state.hpSnooze||{})[g.id] >= T;
+  if(snoozed && (st==='lost'||st==='miss'||st==='behind')) st='ok';
+  return {st, chain, quiet, rate, unit, pace, age};
+}
+function hpGoalLineKey(st){ return {good:'gGood', ok:'gOk', new:'gNew', miss:'gMiss', behind:'gBehind', lost:'gLost'}[st]; }
+function hpGoalVars(g, s){ return {g:g.name, r:s.rate, n: s.st==='lost' ? s.quiet : s.chain, d: s.pace ? s.pace.diff : 0, u:s.unit}; }
+function hpGoalsHTML(){
+  const p=state.coach; if(!p || !HP[p] || !state.goals.length) return '';
+  const rows = state.goals.map(g=>({g, s:hpGoalStat(g)})).sort((a,b)=>HP_G_ORDER[a.s.st]-HP_G_ORDER[b.s.st]);
+  return `<div class="hp-gl"><div class="hp-gl-t">${t('hp.gT')}</div>${rows.map(({g,s})=>{
+    const warn = s.st==='lost'||s.st==='miss'||s.st==='behind';
+    const btns = !warn ? '' : `<div class="hp-gc-btns">
+        <button class="hp-gc-go" onclick="hpReplan('${g.id}')">${t('hp.replan')}</button>
+        ${s.st==='lost'?`<button onclick="delGoal('${g.id}')">${t('hp.del')}</button>`:''}
+        <button onclick="hpSnoozeGoal('${g.id}')">${t('hp.keep')}</button></div>`;
+    return `<div class="hp-gc st-${s.st}" style="--cc:${HP[p].color}">
+      <div class="hp-gc-top"><span class="hp-gc-ic">${HP_G_ICON[s.st]}</span><b>${esc(g.name)}</b><span class="hp-gc-st">${t('hp.st.'+s.st)}</span></div>
+      <div class="hp-gc-line">${esc(hpLine(hpGoalLineKey(s.st), p, hpGoalVars(g,s), g.id))}</div>${btns}</div>`;
+  }).join('')}</div>`;
+}
+function hpSnoozeGoal(id){
+  state.hpSnooze = state.hpSnooze || {};
+  state.hpSnooze[id] = addDays(todayStr(), 7);
+  save(); renderHelper(); toast(t('hp.kept'));
+}
+/* первая цель, о которой стоит сказать на другом экране (не чаще раза в день) */
+function hpGoalWarn(){
+  let best=null;
+  state.goals.forEach(g=>{ const s=hpGoalStat(g); if((s.st==='lost'||s.st==='miss') && (!best || HP_G_ORDER[s.st]<HP_G_ORDER[best.s.st])) best={g,s}; });
+  return best;
+}
+
 /* ---------- экран ---------- */
 let hpSetOpen = false;
 function renderHelper(){
@@ -6090,7 +6205,7 @@ function renderHelper(){
         <button class="hp-go" onclick="hpStart()">🎯 ${t('hp.newGoal')}</button></div>
     </div>`;
   }
-  el.innerHTML = hero + hpSettingsHTML() + `<div id="hpRewards"></div>`;
+  el.innerHTML = hero + hpSettingsHTML() + hpGoalsHTML() + `<div id="hpRewards"></div>`;
   renderRewards();
 }
 /* тап по персонажу — Джин шутит, остальные повторяют реплику дня с другой фразой */
@@ -6158,7 +6273,11 @@ function hpCheck(){
   }
   if(state.helperFreq<=0 || S.n>=state.helperFreq) return;
   if(m.key==='dayDone' && !seen('dayDone')){ mark('dayDone'); S.n++; save(); hpPop('dayDone', m.vars, 'happy'); return; }
-  if(m.key==='week' && !seen('week')){ mark('week'); S.n++; save(); hpPop('week', null, 'proud'); }
+  if(m.key==='week' && !seen('week')){ mark('week'); S.n++; save(); hpPop('week', null, 'proud'); return; }
+  if(!seen('goalWarn')){
+    const w=hpGoalWarn();
+    if(w){ mark('goalWarn'); S.n++; save(); hpPop(hpGoalLineKey(w.s.st), hpGoalVars(w.g,w.s), w.s.st==='lost' ? 'sad' : HP[p].sig); }
+  }
 }
 
 /* ---------- опрос «новая цель» ---------- */
@@ -6202,6 +6321,7 @@ function hqMissing(){
   if(!(g.target>0)) return 'num';
   if(!g.deadline) return 'when';
   if(!d.has('days')) return 'days';
+  if(hq.replan) return 'sum';      // перепланирование: препятствие и правило — по желанию
   if(!d.has('obst')) return 'obst';
   if(!d.has('plan')) return 'plan';
   return 'sum';
@@ -6241,7 +6361,8 @@ async function hqTurn(text, applied){
   hq.msgs.push({who:'me', text}); hq.msgs.push({who:'bot', typing:true}); hqRender();
   const wd=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][(new Date().getDay()+6)%7];
   const r = await hpAI('/chat', {history: hq.msgs.filter(m=>!m.typing).map(m=>({who:m.who, text:m.text})),
-    slots:hqSlots(), today:todayStr(), weekday:wd, units:t('hp.units')});
+    slots:hqSlots(), today:todayStr(), weekday:wd, units:t('hp.units'),
+    mode: hq.replan ? 'replan' : 'new', context: hq.replan ? hqReContext() : ''});
   if(hq!==run) return;                       // опрос закрыли или начали заново
   hq.busy=false; hq.msgs=hq.msgs.filter(m=>!m.typing);
   if(!r || typeof r.reply!=='string' || !r.reply.trim()){ hqToScript(text, step, applied); return; }
@@ -6274,6 +6395,42 @@ function hpStart(){
       g:{title:'', why:'', target:0, unit:'', deadline:'', days:[0,1,2,3,4], obst:'', plan:'', type:null}};
   hqSay('iHello'); hqNext('goal');
 }
+/* 1.7.8: перепланирование существующей цели. Поля опроса заполнены текущим планом,
+   прогресс (hq.base) — точка нового старта: норма считается на остаток.
+   С ИИ персонаж видит статистику цели (context) и сначала выясняет, что мешает;
+   без ИИ — проход по шагам с кнопками «Оставить …». Сохранение меняет ту же цель. */
+function hpReplan(id){
+  const goal=state.goals.find(x=>x.id===id); if(!goal || !state.coach) return;
+  hpInit();
+  const st=hpGoalStat(goal), kind=goal.kind||'numeric', T=todayStr();
+  const lines=String(goal.vision||'').split('\n');
+  const op=lines.find(l=>l.indexOf(' → ')>0)||'';
+  const why=lines.filter(l=>l!==op).join(' ').trim();
+  const unit=(goal.numeric&&goal.numeric.unit)||goal.unit||'';
+  hq={step:'', emo:'think', msgs:[], mode: hpAIOn() ? 'ai' : 'script', done:new Set(['goal','why']), turns:0,
+      replan:goal.id, kind, base: kind==='numeric' ? hpGoalProgress(goal) : 0, stat:st,
+      tip: op ? op.split(' → ')[1] : '',
+      g:{title:goal.name, why, target:Number(goal.target)||0, unit, deadline:goal.deadline||addDays(T,30),
+         days: goalActiveDows(goal).slice(), obst: op ? op.split(' → ')[0] : '', plan: op ? op.split(' → ')[1] : '', type:goal.type||null}};
+  if(kind!=='numeric') hq.done.add('num');
+  if(kind==='checklist') hq.done.add('days');
+  const warn = st.st==='lost'||st.st==='miss'||st.st==='behind';
+  hq.emo = st.st==='lost' ? 'sad' : warn ? HP[state.coach].sig : 'think';
+  hq.msgs.push({who:'bot', text:hpLine(hpGoalLineKey(st.st), state.coach, hpGoalVars(goal,st), goal.id)});
+  hpPopClose(); switchScreen('helper');
+  if(hq.mode==='ai'){ hqSay('iRe'); hq.step='free'; hqRender(); return; }
+  hqSay('iReS'); hq.step = kind==='numeric' ? 'num' : 'when'; hqRender();
+}
+/* статистика цели для ИИ — короткими фактами */
+function hqReContext(){
+  const goal=state.goals.find(x=>x.id===hq.replan); if(!goal) return '';
+  const s=hq.stat, T=todayStr(), g=hq.g;
+  const parts=['REPLAN of an existing goal "'+goal.name+'"', 'created '+(goal.createdDate||'?'), 'deadline '+(goal.deadline||'none')+' ('+daysBetween(T, goal.deadline||T)+' days left)'];
+  if(hq.kind==='numeric') parts.push('progress '+hq.base+' of '+g.target+' '+g.unit+(s.pace?(', plan for today '+s.pace.planToday):''));
+  parts.push('done '+s.rate+'% of planned days in the last 14 days', 'misses in a row: '+s.chain, 'days since last activity: '+s.quiet, 'status: '+s.st);
+  if(hq.kind!=='numeric') parts.push('goal kind '+hq.kind+': do not change target/unit');
+  return parts.join('; ');
+}
 function hqSay(key, vars){ hq.msgs.push({who:'bot', text:hpLine(key, state.coach, vars)}); }
 function hqNext(step){ hq.step=step; hq.emo='think'; hqSay('i'+step.charAt(0).toUpperCase()+step.slice(1), step==='plan'?{tip:hq.tip}:null); hqRender(); }
 function hqRender(){
@@ -6290,14 +6447,18 @@ function hqRender(){
   switch(hq.step){
     case 'goal': hq.chips=t('hp.goals'); input=chips(hq.chips)+field(t('hp.goalPh')); break;
     case 'why':  hq.chips=[t('hp.skip')]; input=chips(hq.chips)+field(t('hp.whyPh')); break;
-    case 'num':  input=`<div class="hq-in"><input id="hqIn" type="text" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
-    case 'when': hq.chips=t('hp.whens').map(w=>w[0]); input=chips(hq.chips)+(hq.mode==='ai'?field(t('hp.whenPh')):''); break;
+    case 'num':  if(hq.replan){ hq.chips=[t('hp.keepVal',{v:hq.g.target+' '+hq.g.unit})]; input=chips(hq.chips); } else input='';
+                 input+=`<div class="hq-in"><input id="hqIn" type="text" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
+    case 'when': hq.chips=t('hp.whens').map(w=>w[0]); if(hq.replan) hq.chips.push(t('hp.keepDate'));
+                 input=chips(hq.chips)+(hq.mode==='ai'?field(t('hp.whenPh')):''); break;
     case 'free': input=field(t('hp.freePh')); break;
     case 'days': input=`<div class="hq-chips days">${WEEKDAYS.map((w,i)=>`<button class="${hq.g.days.includes(i)?'on':''}" onclick="hqDay(${i})">${w}</button>`).join('')}</div>
                  <button class="hq-go" onclick="hqDaysDone()">${t('hp.ready')}</button>`; break;
     case 'obst': hq.chips=t('hp.obst').map(o=>o[0]); input=chips(hq.chips)+field(t('hp.ownPh')); break;
     case 'plan': hq.chips=[t('hp.keepTip')]; input=chips(hq.chips)+field(t('hp.rulePh')); break;
-    case 'sum':  input=`<div class="hq-row2"><button class="hq-ghost" onclick="hpStart()">${t('hp.again')}</button><button class="hq-go" onclick="hqCreate()">${t('hp.create')}</button></div>`; break;
+    case 'sum':  input = hq.replan
+                   ? `<div class="hq-row2"><button class="hq-ghost" onclick="hqClose()">${t('hp.cancel')}</button><button class="hq-go" onclick="hqSaveReplan()">${t('hp.saveRe')}</button></div>`
+                   : `<div class="hq-row2"><button class="hq-ghost" onclick="hpStart()">${t('hp.again')}</button><button class="hq-go" onclick="hqCreate()">${t('hp.create')}</button></div>`; break;
   }
   const i = hq.mode==='ai' ? (hq.step==='sum' ? 6 : Math.min(hq.done.size, 6)) : HQ_ORDER.indexOf(hq.step);
   hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hq.mode==='ai'?'<span class="hq-ai">AI</span>':''}<span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
@@ -6313,7 +6474,9 @@ function hqChip(i){
   switch(hq.step){
     case 'goal': g.title=x; g.type=['travel','physical','learning','learning'][i]||null; d.add('goal'); break;
     case 'why':  g.why=''; d.add('why'); break;
-    case 'when': { const w=t('hp.whens')[i]; g.deadline = w[1]>0 ? addDays(T,w[1]) : T.slice(0,4)+'-12-31';
+    case 'num':  d.add('num'); break;                       // «Оставить N» при перепланировании
+    case 'when': { if(i>=t('hp.whens').length){ d.add('when'); break; }  // «Оставить срок»
+                   const w=t('hp.whens')[i]; g.deadline = w[1]>0 ? addDays(T,w[1]) : T.slice(0,4)+'-12-31';
                    if(daysBetween(T,g.deadline)<7) g.deadline=addDays(T,30); d.add('when'); break; }
     case 'obst': { const o=t('hp.obst')[i]; g.obst=o[0]; hq.tip=o[1]; d.add('obst'); break; }
     case 'plan': g.plan=hq.tip; d.add('plan'); break;
@@ -6366,14 +6529,16 @@ function hqAns(v, chipIdx){
       if(chipIdx===0){ g.why=''; hqSly(); setTimeout(()=>hqNext('num'),900); hqRender(); return; }
       g.why=v; hqNext('num'); break;
     case 'num': {
+      if(hq.replan && chipIdx===0){ hqNext('when'); break; }
       const n=hqNum(v);
       if(!(n>0)){ hqSly(); hqRender(); return; }
       g.target=n; hqNext('when'); break; }
     case 'when': {
+      if(hq.replan && chipIdx>=t('hp.whens').length){ hqNext(hq.kind==='checklist' ? 'obst' : 'days'); break; }
       const T=todayStr(), w=t('hp.whens')[chipIdx];
       g.deadline = w[1]>0 ? addDays(T,w[1]) : T.slice(0,4)+'-12-31';
       if(daysBetween(T,g.deadline)<7) g.deadline=addDays(T,30);
-      hqNext('days'); break; }
+      hqNext(hq.replan && hq.kind==='checklist' ? 'obst' : 'days'); break; }
     case 'days': hqSay('iOk'); hqNext('obst'); break;
     case 'obst': {
       g.obst=v; const o=chipIdx>=0 ? t('hp.obst')[chipIdx] : null;
@@ -6384,7 +6549,8 @@ function hqAns(v, chipIdx){
 function hqCalc(){
   const g=hq.g, T=addDays(todayStr(),1);
   const n=activeDaysCount(T, g.deadline, g.days);
-  const per=n>0 ? g.target/n : 0;
+  const left = hq.replan ? Math.max(0, g.target-(hq.base||0)) : g.target;
+  const per=n>0 ? left/n : 0;
   const nice=per>=10 ? Math.ceil(per) : Math.ceil(per*10)/10;
   return {n, per:nice, rate:nice+' '+g.unit};
 }
@@ -6394,9 +6560,11 @@ function hqSummaryHTML(){
   return `<div class="hq-sum">
     <div class="hq-sum-t">🎯 ${esc(g.title)}</div>
     ${g.why?`<div class="hq-sum-why">«${esc(g.why)}»</div>`:''}
-    <div class="hq-sum-row"><span>${t('hp.sGoal')}</span><b>${g.target} ${esc(g.unit)} · ${fmtFull(g.deadline)}</b></div>
+    ${hq.replan && hq.kind==='numeric' ? `<div class="hq-sum-row"><span>${t('hp.sNow')}</span><b>${hq.base} ${esc(g.unit)}</b></div>` : ''}
+    ${hq.kind && hq.kind!=='numeric' ? `<div class="hq-sum-row"><span>${t('hp.sGoal')}</span><b>${fmtFull(g.deadline)}</b></div>`
+      : `<div class="hq-sum-row"><span>${t('hp.sGoal')}</span><b>${g.target} ${esc(g.unit)} · ${fmtFull(g.deadline)}</b></div>`}
     <div class="hq-sum-row"><span>${t('hp.sDays')}</span><b>${esc(hqDaysTxt())} · ${k.n}</b></div>
-    <div class="hq-sum-row big"><span>${t('hp.sNorm')}</span><b>${esc(k.rate)}</b></div>
+    ${hq.kind && hq.kind!=='numeric' ? '' : `<div class="hq-sum-row big"><span>${t('hp.sNorm')}</span><b>${esc(k.rate)}</b></div>`}
     ${g.obst?`<div class="hq-sum-row"><span>${esc(g.obst)} →</span><b>${esc(g.plan)}</b></div>`:''}
   </div>`;
 }
@@ -6419,6 +6587,26 @@ function hqCreate(){
   generateForDate(today);
   save(); hqClose(); switchScreen('goals'); toast(t('gt.created'));
 }
+function hqSaveReplan(){
+  const goal=state.goals.find(x=>x.id===hq.replan); if(!goal){ hqClose(); return; }
+  const g=hq.g, T=todayStr(), kind=hq.kind;
+  goal.name = g.title || goal.name;
+  goal.deadline = g.deadline || goal.deadline;
+  goal.vision = [g.why, g.obst ? (g.obst+' → '+(g.plan||hq.tip||'')) : ''].filter(Boolean).join('\n');
+  if(kind==='numeric'){
+    // новый отсчёт: от сегодняшнего прогресса к цели, норма — на остаток
+    goal.start = hq.base; goal.target = g.target; goal.unit = g.unit;
+    goal.numeric = {start:hq.base, target:g.target, unit:g.unit};
+    goal.createdDate = T;
+  }
+  if(kind!=='checklist' && g.days && g.days.length) goal.days = g.days.slice();
+  goal.replanned = T;
+  if(state.hpSnooze) delete state.hpSnooze[goal.id];
+  // сегодняшняя невыполненная задача по старому плану → заново по новому
+  state.tasks = state.tasks.filter(t=>!(t.goalId===goal.id && t.date===T && !hpTaskDone(t)));
+  generateForDate(T);
+  save(); hqClose(); render(); toast(t('hp.reSaved'));
+}
 function hqShow(html){
   let ov=document.getElementById('hqOv');
   if(!ov){ ov=document.createElement('div'); ov.id='hqOv'; ov.className='hq-ov'; document.body.appendChild(ov); }
@@ -6434,6 +6622,11 @@ Object.assign(I18N.ru, {
   'hp.styleHint.soft':'Только поддерживает, без строгих слов.', 'hp.styleHint.normal':'Хвалит за выполненное, с 2-го дня пропусков становится строже.',
   'hp.styleHint.strict':'Строгий уже после первого пропуска.',
   'hp.sFreq':'Реплики на других экранах', 'hp.f0':'Нет', 'hp.f1':'Раз в день', 'hp.f3':'До 3 в день', 'hp.sMorning':'Утреннее слово при открытии',
+  'hp.gT':'Цели глазами помощника', 'hp.replan':'Перепланировать', 'hp.keep':'Оставить', 'hp.del':'Удалить',
+  'hp.kept':'Хорошо, неделю не напоминаю об этой цели', 'hp.st.good':'по плану', 'hp.st.ok':'в процессе', 'hp.st.new':'старт',
+  'hp.st.miss':'пропуски', 'hp.st.behind':'отставание', 'hp.st.lost':'забыта',
+  'hp.keepVal':'Оставить {v}', 'hp.keepDate':'Оставить срок', 'hp.saveRe':'Сохранить изменения', 'hp.cancel':'Отмена',
+  'hp.reSaved':'План обновлён', 'hp.sNow':'Сейчас', 'hp.sLeft':'Осталось',
   'hp.sAI':'Кто отвечает в опросе', 'hp.aiOff':'Сценарий',
   'hp.aiHint':'Отвечает AI (Google Gemini): ваши ответы в опросе отправляются в Google. Без интернета — обычный сценарий. ⚑ у ответа — пожаловаться.',
   'hp.aiHintOff':'Готовый сценарий: без интернета и AI.',
@@ -6455,6 +6648,11 @@ Object.assign(I18N.en, {
   'hp.styleHint.soft':'Only supportive, no strict words.', 'hp.styleHint.normal':'Praises what’s done, gets stricter from the 2nd missed day.',
   'hp.styleHint.strict':'Strict right after the first miss.',
   'hp.sFreq':'Messages on other screens', 'hp.f0':'None', 'hp.f1':'Once a day', 'hp.f3':'Up to 3 a day', 'hp.sMorning':'Morning word on opening',
+  'hp.gT':'Goals through the helper’s eyes', 'hp.replan':'Replan', 'hp.keep':'Keep', 'hp.del':'Delete',
+  'hp.kept':'OK, no reminders about this goal for a week', 'hp.st.good':'on track', 'hp.st.ok':'in progress', 'hp.st.new':'new',
+  'hp.st.miss':'misses', 'hp.st.behind':'behind', 'hp.st.lost':'forgotten',
+  'hp.keepVal':'Keep {v}', 'hp.keepDate':'Keep the deadline', 'hp.saveRe':'Save changes', 'hp.cancel':'Cancel',
+  'hp.reSaved':'Plan updated', 'hp.sNow':'Now', 'hp.sLeft':'Left',
   'hp.sAI':'Who answers in the interview', 'hp.aiOff':'Script',
   'hp.aiHint':'AI answers (Google Gemini): your interview answers are sent to Google. Offline — the usual script. ⚑ on a reply — report it.',
   'hp.aiHintOff':'Ready-made script: no internet, no AI.',

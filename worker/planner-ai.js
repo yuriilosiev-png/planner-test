@@ -89,6 +89,14 @@ function system(p) {
     '- emo: your face for this reply (think, happy, proud, sad, sly — sly when the user dodges or jokes).',
     '- No medical, legal or financial advice beyond common sense; for health goals mention checking with a doctor when relevant. If the user hints at self-harm, reply with care, suggest talking to someone close or a professional, ask="free".',
     '- Refuse harmful or illegal goals politely and offer to pick another goal (ask="goal").',
+    p.mode === 'replan' ? [
+      '',
+      'MODE: RE-PLANNING an existing goal. "slots" already hold the CURRENT plan and "context" has its real statistics (progress, misses, activity).',
+      '- Start from what actually happens: ask what gets in the way, using the numbers from context. Be honest but kind.',
+      '- Then agree on concrete changes: a later deadline, a lower target, fewer days, a smaller daily norm, a new if-then rule — or confirm keeping the plan.',
+      '- Put into "set" ONLY values the user agreed to CHANGE. Never repeat unchanged values.',
+      '- ask="done" as soon as the user accepts the new plan (or wants to keep it).'
+    ].join('\n') : '',
     'Return JSON only.'
   ].join('\n');
 }
@@ -209,7 +217,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 2 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 3 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -235,7 +243,8 @@ export default {
     const p = {
       persona: PERSONA[b.persona] ? b.persona : 'coach',
       style: STYLE[b.style] ? b.style : 'normal',
-      lang: LANG[b.lang] ? b.lang : 'en'
+      lang: LANG[b.lang] ? b.lang : 'en',
+      mode: b.mode === 'replan' ? 'replan' : 'new'
     };
     const hist = (Array.isArray(b.history) ? b.history : []).slice(-24)
       .map(m => (m && m.who === 'me' ? 'USER: ' : 'YOU: ') + clip(m && m.text, 400));
@@ -249,6 +258,7 @@ export default {
         daysConfirmed: !!sl.daysConfirmed, obst: clip(sl.obst, 100), tip: clip(sl.tip, 100), plan: clip(sl.plan, 120)
       },
       units: Array.isArray(b.units) ? b.units.slice(0, 12).map(u => clip(u, 12)) : [],
+      context: clip(b.context, 600),
       dialog: hist
     });
 
