@@ -273,6 +273,25 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .wel-hp-team b{font-size:11px;font-weight:800;line-height:1.15;margin-top:4px;padding:3px 6px;
   background:color-mix(in srgb,var(--cc) 70%,#000);max-width:100%;text-align:center;border-radius:9px}
 .wel-or{text-align:center;color:var(--muted);font-size:13px;margin-top:14px}
+/* 1.7.8: экскурсия */
+.tour-ov{position:fixed;inset:0;z-index:400}
+.tour-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(8,6,20,.68);border:2px solid var(--cc);
+  transition:all .35s cubic-bezier(.3,1.2,.5,1);pointer-events:none}
+.tour-hole.none{display:none}
+.tour-ov.dim{background:rgba(8,6,20,.68)}
+.tour-card{position:fixed;left:10px;right:10px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:4px;
+  animation:tourIn .35s ease}
+@keyframes tourIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.tour-card img{height:150px;width:auto;max-width:32%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
+.tour-txt{flex:1;min-width:0;background:var(--surface2);color:var(--txt);border:1px solid var(--line);border-left:3px solid var(--cc);
+  border-radius:16px 16px 16px 4px;padding:11px 12px;font-size:14.5px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.45);margin-bottom:8px}
+.tour-txt b{display:block;font-size:12px;color:color-mix(in srgb,var(--cc) 55%,var(--txt));margin-bottom:3px}
+.tour-btns{display:flex;align-items:center;gap:8px;margin-top:10px}
+.tour-btns button{padding:8px 12px;border-radius:10px;font-weight:800;font-size:13.5px;white-space:nowrap}
+.tour-skip{background:transparent;color:var(--muted)}
+.tour-next{margin-left:auto;background:var(--cc);color:#fff}
+.tour-n{font-size:12px;color:var(--muted);font-weight:700}
+.hp-tour{width:100%;margin-top:14px;padding:11px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);font-weight:800;font-size:14px;color:var(--txt)}
 .tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
 .tpl-grid button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:14px;
   background:var(--surface2);border:1px solid var(--line);font-size:14px;font-weight:700;line-height:1.25}
@@ -1579,6 +1598,17 @@ ru:{
   'wel.hpT':'🎯 Создай первую цель с помощником',
   'wel.hpSub':'Выбери персонажа — он задаст 7 вопросов и превратит желание в план на каждый день.',
   'wel.or':'или',
+  'tour.btn':'Экскурсия по приложению', 'tour.goal':'Создать цель', 'tour.next':'Дальше', 'tour.skip':'Пропустить', 'tour.done':'Готово',
+  'tour.today':'Это задачи на сегодня. Отмечай выполненное — за каждую задачу начисляется балл.',
+  'tour.fab':'Плюс — добавить задачу, цель или событие. Можно голосом.',
+  'tour.goals':'Цели. Каждая сама раскладывается на задачи по дням, ты только отмечаешь.',
+  'tour.helper':'А это я. Помогу поставить цель, похвалю за сделанное и подскажу, где буксуешь.',
+  'tour.review':'Здесь я разбираю каждую цель: что идёт по плану, где пропуски, что пора перепланировать.',
+  'tour.rewards':'Баллы копятся — меняй их на награды, которые придумаешь сам.',
+  'tour.history':'График дисциплины: видно, как ты держишь темп неделями и месяцами.',
+  'tour.calendar':'Календарь: события и задачи на весь месяц.',
+  'tour.settings':'Настройки: темы оформления, напоминания и резервная копия данных.',
+  'tour.end':'Вот и всё! Начнём с первой цели?',
   'wel.offline':'Для примера нужен интернет. Начните с нуля или попробуйте позже.',
   'demo.bar':'🧪 Это пример',
   'demo.start':'Начать своё',
@@ -2069,6 +2099,17 @@ en:{
   'wel.hpT':'🎯 Create your first goal with a helper',
   'wel.hpSub':'Pick a character — 7 questions and your wish becomes a day-by-day plan.',
   'wel.or':'or',
+  'tour.btn':'App tour', 'tour.goal':'Create a goal', 'tour.next':'Next', 'tour.skip':'Skip', 'tour.done':'Done',
+  'tour.today':'These are today’s tasks. Tick off what’s done — every task earns a point.',
+  'tour.fab':'Plus adds a task, a goal or an event. You can dictate it too.',
+  'tour.goals':'Goals. Each one splits itself into daily tasks — you just tick them off.',
+  'tour.helper':'And this is me. I’ll help you set goals, praise your progress and point out where you stall.',
+  'tour.review':'Here I go through each goal: what’s on track, where you miss days, what needs a new plan.',
+  'tour.rewards':'Points add up — trade them for rewards you set yourself.',
+  'tour.history':'The discipline chart shows how you keep pace over weeks and months.',
+  'tour.calendar':'The calendar: events and tasks for the whole month.',
+  'tour.settings':'Settings: themes, reminders and data backup.',
+  'tour.end':'That’s it! Shall we start with your first goal?',
   'wel.offline':'The example needs an internet connection. Start from scratch or try later.',
   'demo.bar':'🧪 This is an example',
   'demo.start':'Start my own',
@@ -6234,6 +6275,7 @@ function hpSettingsHTML(){
     <label class="th-label">${t('hp.sFreq')}</label>
     ${seg('helperFreq',[{v:0,l:t('hp.f0')},{v:1,l:t('hp.f1')},{v:3,l:t('hp.f3')}])}
     <label class="hp-row"><span>${t('hp.sMorning')}</span><input type="checkbox" ${state.helperMorning?'checked':''} onchange="hpSet('helperMorning',this.checked)"></label>
+    <button class="hp-tour" onclick="tourStart()">🧭 ${t('tour.btn')}</button>
     ${HP_AI_URL ? `<label class="th-label">${t('hp.sAI')}</label>
     ${seg('helperAI',[{v:'off',l:t('hp.aiOff')},{v:'gemini',l:'Gemini'}])}
     <div class="hp-hint">${t(state.helperAI==='off' ? 'hp.aiHintOff' : 'hp.aiHint')}</div>` : ''}
@@ -7714,6 +7756,64 @@ function openWelcome(){
       <button class="ghost" onclick="_welcomeOpen=false;openTemplates()">${tr('wel.scratch')}</button>
     </div>`);
 }
+/* ===== 1.7.8: экскурсия по приложению =====
+   Помощник ведёт по экранам: затемнение с «окном» над нужным элементом и облачко
+   с подсказкой. Шаги, чьего элемента нет на экране, пропускаются. Без ИИ и сети.
+   Запуск: после «Посмотреть на примере» и кнопкой в настройках помощника. */
+const TOUR = [
+  {scr:'today',    sel:'#s-today .task',  key:'tour.today'},
+  {scr:'today',    sel:'#fab',            key:'tour.fab'},
+  {scr:'goals',    sel:'#s-goals .goal',  key:'tour.goals'},
+  {scr:'helper',   sel:'.hp-hero,.hp-intro', key:'tour.helper'},
+  {scr:'helper',   sel:'.hp-gl .hp-gc',   key:'tour.review'},
+  {scr:'helper',   sel:'#hpRewards > :first-child', key:'tour.rewards'},
+  {scr:'history',  sel:'.dc-wrap',        key:'tour.history'},
+  {scr:'calendar', sel:'.cal-grid',       key:'tour.calendar'},
+  {scr:null,       sel:'.head .gear',     key:'tour.settings'},
+  {scr:null,       sel:null,              key:'tour.end'}
+];
+let tourI=-1;
+function tourStart(){ closeModal(); hpPopClose(); hqClose(); tourI=-1; tourNext(); }
+function tourNext(){
+  for(tourI++; tourI<TOUR.length; tourI++){
+    const st=TOUR[tourI];
+    if(st.scr && curScreen!==st.scr) switchScreen(st.scr);
+    if(!st.sel || document.querySelector(st.sel)) break;
+  }
+  if(tourI>=TOUR.length){ tourEnd(); return; }
+  tourShow();
+}
+function tourEnd(){ const ov=document.getElementById('tourOv'); if(ov) ov.remove(); tourI=-1; }
+function tourShow(){
+  const st=TOUR[tourI], p=(state.coach && HP[state.coach]) ? state.coach : 'nadia';
+  let ov=document.getElementById('tourOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='tourOv'; ov.className='tour-ov'; document.body.appendChild(ov); }
+  const el = st.sel ? document.querySelector(st.sel) : null;
+  if(el) el.scrollIntoView({block:'center'});
+  const last = st.key==='tour.end';
+  const total = TOUR.filter(x=>x.key!=='tour.end').length;
+  const btns = last
+    ? `<button class="tour-skip" onclick="tourEnd()">${t('tour.done')}</button>${state.demo ? '' : `<button class="tour-next" onclick="tourEnd();switchScreen('helper');if(state.coach)hpStart()">🎯 ${t('tour.goal')}</button>`}`
+    : `<button class="tour-skip" onclick="tourEnd()">${t('tour.skip')}</button><span class="tour-n">${Math.min(tourI+1,total)}/${total}</span><button class="tour-next" onclick="tourNext()">${t('tour.next')} →</button>`;
+  ov.style.setProperty('--cc', HP[p].color);
+  ov.classList.toggle('dim', !el);
+  ov.innerHTML = `<div class="tour-hole${el?'':' none'}"></div>
+    <div class="tour-card"><img src="${hpImg(p, last ? 'happy' : (tourI%2 ? 'think' : 'hello'))}" alt="">
+      <div class="tour-txt"><b>${esc(hpName(p))}</b><div>${esc(t(st.key))}</div><div class="tour-btns">${btns}</div></div></div>`;
+  requestAnimationFrame(()=>{
+    const hole=ov.querySelector('.tour-hole'), card=ov.querySelector('.tour-card');
+    const vh=window.innerHeight;
+    if(el){
+      const r=el.getBoundingClientRect(), pad=6;
+      const top=Math.max(4, r.top-pad), bottom=Math.min(vh-4, r.bottom+pad, top+vh*0.5);  // высокий блок — только его верх
+      Object.assign(hole.style,{left:Math.max(4,r.left-pad)+'px', top:top+'px',
+        width:(Math.min(window.innerWidth-4, r.right+pad)-Math.max(4,r.left-pad))+'px', height:(bottom-top)+'px'});
+      // облачко — с той стороны, где больше места
+      if((r.top+r.bottom)/2 > vh/2){ card.style.top='calc(10px + env(safe-area-inset-top))'; card.style.bottom='auto'; }
+      else { card.style.bottom='calc(14px + env(safe-area-inset-bottom))'; card.style.top='auto'; }
+    }
+  });
+}
 /* 1.7.8: тап по персонажу в приветствии — выбрать его и сразу начать опрос по цели */
 function welHelper(id){
   _welcomeOpen=false; closeModal();
@@ -7755,6 +7855,7 @@ async function startDemo(){
   closeModal();
   applyTheme(curScreen);
   render();
+  setTimeout(tourStart, 500);    // 1.7.8: пример сразу с экскурсией
 }
 function updateDemoBar(){
   const bar=document.getElementById('demoBar');
