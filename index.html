@@ -6119,6 +6119,34 @@ const HP = {
   genie:{color:'#3cc6c0', sig:'tease', emos:['hello','think','happy','proud','sad','tease','sly','joke']},
 };
 function hpImg(p, emo){ return 'coach/'+p+'-'+emo+'.webp'; }
+/* 1.7.8: моргание. Для картинок из списка есть кадры -b1 (веки прикрыты) и -b2 (закрыты),
+   нарисованные поверх оригинала, — поза и размер те же. Раз в 2,5–6 с один видимый
+   персонаж моргает: b1 → b2 → b1 → исходник. Кадры подгружаются заранее. */
+const HP_BLINK = new Set(["coach-hello", "coach-proud", "coach-sad", "coach-sly", "coach-strict", "coach-think", "genie-happy", "genie-hello", "genie-proud", "genie-sad", "genie-sly", "genie-think", "guru-hello", "guru-proud", "guru-sad", "guru-sly", "guru-stern", "nadia-hello", "nadia-proud", "nadia-sad", "nadia-sly", "nadia-think"]);
+const hpBlinkCache = {};
+function hpBlinkLoad(src){
+  if(hpBlinkCache[src]) return hpBlinkCache[src];
+  const base=src.replace(/\.webp$/,''), fr=[new Image(), new Image()];
+  fr[0].src=base+'-b1.webp'; fr[1].src=base+'-b2.webp';
+  return hpBlinkCache[src]=fr;
+}
+function hpBlinkKey(img){ const m=(img.getAttribute('src')||'').match(/coach\/([a-z]+-[a-z]+)\.webp$/); return m && HP_BLINK.has(m[1]) ? m[0] : null; }
+function hpBlinkTick(){
+  try{
+    if(document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const imgs=[...document.querySelectorAll('.hp-fig,.hq-fig,.tour-card img,.hp-pop.show img')]
+      .filter(i=>i.offsetParent && !i.dataset.blinking && hpBlinkKey(i));
+    imgs.forEach(i=>hpBlinkLoad(hpBlinkKey(i)));
+    const img=imgs[Math.floor(Math.random()*imgs.length)]; if(!img) return;
+    const src=hpBlinkKey(img), fr=hpBlinkLoad(src);
+    if(!fr[0].complete || !fr[1].complete) return;
+    img.dataset.blinking='1';
+    const seq=[fr[0].src, fr[1].src, fr[0].src, src], step=[0,60,150,210];
+    seq.forEach((u,k)=>setTimeout(()=>{ if(img.getAttribute('src').indexOf(src.replace('.webp',''))>=0) img.src = k===3 ? src : u;
+      if(k===3) delete img.dataset.blinking; }, step[k]));
+  }catch(e){}
+}
+(function hpBlinkLoop(){ setTimeout(()=>{ hpBlinkTick(); hpBlinkLoop(); }, 2500+Math.random()*3500); })();
 function hpName(p){ return hpLine('name', p); }
 
 /* строка персонажа; массив → один вариант на день (стабильно, не прыгает при перерисовке) */
