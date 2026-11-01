@@ -1,27 +1,31 @@
 /* planner-ai — Cloudflare Worker для помощника Planner (1.7.8).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
-   POST /interview — один шаг опроса по цели: персонаж отвечает на ответ
-                     пользователя и достаёт из него значение для цели.
-   POST /report    — жалоба на ответ AI (требование Google Play для AI-контента).
+   POST /chat   — один ход живого опроса по цели. Приложение присылает историю
+                  диалога и уже собранные поля цели; персонаж отвечает с учётом
+                  контекста, может задать уточняющий вопрос в сторону, но ведёт
+                  к цели, и сообщает, что нового узнал (set) и о чём спрашивает
+                  дальше (ask) — по ask приложение показывает нужные кнопки.
+   POST /report — жалоба на ответ AI (требование Google Play для AI-контента).
 
    Переменные окружения (Settings → Variables):
      GEMINI_KEY   (секрет, обязательно) — ключ из Google AI Studio
      MODEL        модели Gemini через запятую, по очереди при ошибке;
                   по умолчанию gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
-     DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 60
-     GLOBAL_LIMIT запросов в день на всех, по умолчанию 500 (бесплатная квота 3.1 Flash Lite)
+     DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 80
      ORIGINS      разрешённые Origin через запятую
-   KV (необязательно) — привязка с именем RL: дневные счётчики и жалобы.
-   Без KV лимиты не считаются, жалобы пишутся в лог Worker'а. */
+   KV (необязательно) — привязка с именем RL: счётчик на устройство и жалобы.
+   Одна запись в KV на запрос (бесплатно — 1000 записей в день). Ошибки KV
+   запрос не ломают. Общий дневной лимит держит сам Google (квота модели). */
 
 const DEF_ORIGINS = 'https://yuriilosiev-png.github.io,null';
+const DEF_MODELS = 'gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash';
 
 const PERSONA = {
   coach: 'Coach Max: a strict sports coach. Short, direct, no excuses, dry humour. Talks to the user informally (in Russian: «ты»).',
-  nadia: 'Assistant Nadia: polite, well organised, a little mysterious. Addresses the user formally (in Russian: «вы»).',
-  guru:  'Guru: a calm, wise man of about forty. Speaks slowly, sometimes with a short nature metaphor (river, tree, mountain). Informal «ты».',
-  genie: 'Genie from a magic lamp: cheerful, jokes a lot, talks about wishes, magic, the lamp and the scroll. At most one emoji. Informal «ты».'
+  nadia: 'Assistant Nadia: polite, well organised, a little mysterious, writes things down in her notebook. Addresses the user formally (in Russian: «вы»).',
+  guru:  'Guru: a calm, wise man of about forty with a staff. Speaks slowly, sometimes with a short nature metaphor (river, tree, mountain). Informal «ты».',
+  genie: 'Genie from a magic lamp: cheerful, jokes a lot, talks about wishes, magic, the lamp and the scroll. At most one emoji per reply. Informal «ты».'
 };
 const STYLE = {
   soft: 'Be gentle and supportive.',
@@ -29,40 +33,62 @@ const STYLE = {
   strict: 'Be demanding, but never rude or insulting.'
 };
 const LANG = { ru: 'Russian', en: 'English', es: 'Spanish (Latin America)', pt: 'Portuguese (Brazil)', de: 'German', fr: 'French' };
-
-const STEP = {
-  goal: 'The user names ONE goal. value = the goal as a short title in the user\'s language (max 60 chars, capital first letter, no quotes). type = physical (sport, health, body), material (money, savings, buying), learning (study, reading, languages, skills, work) or travel (trips, rest). ok=false if it is not a goal: a question to you, a greeting, nonsense, or something harmful or illegal.',
-  why:  'The user says why the goal matters / what will change when it comes true. value = that reason, cleaned up, max 120 chars. ok=false only for questions to you or text unrelated to the goal.',
-  num:  'The user gives the measurable target of the goal (a number and a unit). num = the number (expand words like «тысяч», «thousand», «k», «млн»). unit = a short unit: pick from units if one fits, otherwise a short word in the user\'s language. ok=false if there is no number; then in reply suggest a sensible measure for THIS goal.',
-  obst: 'The user names what may get in the way. value = the obstacle, max 80 chars. tip = one short if-then rule that beats this obstacle, in the user\'s language, lowercase, max 80 chars, e.g. «если устал — делаю минимум: 10 минут».',
-  plan: 'The user gives their own rule for the obstacle (the suggested one is in tip). value = the rule, max 100 chars. If the user agrees with the suggestion or does not know, ok=true and value = tip.'
-};
+const ASK = ['goal', 'why', 'num', 'when', 'days', 'obst', 'plan', 'free', 'done'];
+const TYPES = ['physical', 'material', 'learning', 'travel'];
+const EMO = ['think', 'happy', 'proud', 'sad', 'sly'];
 
 const SCHEMA = {
   type: 'OBJECT',
   properties: {
-    ok:    { type: 'BOOLEAN' },
     reply: { type: 'STRING' },
-    value: { type: 'STRING' },
-    num:   { type: 'NUMBER' },
-    unit:  { type: 'STRING' },
-    tip:   { type: 'STRING' },
-    type:  { type: 'STRING', enum: ['physical', 'material', 'learning', 'travel'] }
+    ask:   { type: 'STRING', enum: ASK },
+    emo:   { type: 'STRING', enum: EMO },
+    set: {
+      type: 'OBJECT',
+      properties: {
+        title:        { type: 'STRING' },
+        type:         { type: 'STRING', enum: TYPES },
+        why:          { type: 'STRING' },
+        target:       { type: 'NUMBER' },
+        unit:         { type: 'STRING' },
+        deadlineDays: { type: 'INTEGER' },
+        days:         { type: 'ARRAY', items: { type: 'INTEGER' } },
+        obst:         { type: 'STRING' },
+        tip:          { type: 'STRING' },
+        plan:         { type: 'STRING' }
+      }
+    }
   },
-  required: ['ok', 'reply']
+  required: ['reply', 'ask']
 };
 
-function system(b) {
+function system(p) {
   return [
-    'You are a character inside "Planner", a mobile app for goals and tasks. You run a short fixed interview (7 questions) that turns the user\'s wish into a goal with a daily norm.',
-    'Character: ' + (PERSONA[b.persona] || PERSONA.coach),
-    'Tone: ' + (STYLE[b.style] || STYLE.normal),
-    'Write "reply" in ' + (LANG[b.lang] || 'English') + ', 1–2 short sentences, plain text, no markdown, stay in character.',
-    'Current step: ' + b.step + '. The question you asked: «' + b.question + '».',
-    'Step rules: ' + STEP[b.step],
-    'If ok=true: reply is a short reaction to the answer. Do NOT ask the next question — the app asks it.',
-    'If ok=false: if the user asked you something, answer it in one short phrase if it is harmless (you are an AI helper of the Planner app — say so honestly if asked), then steer back to your question.',
-    'Never give medical, legal or financial advice beyond common sense; for health goals suggest checking with a doctor when relevant. If the user hints at self-harm, reply with care, suggest talking to someone close or a professional, ok=false.',
+    'You are a character inside "Planner", a mobile app for goals and tasks. In a short chat you help the user turn a wish into ONE measurable goal with a daily norm. The app then creates the goal and its daily tasks.',
+    'Character: ' + (PERSONA[p.persona] || PERSONA.coach),
+    'Tone: ' + (STYLE[p.style] || STYLE.normal),
+    'Language: write "reply" in ' + (LANG[p.lang] || 'English') + '. 1–3 short sentences, plain text, no markdown, no lists. Stay in character.',
+    '',
+    'FIELDS to collect (see "slots" in the input — what is already known):',
+    '- title: the goal as a short title in the user\'s language (max 60 chars, capital first letter). type: physical (sport, health), material (money, savings, buying), learning (study, reading, languages, skills, career, work) or travel.',
+    '- why: what changes for the user when the goal comes true (optional but valuable).',
+    '- target + unit: the measurable amount for the WHOLE period (e.g. 21 km per run is NOT a target; total km, total savings, total pages, total lessons are). Pick unit from "units" if one fits, otherwise a short word. Expand «тысяч», «thousand», «k», «млн».',
+    '- deadlineDays: days from today until the deadline (the user may say «к лету», «через 3 месяца», «до Нового года» — compute from "today"). Minimum 7.',
+    '- days: weekdays to work on it, 0=Monday … 6=Sunday.',
+    '- obst: what may get in the way; tip: one short if-then rule against it, lowercase, max 80 chars (e.g. «если устал — делаю минимум: 10 минут»).',
+    '- plan: the user\'s own rule, or the tip if they agree.',
+    '',
+    'HOW TO TALK:',
+    '- React to what the user actually said, using the whole dialog. You may ask 1–2 side questions when they help make a realistic plan (current level, experience, past attempts, schedule, budget), and you may suggest a realistic target or deadline yourself — then confirm with the user. Always steer back to the missing fields.',
+    '- A vague wish (e.g. «change my career») must become measurable: help the user pick a concrete measure (e.g. number of applications, courses, hours of study).',
+    '- Ask about ONE thing at a time; your reply must end with that question unless ask="done".',
+    '- If the user asks about you: you are an AI helper of the Planner app — say so honestly in a few words, then return to the goal.',
+    '- Put into "set" ONLY values the user clearly gave or explicitly accepted in THIS message or earlier. Never invent them.',
+    '- "ask" = what your question is about: goal, why, num, when, days, obst, plan; "free" for a side question; "done" when title, target, unit, deadlineDays, days are known and obst/plan were discussed (or the user wants to finish) — then reply with a short encouraging wrap-up and no question.',
+    '- Try to finish within about 10 of your messages.',
+    '- emo: your face for this reply (think, happy, proud, sad, sly — sly when the user dodges or jokes).',
+    '- No medical, legal or financial advice beyond common sense; for health goals mention checking with a doctor when relevant. If the user hints at self-harm, reply with care, suggest talking to someone close or a professional, ask="free".',
+    '- Refuse harmful or illegal goals politely and offer to pick another goal (ask="goal").',
     'Return JSON only.'
   ].join('\n');
 }
@@ -87,18 +113,17 @@ const json = (obj, status, h) =>
 
 const clip = (s, n) => String(s == null ? '' : s).slice(0, n);
 
-/* дневные счётчики в KV: d:<день>:<устройство> и g:<день> (eventual consistency — для лимита достаточно) */
+/* счётчик на устройство: одна запись в KV на запрос; любая ошибка KV — не мешаем работе */
 async function overLimit(env, device) {
   if (!env.RL) return false;
-  const day = new Date().toISOString().slice(0, 10);
-  const kd = 'd:' + day + ':' + device, kg = 'g:' + day;
-  const [d, g] = await Promise.all([env.RL.get(kd), env.RL.get(kg)]);
-  const nd = +d || 0, ng = +g || 0;
-  if (nd >= (+env.DEVICE_LIMIT || 60) || ng >= (+env.GLOBAL_LIMIT || 500)) return true;
-  await Promise.all([
-    env.RL.put(kd, String(nd + 1), { expirationTtl: 172800 }),
-    env.RL.put(kg, String(ng + 1), { expirationTtl: 172800 })
-  ]);
+  try {
+    const k = 'd:' + new Date().toISOString().slice(0, 10) + ':' + device;
+    const n = +(await env.RL.get(k)) || 0;
+    if (n >= (+env.DEVICE_LIMIT || 80)) return true;
+    await env.RL.put(k, String(n + 1), { expirationTtl: 172800 });
+  } catch (e) {
+    console.log('kv', String(e));
+  }
   return false;
 }
 
@@ -106,18 +131,16 @@ async function overLimit(env, device) {
    бесплатная квота, перегрузка) — берём следующую. Для каждой модели сначала
    просим не «думать» (быстрее и дешевле), а если модель такой параметр не
    принимает — повторяем без него. */
-const DEF_MODELS = 'gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash';
-
 async function callModel(env, model, sys, user, thinking) {
   const gc = {
-    temperature: 0.8,
-    maxOutputTokens: 400,
+    temperature: 0.9,
+    maxOutputTokens: 600,
     responseMimeType: 'application/json',
     responseSchema: SCHEMA
   };
   if (thinking) gc.thinkingConfig = /^gemini-[3-9]/.test(model) ? { thinkingLevel: 'minimal' } : { thinkingBudget: 0 };
   const ctl = new AbortController();
-  const tm = setTimeout(() => ctl.abort(), 7000);
+  const tm = setTimeout(() => ctl.abort(), 9000);
   try {
     const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
       method: 'POST',
@@ -136,7 +159,8 @@ async function callModel(env, model, sys, user, thinking) {
     const j = await r.json();
     const txt = j && j.candidates && j.candidates[0] && j.candidates[0].content &&
       j.candidates[0].content.parts && j.candidates[0].content.parts.map(p => p.text || '').join('');
-    return { out: txt ? JSON.parse(txt) : null };
+    if (!txt) console.log('gemini empty', model, JSON.stringify(j).slice(0, 300));
+    return { out: txt ? JSON.parse(txt) : null, model };
   } catch (e) {
     console.log('gemini error', model, String(e));
     return { status: 0 };
@@ -150,9 +174,34 @@ async function gemini(env, sys, user) {
   for (const m of models) {
     let r = await callModel(env, m, sys, user, true);
     if (r.status === 400) r = await callModel(env, m, sys, user, false);
-    if (r.out) return r.out;
+    if (r.out) return r;
   }
   return null;
+}
+
+/* приводим ответ модели к безопасному виду: только известные поля и разумные значения */
+function clean(out) {
+  const s = out.set && typeof out.set === 'object' ? out.set : {};
+  const set = {};
+  if (s.title) set.title = clip(s.title, 80).trim();
+  if (TYPES.includes(s.type)) set.type = s.type;
+  if (s.why) set.why = clip(s.why, 200).trim();
+  if (typeof s.target === 'number' && isFinite(s.target) && s.target > 0) set.target = s.target;
+  if (s.unit) set.unit = clip(s.unit, 16).trim();
+  if (Number.isInteger(s.deadlineDays) && s.deadlineDays > 0) set.deadlineDays = Math.min(Math.max(s.deadlineDays, 7), 3650);
+  if (Array.isArray(s.days)) {
+    const d = [...new Set(s.days.filter(x => Number.isInteger(x) && x >= 0 && x <= 6))].sort();
+    if (d.length) set.days = d;
+  }
+  if (s.obst) set.obst = clip(s.obst, 100).trim();
+  if (s.tip) set.tip = clip(s.tip, 100).trim();
+  if (s.plan) set.plan = clip(s.plan, 120).trim();
+  return {
+    reply: clip(out.reply, 500).trim(),
+    ask: ASK.includes(out.ask) ? out.ask : 'free',
+    emo: EMO.includes(out.emo) ? out.emo : 'think',
+    set
+  };
 }
 
 export default {
@@ -160,7 +209,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai' }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 2 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -171,44 +220,40 @@ export default {
     if (url.pathname === '/report') {
       const rec = {
         at: new Date().toISOString(), device, persona: clip(b.persona, 10), lang: clip(b.lang, 5),
-        step: clip(b.step, 10), answer: clip(b.answer, 500), reply: clip(b.reply, 500)
+        answer: clip(b.answer, 500), reply: clip(b.reply, 500)
       };
-      if (env.RL) await env.RL.put('r:' + rec.at + ':' + device, JSON.stringify(rec), { expirationTtl: 7776000 });
+      try { if (env.RL) await env.RL.put('r:' + rec.at + ':' + device, JSON.stringify(rec), { expirationTtl: 7776000 }); }
+      catch (e) { console.log('kv', String(e)); }
       console.log('REPORT', JSON.stringify(rec));
       return json({ ok: true }, 200, c.h);
     }
 
-    if (url.pathname !== '/interview') return json({ error: 'path' }, 404, c.h);
+    if (url.pathname !== '/chat') return json({ error: 'path' }, 404, c.h);
     if (!env.GEMINI_KEY) return json({ error: 'nokey' }, 503, c.h);
-    if (!STEP[b.step]) return json({ error: 'step' }, 400, c.h);
     if (await overLimit(env, device)) return json({ error: 'limit' }, 429, c.h);
 
     const p = {
       persona: PERSONA[b.persona] ? b.persona : 'coach',
       style: STYLE[b.style] ? b.style : 'normal',
-      lang: LANG[b.lang] ? b.lang : 'en',
-      step: b.step,
-      question: clip(b.question, 300)
+      lang: LANG[b.lang] ? b.lang : 'en'
     };
+    const hist = (Array.isArray(b.history) ? b.history : []).slice(-24)
+      .map(m => (m && m.who === 'me' ? 'USER: ' : 'YOU: ') + clip(m && m.text, 400));
+    const sl = b.slots && typeof b.slots === 'object' ? b.slots : {};
     const user = JSON.stringify({
-      answer: clip(b.answer, 500),
-      goal: clip(b.goal && b.goal.title, 100),
-      why: clip(b.goal && b.goal.why, 200),
+      today: clip(b.today, 10),
+      weekday: clip(b.weekday, 12),
+      slots: {
+        title: clip(sl.title, 80), why: clip(sl.why, 200), target: +sl.target || 0, unit: clip(sl.unit, 16),
+        deadlineDays: +sl.deadlineDays || 0, days: Array.isArray(sl.days) ? sl.days.slice(0, 7) : [],
+        daysConfirmed: !!sl.daysConfirmed, obst: clip(sl.obst, 100), tip: clip(sl.tip, 100), plan: clip(sl.plan, 120)
+      },
       units: Array.isArray(b.units) ? b.units.slice(0, 12).map(u => clip(u, 12)) : [],
-      selectedUnit: clip(b.unit, 12),
-      tip: clip(b.tip, 120)
+      dialog: hist
     });
 
-    const out = await gemini(env, system(p), user);
-    if (!out || typeof out.reply !== 'string' || !out.reply.trim()) return json({ error: 'model' }, 502, c.h);
-    return json({
-      ok: !!out.ok,
-      reply: clip(out.reply.trim(), 400),
-      value: clip(out.value, 140).trim(),
-      num: typeof out.num === 'number' && isFinite(out.num) ? out.num : 0,
-      unit: clip(out.unit, 16).trim(),
-      tip: clip(out.tip, 120).trim(),
-      type: ['physical', 'material', 'learning', 'travel'].includes(out.type) ? out.type : ''
-    }, 200, c.h);
+    const r = await gemini(env, system(p), user);
+    if (!r || !r.out || typeof r.out.reply !== 'string' || !r.out.reply.trim()) return json({ error: 'model' }, 502, c.h);
+    return json({ ...clean(r.out), model: r.model }, 200, c.h);
   }
 };

@@ -6165,14 +6165,16 @@ function hpCheck(){
 let hq=null;
 const HQ_ORDER=['goal','why','num','when','days','obst','plan','sum'];
 /* ===== 1.7.8: AI в опросе =====
-   Свободный ответ уходит в Cloudflare Worker planner-ai (worker/planner-ai.js),
-   тот спрашивает Gemini: персонаж отвечает в своём стиле и достаёт значение
-   (название цели, число, единицу…). Нет адреса / нет сети / ошибка / лимит —
-   тот же ответ обрабатывает обычный сценарий, опрос не ломается. Чипы идут
-   мимо AI: там значение и так известно. */
+   Режим AI: персонаж сам ведёт разговор по контексту — может уточнить уровень,
+   опыт, расписание, предложить реалистичную цифру — но ведёт к цели. Каждый ход
+   уходит в Cloudflare Worker planner-ai (worker/planner-ai.js) → Gemini с
+   историей и уже собранными полями. В ответ: реплика, что нового узнал (set) и
+   о чём спрашивает (ask) — по ask внизу показываются нужные кнопки.
+   Нет адреса / сети / ошибка / лимит — опрос продолжается по сценарию с первого
+   несобранного поля, ничего не теряется. */
 const HP_AI_URL = 'https://planner-ai.yuriilosiev.workers.dev';
-const HQ_AI_STEPS = ['goal','why','num','obst','plan'];
-let hpAILimitShown = false;
+const HQ_AI_MAX = 14;            // ходов AI на опрос; дальше — добор полей по сценарию
+let hpAILimitShown = false, hpAIFailShown = false;
 function hpAIOn(){ return !!HP_AI_URL && state.helperAI!=='off' && navigator.onLine!==false; }
 function hpDev(){
   try{
@@ -6182,7 +6184,7 @@ function hpDev(){
   }catch(e){ return 'nostore'; }
 }
 async function hpAI(path, body){
-  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 20000);
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 25000);
   try{
     const res=await fetch(HP_AI_URL+path, {method:'POST', signal:ctl.signal, headers:{'Content-Type':'application/json'},
       body:JSON.stringify(Object.assign({lang:curLang(), persona:state.coach, style:state.helperStyle, model:state.helperAI, device:hpDev()}, body))});
@@ -6192,39 +6194,84 @@ async function hpAI(path, body){
   }catch(e){ return null; }
   finally{ clearTimeout(tm); }
 }
-async function hqAsk(v, shown){
-  const step=hq.step, run=hq;
-  const q=[...hq.msgs].reverse().find(m=>m.who==='bot' && !m.ai);
-  hq.busy=true; hq.emo='think';
-  hq.msgs.push({who:'me', text:shown||v}); hq.msgs.push({who:'bot', typing:true}); hqRender();
-  const r = await hpAI('/interview', {step, question:q?q.text:'', answer:v, goal:{title:hq.g.title, why:hq.g.why},
-    units:t('hp.units'), unit:hq.g.unit, tip:hq.tip||''});
+/* первое несобранное поле — с него продолжает сценарий */
+function hqMissing(){
+  const g=hq.g, d=hq.done;
+  if(!g.title) return 'goal';
+  if(!d.has('why')) return 'why';
+  if(!(g.target>0)) return 'num';
+  if(!g.deadline) return 'when';
+  if(!d.has('days')) return 'days';
+  if(!d.has('obst')) return 'obst';
+  if(!d.has('plan')) return 'plan';
+  return 'sum';
+}
+function hqToScript(text, step, applied){
+  hq.mode='script';
+  if(!hpAIFailShown){ hpAIFailShown=true; toast(t('hp.aiFail')); }
+  // свободный ответ ещё не разобран — отдаём его сценарию на том же шаге
+  if(text && !applied && ['goal','why','num','obst','plan'].includes(step)){
+    hq.msgs.pop(); hq.step=step; hqAns(text, -1); return;
+  }
+  const st=hqMissing();
+  if(st==='sum') hqFinish(); else hqNext(st);
+}
+function hqSlots(){
+  const g=hq.g, T=todayStr();
+  return {title:g.title, why:g.why, target:g.target, unit:g.unit,
+    deadlineDays: g.deadline ? daysBetween(T, g.deadline) : 0,
+    days:g.days, daysConfirmed:hq.done.has('days'), obst:g.obst, tip:hq.tip||'', plan:g.plan};
+}
+function hqApply(set){
+  const g=hq.g, d=hq.done; if(!set) return;
+  if(set.title){ g.title=set.title; d.add('goal'); }
+  if(set.type) g.type=set.type;
+  if(set.why){ g.why=set.why; d.add('why'); }
+  if(set.target>0){ g.target=set.target; d.add('num'); }
+  if(set.unit) g.unit=set.unit;
+  if(set.deadlineDays>0){ g.deadline=addDays(todayStr(), Math.max(7, set.deadlineDays)); d.add('when'); }
+  if(Array.isArray(set.days) && set.days.length){ g.days=set.days.slice(); d.add('days'); }
+  if(set.obst){ g.obst=set.obst; d.add('obst'); }
+  if(set.tip) hq.tip=set.tip;
+  if(set.plan){ g.plan=set.plan; d.add('plan'); }
+}
+async function hqTurn(text, applied){
+  const run=hq, step=hq.step;
+  hq.busy=true; hq.turns=(hq.turns||0)+1;
+  hq.msgs.push({who:'me', text}); hq.msgs.push({who:'bot', typing:true}); hqRender();
+  const wd=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][(new Date().getDay()+6)%7];
+  const r = await hpAI('/chat', {history: hq.msgs.filter(m=>!m.typing).map(m=>({who:m.who, text:m.text})),
+    slots:hqSlots(), today:todayStr(), weekday:wd, units:t('hp.units')});
   if(hq!==run) return;                       // опрос закрыли или начали заново
   hq.busy=false; hq.msgs=hq.msgs.filter(m=>!m.typing);
-  if(!r || typeof r.reply!=='string' || !r.reply.trim()){ hq.msgs.pop(); hqAns(shown||v, -1); return; }
-  hq.msgs.push({who:'bot', text:r.reply, ai:true, step, answer:v});
-  if(!r.ok){ hq.emo='sly'; hqRender(); return; }
-  hq.emo='happy';
-  const g=hq.g, val=String(r.value||'').trim();
-  switch(step){
-    case 'goal': g.title=(val||v).slice(0,80); g.type=r.type||null; hqNext('why'); break;
-    case 'why':  g.why=(val||v).slice(0,200); hqNext('num'); break;
-    case 'num': {
-      const n = r.num>0 ? r.num : hqNum(v);
-      if(!(n>0)){ hq.emo='sly'; hqRender(); return; }
-      g.target=n; if(r.unit) g.unit=r.unit.slice(0,16); hqNext('when'); break; }
-    case 'obst': g.obst=(val||v).slice(0,100); hq.tip=r.tip||t('hp.tipDefault'); hqNext('plan'); break;
-    case 'plan': g.plan=(val||hq.tip).slice(0,120); hqFinish(); break;
+  if(!r || typeof r.reply!=='string' || !r.reply.trim()){ hqToScript(text, step, applied); return; }
+  hqApply(r.set);
+  hq.msgs.push({who:'bot', text:r.reply, ai:true, answer:text});
+  hq.emo = ['think','happy','proud','sad','sly'].includes(r.emo) ? r.emo : 'think';
+  let ask = r.ask || 'free';
+  if(ask==='done'){
+    const miss=hqMissing();
+    // AI считает, что всего хватает: необязательное добираем молча, обязательное — спросим
+    if(['why','obst','plan','days'].includes(miss) && hq.g.title && hq.g.target>0 && hq.g.deadline){
+      if(!hq.g.plan && hq.tip) hq.g.plan=hq.tip;
+      hqFinish(); return;
+    }
+    ask = miss==='sum' ? 'sum' : miss;
+    if(ask==='sum'){ hqFinish(); return; }
   }
+  if(hq.turns>=HQ_AI_MAX){ hq.mode='script'; const st=hqMissing(); if(st==='sum') hqFinish(); else hqNext(st); return; }
+  if(ask==='plan' && !hq.tip) hq.tip=t('hp.tipDefault');
+  hq.step=ask; hqRender();
 }
 function hqFlag(i){
   const m=hq.msgs[i]; if(!m || !m.ai || m.flagged) return;
   m.flagged=true; hqRender(); toast(t('hp.aiThanks'));
-  hpAI('/report', {step:m.step, answer:m.answer, reply:m.text});
+  hpAI('/report', {answer:m.answer, reply:m.text});
 }
 function hpStart(){
   if(!state.coach) return;
-  hq={step:'goal', emo:'hello', msgs:[], g:{title:'', why:'', target:0, unit:'', deadline:'', days:[0,1,2,3,4], obst:'', plan:'', type:null}};
+  hq={step:'goal', emo:'hello', msgs:[], mode: hpAIOn() ? 'ai' : 'script', done:new Set(), turns:0,
+      g:{title:'', why:'', target:0, unit:'', deadline:'', days:[0,1,2,3,4], obst:'', plan:'', type:null}};
   hqSay('iHello'); hqNext('goal');
 }
 function hqSay(key, vars){ hq.msgs.push({who:'bot', text:hpLine(key, state.coach, vars)}); }
@@ -6244,26 +6291,44 @@ function hqRender(){
     case 'goal': hq.chips=t('hp.goals'); input=chips(hq.chips)+field(t('hp.goalPh')); break;
     case 'why':  hq.chips=[t('hp.skip')]; input=chips(hq.chips)+field(t('hp.whyPh')); break;
     case 'num':  input=`<div class="hq-in"><input id="hqIn" type="text" inputmode="decimal" placeholder="${esc(t('hp.numPh'))}" onkeydown="if(event.key==='Enter')hqSend()"><select id="hqUnit">${t('hp.units').map(u=>`<option>${esc(u)}</option>`).join('')}</select><button onclick="hqSend()">➤</button></div>`; break;
-    case 'when': hq.chips=t('hp.whens').map(w=>w[0]); input=chips(hq.chips); break;
+    case 'when': hq.chips=t('hp.whens').map(w=>w[0]); input=chips(hq.chips)+(hq.mode==='ai'?field(t('hp.whenPh')):''); break;
+    case 'free': input=field(t('hp.freePh')); break;
     case 'days': input=`<div class="hq-chips days">${WEEKDAYS.map((w,i)=>`<button class="${hq.g.days.includes(i)?'on':''}" onclick="hqDay(${i})">${w}</button>`).join('')}</div>
                  <button class="hq-go" onclick="hqDaysDone()">${t('hp.ready')}</button>`; break;
     case 'obst': hq.chips=t('hp.obst').map(o=>o[0]); input=chips(hq.chips)+field(t('hp.ownPh')); break;
     case 'plan': hq.chips=[t('hp.keepTip')]; input=chips(hq.chips)+field(t('hp.rulePh')); break;
     case 'sum':  input=`<div class="hq-row2"><button class="hq-ghost" onclick="hpStart()">${t('hp.again')}</button><button class="hq-go" onclick="hqCreate()">${t('hp.create')}</button></div>`; break;
   }
-  const i=HQ_ORDER.indexOf(hq.step);
-  hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hpAIOn()?'<span class="hq-ai">AI</span>':''}<span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
+  const i = hq.mode==='ai' ? (hq.step==='sum' ? 6 : Math.min(hq.done.size, 6)) : HQ_ORDER.indexOf(hq.step);
+  hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hq.mode==='ai'?'<span class="hq-ai">AI</span>':''}<span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
     <div class="hq-stage"><img class="hq-fig" src="${hpImg(p,hq.emo)}" alt=""><div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
     <div class="hq-bottom">${input}</div>`);
-  const ch=document.getElementById('hqChat'); if(ch) ch.scrollTop=ch.scrollHeight;
+  const ch=document.getElementById('hqChat'); if(ch){ ch.scrollTop=ch.scrollHeight; requestAnimationFrame(()=>{ ch.scrollTop=ch.scrollHeight; }); }
 }
-function hqChip(i){ if(hq.busy) return; hqAns(hq.chips[i], i); }
+function hqChip(i){
+  if(hq.busy) return;
+  if(hq.mode!=='ai'){ hqAns(hq.chips[i], i); return; }
+  // в режиме AI значение чипа известно сразу — записываем и отдаём ход персонажу
+  const g=hq.g, d=hq.done, x=hq.chips[i], T=todayStr();
+  switch(hq.step){
+    case 'goal': g.title=x; g.type=['travel','physical','learning','learning'][i]||null; d.add('goal'); break;
+    case 'why':  g.why=''; d.add('why'); break;
+    case 'when': { const w=t('hp.whens')[i]; g.deadline = w[1]>0 ? addDays(T,w[1]) : T.slice(0,4)+'-12-31';
+                   if(daysBetween(T,g.deadline)<7) g.deadline=addDays(T,30); d.add('when'); break; }
+    case 'obst': { const o=t('hp.obst')[i]; g.obst=o[0]; hq.tip=o[1]; d.add('obst'); break; }
+    case 'plan': g.plan=hq.tip; d.add('plan'); break;
+  }
+  hqTurn(x, true);
+}
 function hqSend(){
   const el=document.getElementById('hqIn'); if(!el||!String(el.value).trim()) return;
   if(hq.busy) return;
   let v=String(el.value).trim(), shown=v;
-  if(hq.step==='num'){ hq.g.unit=document.getElementById('hqUnit').value; if(/^[\d\s.,]+$/.test(v)) shown=v+' '+hq.g.unit; }
-  if(hpAIOn() && HQ_AI_STEPS.includes(hq.step)){ hqAsk(v, shown); return; }
+  if(hq.step==='num'){ const u=document.getElementById('hqUnit').value; if(hq.mode!=='ai' || /^[\d\s.,]+$/.test(v)) hq.g.unit=u; if(/^[\d\s.,]+$/.test(v)) shown=v+' '+u; }
+  if(hq.mode==='ai'){
+    if(hq.step==='num' && /^[\d\s.,]+$/.test(v)){ const n=hqNum(v); if(n>0){ hq.g.target=n; hq.done.add('num'); } }
+    el.value=''; hqTurn(shown, hq.done.has('num') && hq.step==='num' && /^[\d\s.,]+$/.test(v)); return;
+  }
   hqAns(shown, -1);
 }
 /* число из ввода или диктовки: «150 000», «1,5», «150 тысяч», «2 млн», «10k» */
@@ -6278,7 +6343,12 @@ function hqNum(v){
 }
 function hqDay(i){ const d=hq.g.days, k=d.indexOf(i); if(k<0) d.push(i); else d.splice(k,1); d.sort(); hqRender(); }
 function hqDaysTxt(){ return hq.g.days.length===7 ? t('hp.everyDay') : hq.g.days.map(i=>WEEKDAYS[i]).join(', '); }
-function hqDaysDone(){ if(!hq.g.days.length){ toast(t('gv.oneDay')); return; } hqAns(hqDaysTxt(), -1); }
+function hqDaysDone(){
+  if(!hq.g.days.length){ toast(t('gv.oneDay')); return; }
+  if(hq.busy) return;
+  if(hq.mode==='ai'){ hq.done.add('days'); hqTurn(hqDaysTxt(), true); return; }
+  hqAns(hqDaysTxt(), -1);
+}
 /* «хитрая улыбка»: пропуск вопроса или ответ-отписка */
 function hqSly(){ hq.emo='sly'; hqSay('iSly'); }
 function hqAns(v, chipIdx){
@@ -6318,7 +6388,7 @@ function hqCalc(){
   const nice=per>=10 ? Math.ceil(per) : Math.ceil(per*10)/10;
   return {n, per:nice, rate:nice+' '+g.unit};
 }
-function hqFinish(){ hq.step='sum'; hq.emo='happy'; hqSay('iDone',{rate:hqCalc().rate}); hqRender(); }
+function hqFinish(){ hq.step='sum'; hq.emo='happy'; if(hq.mode!=='ai') hqSay('iDone',{rate:hqCalc().rate}); hqRender(); }
 function hqSummaryHTML(){
   const g=hq.g, k=hqCalc();
   return `<div class="hq-sum">
@@ -6374,7 +6444,7 @@ Object.assign(I18N.ru, {
   'hp.whens':[['Через месяц',30],['Через 3 месяца',91],['Через полгода',182],['До конца года',0]],
   'hp.ready':'Готово', 'hp.everyDay':'Каждый день',
   'hp.obst':[['Устану после работы','если устал — делаю минимум: 10 минут'],['Забуду','напоминание вечером и задача в шторке'],['Не будет времени','делаю утром, до работы'],['Лень','начинаю с 2 минут — дальше само пойдёт']],
-  'hp.ownPh':'Своё…', 'hp.keepTip':'Оставить совет', 'hp.rulePh':'Своё правило…', 'hp.tipDefault':'сделаю хотя бы минимум, но в тот же день',
+  'hp.ownPh':'Своё…', 'hp.freePh':'Ответ…', 'hp.whenPh':'Или своими словами: «к лету»…', 'hp.aiFail':'AI не ответил — продолжаю по сценарию', 'hp.keepTip':'Оставить совет', 'hp.rulePh':'Своё правило…', 'hp.tipDefault':'сделаю хотя бы минимум, но в тот же день',
   'hp.again':'Заново', 'hp.create':'Создать цель', 'hp.sGoal':'Цель', 'hp.sDays':'Дни', 'hp.sNorm':'Норма в день',
 });
 Object.assign(I18N.en, {
@@ -6395,7 +6465,7 @@ Object.assign(I18N.en, {
   'hp.whens':[['In a month',30],['In 3 months',91],['In half a year',182],['By the end of the year',0]],
   'hp.ready':'Done', 'hp.everyDay':'Every day',
   'hp.obst':[['Tired after work','if tired — I do the minimum: 10 minutes'],['I’ll forget','an evening reminder and the task in the shade'],['No time','I do it in the morning, before work'],['Laziness','I start with 2 minutes — the rest follows']],
-  'hp.ownPh':'Your own…', 'hp.keepTip':'Keep the advice', 'hp.rulePh':'Your own rule…', 'hp.tipDefault':'I’ll do at least the minimum, but the same day',
+  'hp.ownPh':'Your own…', 'hp.freePh':'Your answer…', 'hp.whenPh':'Or in your words: “by summer”…', 'hp.aiFail':'AI didn’t answer — continuing with the script', 'hp.keepTip':'Keep the advice', 'hp.rulePh':'Your own rule…', 'hp.tipDefault':'I’ll do at least the minimum, but the same day',
   'hp.again':'Start over', 'hp.create':'Create goal', 'hp.sGoal':'Goal', 'hp.sDays':'Days', 'hp.sNorm':'Daily norm',
   // награды
   'rw.d1':'A chocolate bar', 'rw.d2':'Coffee at a café', 'rw.d3':'A movie night', 'rw.d4':'A new book',
