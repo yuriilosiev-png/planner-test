@@ -6204,33 +6204,46 @@ function hpStickers(em){
 function hpFigHTML(p, emo, imgCls, still, attrs){
   const k=p+'-'+emo, h=HP_HEAD[k]||[50,4], em=HP_EM[emo]||'hello';
   return `<span class="hp-fw ${imgCls}-w fig-${p} em-${em}${still?' still':''}" style="--hx:${h[0]}%;--hy:${h[1]}%">`+
-    `<img class="${imgCls} fig-${p}" src="${hpImg(p,emo)}" alt="" ${attrs||''}>${hpStickers(em)}</span>`;
+    `<img class="${imgCls} fig-${p}" data-k="${k}" src="${(hpBlinkCache[k]&&hpBlinkCache[k].o)||hpImg(p,emo)}" alt="" ${attrs||''}>${hpStickers(em)}</span>`;
 }
 /* 1.7.8: моргание. Для картинок из списка есть кадры -b1 (веки прикрыты) и -b2 (закрыты),
    нарисованные поверх оригинала, — поза и размер те же. Раз в 2,5–6 с один видимый
    персонаж моргает: b1 → b2 → b1 → исходник. Кадры подгружаются заранее. */
 const HP_BLINK = new Set(["coach-hello", "coach-proud", "coach-sad", "coach-sly", "coach-strict", "coach-think", "genie-happy", "genie-hello", "genie-proud", "genie-sad", "genie-sly", "genie-tease", "genie-think", "guru-hello", "guru-proud", "guru-sad", "guru-sly", "guru-stern", "nadia-hello", "nadia-mystery", "nadia-proud", "nadia-sad", "nadia-sly", "nadia-think"]);
+/* Кадры берём через fetch → blob: и держим в памяти. Приложение при сети открывает
+   страницу с LOAD_NO_CACHE: каждая смена src у <img> по обычному адресу шла бы в сеть,
+   кадр не успевал прийти за 60 мс — моргания не было видно. blob: в сеть не ходит. */
 const hpBlinkCache = {};
-function hpBlinkLoad(src){
-  if(hpBlinkCache[src]) return hpBlinkCache[src];
-  const base=src.replace(/\.webp$/,''), fr=[new Image(), new Image()];
-  fr[0].src=base+'-b1.webp'; fr[1].src=base+'-b2.webp';
-  return hpBlinkCache[src]=fr;
+function hpBlinkLoad(k){
+  if(hpBlinkCache[k]) return hpBlinkCache[k];
+  const c = hpBlinkCache[k] = {ready:false};
+  const get=u=>fetch(u).then(r=>{ if(!r.ok) throw 0; return r.blob(); }).then(b=>URL.createObjectURL(b));
+  Promise.all(['', '-b1', '-b2'].map(x=>get('coach/'+k+x+'.webp')))
+    .then(([o,b1,b2])=>{ Object.assign(c,{o,b1,b2,ready:true});
+      // декодируем заранее, чтобы первый кадр не мигал пустотой
+      [b1,b2].forEach(u=>{ const im=new Image(); im.src=u; });
+    }).catch(()=>{ c.failed=true; });
+  return c;
 }
-function hpBlinkKey(img){ const m=(img.getAttribute('src')||'').match(/coach\/([a-z]+-[a-z]+)\.webp$/); return m && HP_BLINK.has(m[1]) ? m[0] : null; }
+function hpBlinkKey(img){
+  const k = img.dataset.k || ((img.getAttribute('src')||'').match(/coach\/([a-z]+-[a-z]+)\.webp$/)||[])[1];
+  return k && HP_BLINK.has(k) ? k : null;
+}
 function hpBlinkTick(){
   try{
     if(document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const imgs=[...document.querySelectorAll('.hp-fig,.hq-fig,.tour-img,.hp-pop.show .hp-pimg')]
-      .filter(i=>i.offsetParent && !i.dataset.blinking && hpBlinkKey(i));
+    // поверх всего — экскурсия или опрос: моргает тот, кого видно
+    const sel = document.getElementById('tourOv') ? '.tour-img'
+      : (document.querySelector('#hqOv.show') ? '.hq-fig' : '.hp-fig,.hp-pop.show .hp-pimg');
+    const imgs=[...document.querySelectorAll(sel)]
+      .filter(i=>i.isConnected && i.getClientRects().length && !i.dataset.blinking && hpBlinkKey(i));
     imgs.forEach(i=>hpBlinkLoad(hpBlinkKey(i)));
     const img=imgs[Math.floor(Math.random()*imgs.length)]; if(!img) return;
-    const src=hpBlinkKey(img), fr=hpBlinkLoad(src);
-    if(!fr[0].complete || !fr[1].complete) return;
-    img.dataset.blinking='1';
-    const seq=[fr[0].src, fr[1].src, fr[0].src, src], step=[0,60,150,210];
-    seq.forEach((u,k)=>setTimeout(()=>{ if(img.getAttribute('src').indexOf(src.replace('.webp',''))>=0) img.src = k===3 ? src : u;
-      if(k===3) delete img.dataset.blinking; }, step[k]));
+    const k=hpBlinkKey(img), c=hpBlinkLoad(k);
+    if(!c.ready) return;
+    img.dataset.k=k; img.dataset.blinking='1';
+    const seq=[c.b1, c.b2, c.b1, c.o], step=[0,60,150,210];
+    seq.forEach((u,i)=>setTimeout(()=>{ if(img.dataset.k===k) img.src=u; if(i===3) delete img.dataset.blinking; }, step[i]));
   }catch(e){}
 }
 (function hpBlinkLoop(){ setTimeout(()=>{ hpBlinkTick(); hpBlinkLoop(); }, 2500+Math.random()*3500); })();
@@ -6381,8 +6394,8 @@ function hpPoke(){
   const p=state.coach; if(!p) return;
   hpPokeN++;
   const fig=document.querySelector('.hp-fig'), bub=document.querySelector('.hp-bub');
-  if(p==='genie'){ if(fig) fig.src=hpImg('genie','joke'); if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); }
-  else { const k=['hello','pick'][hpPokeN%2]; if(fig) fig.src=hpImg(p, hpPokeN%2?'think':'hello'); if(bub) bub.textContent=hpLine(k,p,null,'poke'+hpPokeN); }
+  if(p==='genie'){ if(fig){ fig.src=hpImg('genie','joke'); fig.dataset.k='genie-joke'; } if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); }
+  else { const k=['hello','pick'][hpPokeN%2]; if(fig){ const e=hpPokeN%2?'think':'hello'; fig.src=hpImg(p,e); fig.dataset.k=p+'-'+e; } if(bub) bub.textContent=hpLine(k,p,null,'poke'+hpPokeN); }
   if(fig){ fig.classList.remove('hp-jump'); void fig.offsetWidth; fig.classList.add('hp-jump'); }
   const w=fig && fig.closest('.hp-fw');
   if(w){ const em = p==='genie' ? 'joke' : (hpPokeN%2 ? 'think' : 'hello');
