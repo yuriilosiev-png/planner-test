@@ -869,6 +869,17 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
   background:radial-gradient(120% 90% at 20% 100%, color-mix(in srgb,var(--cc) 30%,transparent) 0%, transparent 70%), var(--surface)}
 .hp-fig{height:220px;width:auto;max-width:46%;object-fit:contain;object-position:bottom;flex:0 0 auto;cursor:pointer;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));transform-origin:50% 100%}
+/* 1.7.8: персонажи «живут» — дышат, Джин парит; смена эмоции — мягкий толчок.
+   Это первый уровень анимации; покадровые ролики заменят его позже. */
+.hp-fig,.hq-fig,.tour-card img{animation:hpBreath 3.4s ease-in-out infinite;transform-origin:50% 100%}
+.hp-fig.fig-genie,.hq-fig.fig-genie,.tour-card img.fig-genie{animation:hpFloat 3s ease-in-out infinite}
+.hq-fig.hp-emo{animation:hpEmo .45s cubic-bezier(.3,1.6,.5,1), hpBreath 3.4s ease-in-out .45s infinite}
+.hq-fig.fig-genie.hp-emo{animation:hpEmo .45s cubic-bezier(.3,1.6,.5,1), hpFloat 3s ease-in-out .45s infinite}
+@keyframes hpBreath{0%,100%{transform:none}50%{transform:scale(1.008,1.018)}}
+@keyframes hpFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(-1deg)}}
+@keyframes hpEmo{0%{transform:scale(.94,1.04);opacity:.7}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.hp-fig,.hq-fig,.tour-card img,.hp-pop img{animation:none!important}}
+.hp-fig.hp-jump{animation:hpJump .45s ease}
 .hp-jump{animation:hpJump .45s ease}
 @keyframes hpJump{0%{transform:scale(1)}40%{transform:scale(1.05,0.95) translateY(-6px)}100%{transform:none}}
 .hp-say{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding-bottom:12px;align-self:center}
@@ -6241,7 +6252,7 @@ function renderHelper(){
     const m = hpMood(p);
     const line = m.key==='joke' ? hpLine('joke','genie',null) : hpLine(m.key, p, m.vars);
     hero = `<div class="hp-card hp-hero" style="--cc:${HP[p].color}">
-      <img class="hp-fig" src="${hpImg(p,m.emo)}" alt="" onclick="hpPoke()">
+      <img class="hp-fig fig-${p}" src="${hpImg(p,m.emo)}" alt="" onclick="hpPoke()">
       <div class="hp-say"><b>${esc(hpName(p))}</b><div class="hp-bub">${esc(line)}</div>
         <button class="hp-go" onclick="hpStart()">🎯 ${t('hp.newGoal')}</button></div>
     </div>`;
@@ -6504,8 +6515,9 @@ function hqRender(){
   }
   const i = hq.mode==='ai' ? (hq.step==='sum' ? 6 : Math.min(hq.done.size, 6)) : HQ_ORDER.indexOf(hq.step);
   hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hq.mode==='ai'?'<span class="hq-ai">AI</span>':''}<span class="hq-prog">${Math.min(i+1,7)}/7</span><button class="hq-x" onclick="hqClose()">✕</button></div>
-    <div class="hq-stage"><img class="hq-fig" src="${hpImg(p,hq.emo)}" alt=""><div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
+    <div class="hq-stage"><img class="hq-fig fig-${p}${hq.emo!==hq.lastEmo?' hp-emo':''}" src="${hpImg(p,hq.emo)}" alt=""><div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
     <div class="hq-bottom">${input}</div>`);
+  hq.lastEmo=hq.emo;
   const ch=document.getElementById('hqChat'); if(ch){ ch.scrollTop=ch.scrollHeight; requestAnimationFrame(()=>{ ch.scrollTop=ch.scrollHeight; }); }
 }
 function hqChip(i){
@@ -7798,7 +7810,7 @@ function tourShow(){
   ov.style.setProperty('--cc', HP[p].color);
   ov.classList.toggle('dim', !el);
   ov.innerHTML = `<div class="tour-hole${el?'':' none'}"></div>
-    <div class="tour-card"><img src="${hpImg(p, last ? 'happy' : (tourI%2 ? 'think' : 'hello'))}" alt="">
+    <div class="tour-card"><img class="fig-${p}" src="${hpImg(p, last ? 'happy' : (tourI%2 ? 'think' : 'hello'))}" alt="">
       <div class="tour-txt"><b>${esc(hpName(p))}</b><div>${esc(t(st.key))}</div><div class="tour-btns">${btns}</div></div></div>`;
   requestAnimationFrame(()=>{
     const hole=ov.querySelector('.tour-hole'), card=ov.querySelector('.tour-card');
