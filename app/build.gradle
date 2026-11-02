@@ -24,6 +24,9 @@
 //     цветах текста — читается на любой шторке (MIUI не рисовал свой синий фон)
 //   - versionCode=16, versionName="1.7.7": виджет «Сегодня» на главном экране и
 //     кнопка «выполнено» в строках шторки (DoneReceiver, TodayWidget, TodayWidgetService).
+//   - versionCode=17, versionName="1.7.8": вкладка «Помощник» (персонажи, AI-опрос через
+//     Cloudflare Worker, разбор целей, экскурсия), баллы и награды; клавиатура больше
+//     не закрывает поле ввода (MainActivity: отступ по высоте IME); вариант prod/test.
 // 1.8 зарезервирован под миграцию на OnBackInvokedCallback (см. комментарий
 // enableOnBackInvokedCallback в AndroidManifest.xml) — поэтому здесь 1.7.x.
 // Тулчейн (compileSdk 36, minSdk 24, target 36, AGP 8.9.1, Gradle 8.11.1) — как в
@@ -52,8 +55,8 @@ android {
         buildConfigField "String", "PAGES_PATH", plannerTest ? '"/planner-test/"' : '"/planner/"'
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 16
-        versionName "1.7.7"
+        versionCode 17
+        versionName "1.7.8"
     }
     signingConfigs {
         // Тестовая сборка подписывается своим ключом app/test.jks — он лежит только
