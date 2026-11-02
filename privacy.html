@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Planner — Политика конфиденциальности / Privacy Policy</title>
-<meta name="description" content="Privacy policy for Planner (com.planner.app). No accounts, no analytics, no ads. Your data stays on your device.">
+<meta name="description" content="Privacy policy for Planner (com.losev.planner). No accounts, no analytics, no ads. Your data stays on your device.">
 <style>
   :root{
     --bg:#eef2f8; --surface:#ffffff; --ink:#141821; --muted:#5a6478;
@@ -74,9 +74,9 @@
 <div class="wrap">
 
 <header>
-  <span class="badge">Planner · com.planner.app</span>
+  <span class="badge">Planner · com.losev.planner</span>
   <h1 id="pageTitle">Политика конфиденциальности</h1>
-  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 27.07.2026</p>
+  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 02.11.2026</p>
   <div class="langbar">
     <button id="btnRu" class="on" onclick="setLang('ru')">Русский</button>
     <button id="btnEn" onclick="setLang('en')">English</button>
@@ -88,12 +88,14 @@
   <p class="keypoint">
     Коротко: <strong>Planner не собирает ваши данные.</strong> Нет регистрации, нет аккаунта,
     нет аналитики и рекламы. Цели, задачи, события и история остаются на вашем устройстве,
-    разработчик к ним доступа не имеет.
+    разработчик к ним доступа не имеет. Исключение одно и по вашему выбору — AI-помощник:
+    если он включён, ваши ответы в разговоре о цели отправляются для обработки в Google Gemini
+    (подробно — в разделе «AI-помощник»).
   </p>
 
   <h2>Кто отвечает за приложение</h2>
   <p>
-    Приложение Planner (идентификатор <code>com.planner.app</code>) разрабатывает
+    Приложение Planner (идентификатор <code>com.losev.planner</code>) разрабатывает
     Юрий Лосев. Вопросы по этой политике: <a href="mailto:yuriilosiev@gmail.com">yuriilosiev@gmail.com</a>.
   </p>
 
@@ -107,6 +109,11 @@
   <p>
     Приложение <strong>не запрашивает</strong> имя, email, телефон, контакты, геолокацию,
     камеру, микрофон, список установленных программ, идентификаторы рекламы.
+  </p>
+  <p>
+    <strong>Голосовой ввод.</strong> Кнопка микрофона в полях ввода открывает системный
+    распознаватель речи Android (обычно — Google). Запись и распознавание выполняет он,
+    по своим правилам; приложение получает только готовый текст и не имеет доступа к микрофону.
   </p>
 
   <h2>Что всё-таки уходит в сеть</h2>
@@ -122,6 +129,52 @@
     Ваши цели и задачи в этих запросах <strong>не передаются</strong> — уходит только
     запрос самой страницы. Если сети нет, приложение открывает копию интерфейса,
     встроенную в него, и работает полностью офлайн.
+  </p>
+
+  <h2>AI-помощник</h2>
+  <p>
+    На вкладке «Помощник» можно поставить цель в разговоре с персонажем. В настройках помощника
+    выбирается, кто отвечает: <strong>«Сценарий»</strong> — готовые реплики, всё работает на
+    устройстве и ничего не отправляется; <strong>«Gemini»</strong> — отвечает модель
+    искусственного интеллекта.
+  </p>
+  <p>Когда отвечает Gemini, во время разговора о цели передаётся:</p>
+  <ul>
+    <li>текст ваших ответов в этом разговоре (напечатанный или продиктованный) и реплики персонажа;</li>
+    <li>то, что уже известно о цели в этом разговоре: название, причина, число и единица, срок,
+      дни, препятствие и правило;</li>
+    <li>при перепланировании существующей цели — её показатели: прогресс, срок, доля выполненных
+      дней за 14 дней, пропуски подряд, дни без активности;</li>
+    <li>язык интерфейса, выбранный персонаж и стиль, сегодняшняя дата;</li>
+    <li>случайный идентификатор установки, который создаёт само приложение. Он не связан
+      с вашим именем, аккаунтом или устройством и нужен только для дневного лимита запросов.</li>
+  </ul>
+  <p>
+    Остальные цели, задачи, события и история в AI не отправляются.
+  </p>
+  <p>
+    <strong>Куда идут данные.</strong> Запрос уходит на сервер разработчика на платформе
+    Cloudflare Workers (Cloudflare, Inc.), а оттуда — в Gemini API (Google LLC), чтобы получить
+    ответ. Используется платный тариф Gemini API: по условиям Google запросы и ответы не
+    используются для улучшения продуктов Google; Google хранит их ограниченное время только
+    для выявления и предотвращения нарушений. Cloudflare, как любой сервер, видит технические
+    данные запроса (IP-адрес, время).
+  </p>
+  <p>
+    <strong>Что хранит сервер разработчика.</strong> Разговоры не сохраняются. Хранится только
+    счётчик запросов на идентификатор установки за день — удаляется автоматически через 2 дня.
+    Технические журналы сервера Cloudflare хранит несколько дней.
+  </p>
+  <p>
+    <strong>Жалобы на ответы.</strong> Значок ⚑ у ответа AI отправляет разработчику этот ответ
+    и ваш ответ, на который он был дан, чтобы улучшить работу помощника. Такие записи хранятся
+    до 90 дней.
+  </p>
+  <p>
+    Не пишите в разговоре с помощником сведения о здоровье, финансах и другие данные, которыми
+    не хотели бы делиться. Ответы AI могут быть неточными и не являются медицинской,
+    юридической или финансовой консультацией. Отключить AI в любой момент: настройки помощника →
+    «Кто отвечает в опросе» → «Сценарий».
   </p>
 
   <h2>Резервные копии</h2>
@@ -162,8 +215,8 @@
   <h2>Реклама, аналитика, продажа данных</h2>
   <p>
     Ничего из перечисленного нет. В приложении не используются рекламные сети, счётчики
-    посещений, системы аналитики и трекеры. Данные не продаются и не передаются третьим
-    лицам, потому что они к нам и не попадают.
+    посещений, системы аналитики и трекеры. Данные не продаются. Третьим лицам данные
+    передаются только в одном случае — при включённом AI-помощнике, как описано выше.
   </p>
 
   <h2>Как удалить данные</h2>
@@ -171,13 +224,14 @@
     Данные лежат на устройстве, поэтому удаляются вами и мгновенно: удалите приложение
     либо очистите его данные в настройках телефона. Отдельно проверьте копии, которые
     сделали сами, и, если включён Android Auto Backup, копию в вашем Google Диске.
-    Запрос на удаление присылать некому и незачем — у разработчика ваших данных нет.
+    Разговоры с AI-помощником сервер разработчика не сохраняет. Если вы отправляли жалобу
+    на ответ и хотите удалить её раньше 90 дней, напишите на почту ниже.
   </p>
 
   <h2>Дети</h2>
   <p>
-    Приложение не адресовано детям младше 13 лет и не собирает данные о них — как,
-    впрочем, и о ком-либо ещё.
+    Приложение не адресовано детям и не собирает данные о них. AI-помощник предназначен
+    только для пользователей от 18 лет: это условие Google Gemini API.
   </p>
 
   <h2>Изменения политики</h2>
@@ -195,12 +249,14 @@
   <p class="keypoint">
     In short: <strong>Planner does not collect your data.</strong> No sign-up, no account,
     no analytics, no ads. Your goals, tasks, events and history stay on your device,
-    and the developer has no access to them.
+    and the developer has no access to them. There is one exception, and it is your choice:
+    the AI helper. When it is on, your answers in the goal conversation are sent to Google
+    Gemini for processing (details in “AI helper”).
   </p>
 
   <h2>Who is responsible</h2>
   <p>
-    Planner (application ID <code>com.planner.app</code>) is developed by
+    Planner (application ID <code>com.losev.planner</code>) is developed by
     Yurii Losev. Questions about this policy: <a href="mailto:yuriilosiev@gmail.com">yuriilosiev@gmail.com</a>.
   </p>
 
@@ -215,6 +271,11 @@
     The app <strong>does not ask for</strong> your name, email, phone number, contacts,
     location, camera, microphone, installed app list or advertising identifiers.
   </p>
+  <p>
+    <strong>Voice input.</strong> The microphone button in text fields opens Android's system
+    speech recognizer (usually Google's). It records and recognizes speech under its own terms;
+    the app only receives the resulting text and has no access to the microphone.
+  </p>
 
   <h2>What does go over the network</h2>
   <p>
@@ -228,6 +289,47 @@
     Your goals and tasks are <strong>never</strong> part of those requests; only the page
     itself is fetched. With no connection, the app opens the copy of the interface bundled
     inside it and works fully offline.
+  </p>
+
+  <h2>AI helper</h2>
+  <p>
+    On the Helper tab you can set a goal in a conversation with a character. In the helper
+    settings you choose who answers: <strong>“Script”</strong> — ready-made lines, everything runs
+    on the device and nothing is sent; <strong>“Gemini”</strong> — an artificial intelligence model answers.
+  </p>
+  <p>When Gemini answers, the following is sent during the goal conversation:</p>
+  <ul>
+    <li>the text of your answers in that conversation (typed or dictated) and the character’s lines;</li>
+    <li>what is already known about the goal in that conversation: title, reason, number and unit,
+      deadline, days, obstacle and rule;</li>
+    <li>when re-planning an existing goal — its figures: progress, deadline, share of completed days
+      in the last 14 days, misses in a row, days without activity;</li>
+    <li>interface language, chosen character and style, today’s date;</li>
+    <li>a random installation identifier created by the app itself. It is not linked to your name,
+      account or device and is used only for the daily request limit.</li>
+  </ul>
+  <p>Your other goals, tasks, events and history are not sent to the AI.</p>
+  <p>
+    <strong>Where the data goes.</strong> The request goes to the developer’s server on Cloudflare
+    Workers (Cloudflare, Inc.) and from there to the Gemini API (Google LLC) to get a reply. The paid
+    Gemini API tier is used: under Google’s terms, prompts and responses are not used to improve
+    Google’s products; Google logs them for a limited period solely to detect and prevent violations.
+    Like any server, Cloudflare sees technical request data (IP address, time).
+  </p>
+  <p>
+    <strong>What the developer’s server keeps.</strong> Conversations are not stored. Only a daily
+    request counter per installation identifier is kept, and it is deleted automatically after 2 days.
+    Cloudflare keeps technical server logs for a few days.
+  </p>
+  <p>
+    <strong>Reporting replies.</strong> The ⚑ icon on an AI reply sends the developer that reply and
+    the answer of yours it responded to, so the helper can be improved. These records are kept for
+    up to 90 days.
+  </p>
+  <p>
+    Do not share health, financial or other details you would not want to share in the helper
+    conversation. AI replies may be inaccurate and are not medical, legal or financial advice.
+    To turn AI off at any time: helper settings → “Who answers in the interview” → “Script”.
   </p>
 
   <h2>Backups</h2>
@@ -266,22 +368,23 @@
   <h2>Ads, analytics, selling data</h2>
   <p>
     None of these exist here. The app contains no ad networks, no page counters, no analytics
-    or tracking libraries. Data is not sold or shared with third parties, because it never
-    reaches us in the first place.
+    or tracking libraries. Data is not sold. Data is shared with third parties in one case only —
+    when the AI helper is on, as described above.
   </p>
 
   <h2>Deleting your data</h2>
   <p>
     Your data lives on your device, so you delete it yourself and immediately: uninstall the
     app, or clear its data in your phone's settings. Separately, check any backups you made
-    yourself and, if Android Auto Backup is on, the copy in your Google Drive. There is no
-    deletion request to send — the developer holds nothing of yours.
+    yourself and, if Android Auto Backup is on, the copy in your Google Drive. The developer’s
+    server does not store AI helper conversations. If you sent a report on a reply and want it
+    deleted before 90 days, write to the email below.
   </p>
 
   <h2>Children</h2>
   <p>
-    The app is not directed at children under 13 and collects no data about them — nor,
-    for that matter, about anyone else.
+    The app is not directed at children and collects no data about them. The AI helper is
+    for users aged 18 and over only: this is a condition of the Google Gemini API.
   </p>
 
   <h2>Changes to this policy</h2>
@@ -295,7 +398,7 @@
 </main>
 
 <footer id="foot">
-  Planner · com.planner.app<br>
+  Planner · com.losev.planner<br>
   Данные остаются на вашем устройстве.
 </footer>
 
@@ -304,11 +407,11 @@
 <script>
   var TXT = {
     ru:{title:'Политика конфиденциальности',
-        date:'Действует с: 27.07.2026 · Последнее обновление: 27.07.2026',
-        foot:'Planner · com.planner.app<br>Данные остаются на вашем устройстве.'},
+        date:'Действует с: 27.07.2026 · Последнее обновление: 02.11.2026',
+        foot:'Planner · com.losev.planner<br>Ваши записи остаются на вашем устройстве.'},
     en:{title:'Privacy Policy',
-        date:'Effective from: July 27, 2026 · Last updated: July 27, 2026',
-        foot:'Planner · com.planner.app<br>Your data stays on your device.'}
+        date:'Effective from: July 27, 2026 · Last updated: November 2, 2026',
+        foot:'Planner · com.losev.planner<br>Your data stays on your device.'}
   };
   function setLang(l){
     document.getElementById('ru').hidden = (l !== 'ru');
