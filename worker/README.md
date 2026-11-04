@@ -15,11 +15,15 @@ CI этот код не собирает — он вставляется в Clou
 5. **Проверка.** Открыть `https://planner-ai.<твой-поддомен>.workers.dev/` — должно показать `{"ok":true,"service":"planner-ai"}`.
    Этот адрес вписывается в `HP_AI_URL` в index.html.
 
+## Workers AI (основной вариант)
+
+Worker → Settings → Bindings → Add binding → **Workers AI** → имя переменной `AI` → Deploy. Ключ не нужен. Бесплатно 10 000 «нейронов» в день (примерно 150 ходов опроса), дальше — план Workers Paid.
+
 ## Настройки (Settings → Variables, тип Text)
 
 | Имя | По умолчанию | Что |
 |---|---|---|
-| `MODEL` | `gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash` | модели через запятую: первая не ответила — пробуется следующая |
+| `MODEL` | `cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct` | модели через запятую: первая не ответила — пробуется следующая. `cf:` — Workers AI (привязка `AI`), без префикса — Gemini (только при платном тарифе) |
 | `DEVICE_LIMIT` | `80` | запросов в день на устройство (общий лимит держит квота Google) |
 | `ORIGINS` | `https://yuriilosiev-png.github.io,null` | откуда разрешены запросы (`null` — офлайн-копия в APK) |
 

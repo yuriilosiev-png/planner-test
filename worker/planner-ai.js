@@ -9,9 +9,13 @@
    POST /report — жалоба на ответ AI (требование Google Play для AI-контента).
 
    Переменные окружения (Settings → Variables):
-     GEMINI_KEY   (секрет, обязательно) — ключ из Google AI Studio
-     MODEL        модели Gemini через запятую, по очереди при ошибке;
-                  по умолчанию gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
+     AI           (привязка Workers AI) — модели Cloudflare, ключ не нужен
+     GEMINI_KEY   (секрет, необязательно) — ключ из Google AI Studio
+     MODEL        модели через запятую, по очереди при ошибке. Префикс cf: — Workers AI,
+                  без префикса — Gemini. По умолчанию — только Workers AI:
+                  cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct
+                  (бесплатный тариф Gemini нельзя давать пользователям из ЕС/UK/CH —
+                  Gemini добавлять в цепочку только при платном тарифе)
      DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 80
      ORIGINS      разрешённые Origin через запятую
    KV (необязательно) — привязка с именем RL: счётчик на устройство и жалобы.
@@ -19,7 +23,9 @@
    запрос не ломают. Общий дневной лимит держит сам Google (квота модели). */
 
 const DEF_ORIGINS = 'https://yuriilosiev-png.github.io,null';
-const DEF_MODELS = 'gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash';
+const DEF_MODELS = 'cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct';
+// модели Workers AI, которые умеют строгий JSON по схеме (у остальных — разбор ответа)
+const CF_JSON = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct'];
 
 const PERSONA = {
   coach: 'Coach Max: a strict sports coach. Short, direct, no excuses, dry humour. Talks to the user informally (in Russian: «ты»).',
@@ -177,12 +183,52 @@ async function callModel(env, model, sys, user, thinking) {
   }
 }
 
+/* JSON-схема в обычном виде (для Workers AI) из схемы Gemini */
+function stdSchema(x) {
+  if (Array.isArray(x)) return x.map(stdSchema);
+  if (x && typeof x === 'object') {
+    const o = {};
+    for (const k in x) o[k] = k === 'type' ? String(x[k]).toLowerCase() : stdSchema(x[k]);
+    return o;
+  }
+  return x;
+}
+/* первый объект {...} из текста — модели без строгого JSON иногда добавляют слова или ```json */
+function pickJson(t) {
+  if (t && typeof t === 'object') return t;
+  t = String(t || '');
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b <= a) return null;
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; }
+}
+async function callCF(env, model, sys, user) {
+  if (!env.AI) return { status: 0 };
+  const req = {
+    messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+    max_tokens: 600, temperature: 0.8
+  };
+  if (CF_JSON.includes(model)) req.response_format = { type: 'json_schema', json_schema: stdSchema(SCHEMA) };
+  try {
+    const r = await env.AI.run(model, req);
+    const out = pickJson(r && r.response !== undefined ? r.response : r);
+    if (!out) console.log('cf no json', model, JSON.stringify(r).slice(0, 300));
+    return { out, model };
+  } catch (e) {
+    console.log('cf error', model, String(e).slice(0, 300));
+    return { status: 0 };
+  }
+}
 async function gemini(env, sys, user) {
   const models = (env.MODEL || DEF_MODELS).split(',').map(s => s.trim()).filter(Boolean);
   for (const m of models) {
-    let r = await callModel(env, m, sys, user, true);
-    if (r.status === 400) r = await callModel(env, m, sys, user, false);
-    if (r.out) return r;
+    let r;
+    if (m.startsWith('cf:')) r = await callCF(env, m.slice(3), sys, user);
+    else {
+      if (!env.GEMINI_KEY) continue;
+      r = await callModel(env, m, sys, user, true);
+      if (r.status === 400) r = await callModel(env, m, sys, user, false);
+    }
+    if (r.out && typeof r.out.reply === 'string' && r.out.reply.trim()) return r;
   }
   return null;
 }
@@ -217,7 +263,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 3 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 4 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -237,7 +283,7 @@ export default {
     }
 
     if (url.pathname !== '/chat') return json({ error: 'path' }, 404, c.h);
-    if (!env.GEMINI_KEY) return json({ error: 'nokey' }, 503, c.h);
+    if (!env.AI && !env.GEMINI_KEY) return json({ error: 'nokey' }, 503, c.h);
     if (await overLimit(env, device)) return json({ error: 'limit' }, 429, c.h);
 
     const p = {
