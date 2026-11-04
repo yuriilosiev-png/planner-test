@@ -13,7 +13,8 @@
      GEMINI_KEY   (секрет, необязательно) — ключ из Google AI Studio
      MODEL        модели через запятую, по очереди при ошибке. Префикс cf: — Workers AI,
                   без префикса — Gemini. По умолчанию — только Workers AI:
-                  cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct
+                  cf:@cf/qwen/qwen3.8-27b,cf:@cf/zai-org/glm-4.7-flash,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast
+                  (DeepSeek V4.1 Flash, Kimi K2.6, GLM-5.3 Flash — только на Workers Paid)
                   (бесплатный тариф Gemini нельзя давать пользователям из ЕС/UK/CH —
                   Gemini добавлять в цепочку только при платном тарифе)
      DEVICE_LIMIT запросов в день на одно устройство, по умолчанию 80
@@ -23,7 +24,7 @@
    запрос не ломают. Общий дневной лимит держит сам Google (квота модели). */
 
 const DEF_ORIGINS = 'https://yuriilosiev-png.github.io,null';
-const DEF_MODELS = 'cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct';
+const DEF_MODELS = 'cf:@cf/qwen/qwen3.8-27b,cf:@cf/zai-org/glm-4.7-flash,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 // модели Workers AI, которые умеют строгий JSON по схеме (у остальных — разбор ответа)
 const CF_JSON = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct'];
 
@@ -88,7 +89,9 @@ function system(p) {
     '- React to what the user actually said, using the whole dialog. You may ask 1–2 side questions when they help make a realistic plan (current level, experience, past attempts, schedule, budget), and you may suggest a realistic target or deadline yourself — then confirm with the user. Always steer back to the missing fields.',
     '- A vague wish (e.g. «change my career») must become measurable: help the user pick a concrete measure (e.g. number of applications, courses, hours of study).',
     '- Ask about ONE thing at a time; your reply must end with that question unless ask="done".',
-    '- If the user asks about you: you are an AI helper of the Planner app — say so honestly in a few words, then return to the goal.',
+    '- Be warm and human, never robotic. Use the user\'s own words. Never repeat a phrase you already used in this dialog.',
+    '- If the user asks about you, what you can do, or complains about your answers — answer that properly first (2–3 sentences, in character), then gently return to the goal. You are an AI helper of the Planner app: you help choose a realistic goal, turn it into a daily norm, plan around obstacles, and later the app tracks progress, praises, and helps re-plan. Do not claim abilities beyond that.',
+    '- Greetings and small talk: reply briefly and kindly, then ask about the goal.',
     '- Put into "set" ONLY values the user clearly gave or explicitly accepted in THIS message or earlier. Never invent them.',
     '- "ask" = what your question is about: goal, why, num, when, days, obst, plan; "free" for a side question; "done" when title, target, unit, deadlineDays, days are known and obst/plan were discussed (or the user wants to finish) — then reply with a short encouraging wrap-up and no question.',
     '- Try to finish within about 10 of your messages.',
@@ -103,7 +106,7 @@ function system(p) {
       '- Put into "set" ONLY values the user agreed to CHANGE. Never repeat unchanged values.',
       '- ask="done" as soon as the user accepts the new plan (or wants to keep it).'
     ].join('\n') : '',
-    'Return JSON only.'
+    'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"goal","emo":"think","set":{}}'
   ].join('\n');
 }
 
@@ -196,7 +199,7 @@ function stdSchema(x) {
 /* первый объект {...} из текста — модели без строгого JSON иногда добавляют слова или ```json */
 function pickJson(t) {
   if (t && typeof t === 'object') return t;
-  t = String(t || '');
+  t = String(t || '').replace(/<think>[\s\S]*?<\/think>/g, '');   // рассуждения моделей Qwen/DeepSeek
   const a = t.indexOf('{'), b = t.lastIndexOf('}');
   if (a < 0 || b <= a) return null;
   try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; }
@@ -204,13 +207,17 @@ function pickJson(t) {
 async function callCF(env, model, sys, user) {
   if (!env.AI) return { status: 0 };
   const req = {
-    messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
-    max_tokens: 600, temperature: 0.8
+    // Qwen 3: /no_think — сразу ответ, без длинных рассуждений
+    messages: [{ role: 'system', content: sys }, { role: 'user', content: (/qwen3/.test(model) ? '/no_think\n' : '') + user }],
+    max_tokens: 900, temperature: 0.7
   };
   if (CF_JSON.includes(model)) req.response_format = { type: 'json_schema', json_schema: stdSchema(SCHEMA) };
   try {
     const r = await env.AI.run(model, req);
-    const out = pickJson(r && r.response !== undefined ? r.response : r);
+    // старые модели отвечают {response}, новые — в формате OpenAI {choices:[{message:{content}}]}
+    const raw = r && (r.response !== undefined ? r.response
+      : (r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) || r.output_text || r.result);
+    const out = pickJson(raw !== undefined ? raw : r);
     if (!out) console.log('cf no json', model, JSON.stringify(r).slice(0, 300));
     return { out, model };
   } catch (e) {
@@ -263,7 +270,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 4 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 5 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 

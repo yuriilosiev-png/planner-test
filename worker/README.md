@@ -23,7 +23,7 @@ Worker → Settings → Bindings → Add binding → **Workers AI** → имя �
 
 | Имя | По умолчанию | Что |
 |---|---|---|
-| `MODEL` | `cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast,cf:@cf/mistralai/mistral-small-3.1-24b-instruct` | модели через запятую: первая не ответила — пробуется следующая. `cf:` — Workers AI (привязка `AI`), без префикса — Gemini (только при платном тарифе) |
+| `MODEL` | `cf:@cf/qwen/qwen3.8-27b,cf:@cf/zai-org/glm-4.7-flash,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast` | модели через запятую: первая не ответила — пробуется следующая. `cf:` — Workers AI (привязка `AI`), без префикса — Gemini (только при платном тарифе) |
 | `DEVICE_LIMIT` | `80` | запросов в день на устройство (общий лимит держит квота Google) |
 | `ORIGINS` | `https://yuriilosiev-png.github.io,null` | откуда разрешены запросы (`null` — офлайн-копия в APK) |
 
