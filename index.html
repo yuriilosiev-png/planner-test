@@ -872,8 +872,8 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 /* 1.7.8: персонажи живут — обёртка .hp-fw держит размер и позу, картинка внутри дышит,
    наклейки (.st) стоят относительно макушки (--hx/--hy из HP_HEAD). --u = 1% роста фигуры. */
 .hp-fw{position:relative;display:inline-block;flex:0 0 auto;line-height:0;transform-origin:50% 100%}
-.hp-fw>img{max-width:none!important;transform-origin:50% 100%;animation:hpBreath 3.4s ease-in-out infinite}
-.hp-fw.fig-genie>img{animation:hpFloat 3s ease-in-out infinite}
+.hp-fw .hp-g>img{max-width:none!important;transform-origin:50% 100%;animation:hpBreath 3.4s ease-in-out infinite}
+.hp-fw.fig-genie .hp-g>img{animation:hpFloat 3s ease-in-out infinite}
 .hp-fig-w{max-width:46%;--u:2.2px} .hq-fig-w{max-width:34%;--u:calc(min(42vh,260px)/100)}
 .tour-img-w{max-width:32%;--u:1.5px} .hp-pimg-w{max-width:34%;--u:1.32px}
 .tour-img{height:150px;width:auto;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
@@ -886,8 +886,8 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hp-fw.em-sad{animation:hpSink 1s ease-out both}
 .hp-fw.em-sly{animation:hpSly .7s ease-in-out .15s both}
 .hp-fw.em-strict{animation:hpShake .45s ease-in-out .1s both}
-.hp-fw.em-mystery>img{animation:hpMyst 4.2s ease-in-out infinite}
-.hp-fw.em-stern>img{animation:hpBreath 4.6s ease-in-out infinite}
+.hp-fw.em-mystery .hp-g>img{animation:hpMyst 4.2s ease-in-out infinite}
+.hp-fw.em-stern .hp-g>img{animation:hpBreath 4.6s ease-in-out infinite}
 .hp-fw.still,.hp-fw.still *{animation-delay:-30s!important}
 @keyframes hpBreath{0%,100%{transform:none}50%{transform:scale(1.008,1.018)}}
 @keyframes hpFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(-1deg)}}
@@ -934,9 +934,47 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 @keyframes stLeaf{0%{opacity:0;transform:translate(-50%,-50%) rotate(0)}10%{opacity:1}
   50%{transform:translate(calc(-50% + var(--u)*-6),calc(-50% + var(--u)*14)) rotate(70deg)}90%{opacity:1}
   100%{opacity:0;transform:translate(calc(-50% + var(--u)*3),calc(-50% + var(--u)*30)) rotate(160deg)}}
-.hp-pop .hp-fw>img{animation:hpBob 2.6s ease-in-out infinite}
+.hp-pop .hp-fw .hp-g>img{animation:hpBob 2.6s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){.hp-fw,.hp-fw *{animation:none!important} .hp-fw .st{display:none}}
-.hp-fw>img.hp-jump{animation:hpJump .45s ease!important}
+/* ===== Этап 1: Character Controller — жесты, новые лица, рот =====
+   .hp-fw (поза эмоции) > .hp-g (жест, разовое движение) > img (дыхание).
+   --k — сила (intensity 0.3…1) из ответа AI или таблицы событий. */
+.hp-g{position:relative;display:inline-block;line-height:0;transform-origin:50% 100%;--k:.6}
+.hp-g>img{transition:opacity .25s ease-out}
+.hp-fw.em-doubt{animation:hpTilt 1.3s ease-in-out both}
+.hp-fw.em-surprised{animation:hpJump .5s ease-out .05s both}
+.hp-fw.em-worried{animation:hpSink 1.2s ease-out both}
+.hp-g.g-nod{animation:gNod .9s ease-in-out both}
+.hp-g.g-shake{animation:gShake .9s ease-in-out both}
+.hp-g.g-wave{animation:gWave 1.2s ease-in-out both}
+.hp-g.g-pop{animation:gPop .7s cubic-bezier(.3,1.5,.5,1) both}
+.hp-g.g-up{animation:gUp 1s ease-in-out both}
+.hp-g.g-shrug{animation:gShrug 1s ease-in-out both}
+.hp-g.g-tilt{animation:gTilt 1.4s ease-in-out both}
+.hp-g.g-hop{animation:gHop 1.1s cubic-bezier(.3,.7,.4,1) both}
+.hp-g.g-spin{animation:gSpin 1.2s ease-in-out both}
+.hp-g.g-dip{animation:gDip 1.8s ease-in-out both}
+@keyframes gNod{0%,40%,80%,100%{transform:none}20%,60%{transform:translateY(calc(var(--u,2px)*1.6*var(--k))) scaleY(calc(1 - .014*var(--k)))}}
+@keyframes gShake{0%,100%{transform:none}17%,50%,83%{transform:rotate(calc(-2.2deg*var(--k)))}33%,67%{transform:rotate(calc(2.2deg*var(--k)))}}
+@keyframes gWave{0%,100%{transform:none}25%,75%{transform:rotate(calc(-2deg*var(--k)))}50%{transform:rotate(calc(2deg*var(--k)))}}
+@keyframes gPop{0%,100%{transform:none}40%{transform:scale(calc(1 + .05*var(--k)))}}
+@keyframes gUp{0%,100%{transform:none}35%,70%{transform:translateY(calc(var(--u,2px)*-3*var(--k)))}}
+@keyframes gShrug{0%,100%{transform:none}25%,55%{transform:scale(calc(1 + .02*var(--k)),calc(1 + .035*var(--k)))}40%{transform:scale(1,calc(1 + .02*var(--k)))}}
+@keyframes gTilt{0%,100%{transform:none}30%,75%{transform:rotate(calc(-3deg*var(--k)))}}
+@keyframes gHop{0%,100%{transform:none}20%{transform:scale(1.035,.955)}45%{transform:translateY(calc(var(--u,2px)*-9*var(--k))) scale(.975,1.035)}70%{transform:none}82%{transform:scale(1.025,.97)}}
+@keyframes gSpin{0%,100%{transform:none}50%{transform:translateY(calc(var(--u,2px)*-6*var(--k))) rotateY(180deg)}}
+@keyframes gDip{0%,100%{transform:none}30%,60%{transform:translateY(calc(var(--u,2px)*1.4*var(--k))) rotate(calc(1deg*var(--k)))}}
+/* наклейки жестов: значок в кружке, галочка, конфетти */
+.st-badge{width:calc(var(--u)*15);height:calc(var(--u)*15);border-radius:50%;background:#fff;border:calc(var(--u)*.8) solid var(--cc,#7a5cff);
+  display:flex;align-items:center;justify-content:center;font:calc(var(--u)*8.5)/1 system-ui,sans-serif;color:#1f9d55;font-weight:900;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);animation:stPop .4s cubic-bezier(.3,1.6,.5,1) .1s both, stOut .3s ease-in 1.1s forwards}
+@keyframes stOut{to{opacity:0;transform:translate(-50%,-50%) scale(.6)}}
+.st-conf{width:calc(var(--u)*2.6);height:calc(var(--u)*4.2);border-radius:1px;opacity:0;animation:stBurst 1.3s cubic-bezier(.2,.8,.3,1) both}
+.st-sweat{width:calc(var(--u)*3.4);height:calc(var(--u)*4.6);background:linear-gradient(160deg,#bfe6ff,#4a9eea);border-radius:0 50% 50% 50%;
+  transform:translate(-50%,-50%) rotate(45deg);opacity:0;animation:stSweat 2.4s ease-in .4s infinite}
+@keyframes stSweat{0%{opacity:0;transform:translate(-50%,-50%) rotate(45deg)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,calc(-50% + var(--u)*8)) rotate(45deg)}}
+@media (prefers-reduced-motion: reduce){.hp-g{animation:none!important}}
+.hp-fw .hp-g>img.hp-jump{animation:hpJump .45s ease!important}
 .hp-fig.hp-jump{animation:hpJump .45s ease}
 .hp-jump{animation:hpJump .45s ease}
 @keyframes hpJump{0%{transform:scale(1)}40%{transform:scale(1.05,0.95) translateY(-6px)}100%{transform:none}}
@@ -4729,7 +4767,7 @@ function applyNativeDone(silent){
   });
   if(!changed) return;
   save();
-  if(!silent){ render(); rateOnSuccess('day'); }
+  if(!silent){ render(); rateOnSuccess('day'); hpTaskEv(); }
 }
 
 // единая точка сборки: задачи + цели. Цели идут ПОСЛЕ задач, поэтому
@@ -6082,7 +6120,7 @@ function rwBuy(id){
 function rwBuyDo(id){
   const r=(state.rewards||[]).find(x=>x.id===id); if(!r) return;
   state.rewardBuys.push({id:'b'+Date.now().toString(36), rewardId:r.id, emoji:r.emoji, name:rwName(r), price:r.price, date:todayStr(), at:Date.now()});
-  save(); closeModal(); render(); toast(t('rw.enjoy',{e:r.emoji||'🎁'}));
+  save(); closeModal(); render(); toast(t('rw.enjoy',{e:r.emoji||'🎁'})); hpChar.event('reward');
 }
 
 let rwPickEmoji='🎁';
@@ -6198,13 +6236,37 @@ function hpStickers(em){
     case 'mystery':return [[-32,6],[30,2],[-38,28],[36,24],[-26,48],[34,46],[0,-4]].map(([x,y],i)=>st('st-spark st-white',x,y,`animation-delay:${i*.6}s`)).join('');
     case 'strict': return `<i class="st st-ex" style="--x:22;--y:-1">!</i>`;
     case 'stern':  return st('st-leaf',18,-6);
+    case 'smile':  return st('st-spark st-white st-once',18,6);
+    case 'doubt':  return `<i class="st st-q" style="--x:22;--y:-2;font-size:calc(var(--u)*12)">?</i>`;
+    case 'surprised': return `<i class="st st-ex" style="--x:20;--y:-3">!</i>`;
+    case 'worried': return st('st-sweat',17,8);
   }
   return '';
 }
 function hpFigHTML(p, emo, imgCls, still, attrs){
-  const k=p+'-'+emo, h=HP_HEAD[k]||[50,4], em=HP_EM[emo]||'hello';
-  return `<span class="hp-fw ${imgCls}-w fig-${p} em-${em}${still?' still':''}" style="--hx:${h[0]}%;--hy:${h[1]}%">`+
-    `<img class="${imgCls} fig-${p}" data-k="${k}" src="${(hpBlinkCache[k]&&hpBlinkCache[k].o)||hpImg(p,emo)}" alt="" ${attrs||''}>${hpStickers(em)}</span>`;
+  const img=hpEmoImg(p,emo), k=p+'-'+img, h=HP_HEAD[k]||[50,4], em=hpEmoCls(p,emo);
+  return `<span class="hp-fw ${imgCls}-w fig-${p} em-${em}${still?' still':''}" data-emo="${emo}" data-emo0="${emo}" style="--hx:${h[0]}%;--hy:${h[1]}%">`+
+    `<span class="hp-g"><img class="${imgCls} fig-${p}" data-k="${k}" src="${(hpBlinkCache[k]&&hpBlinkCache[k].o)||hpImg(p,img)}" alt="" ${attrs||''}></span>${hpStickers(em)}</span>`;
+}
+/* Этап 1: единая библиотека лиц (12) для всех четверых → готовая картинка персонажа.
+   Старые имена (hello, joke, mystery, tease, stern…) остаются как есть. */
+const HP_EMOS = ['neutral','smile','happy','excited','proud','think','doubt','surprised','sad','worried','sly','strict'];
+const HP_EMO = {
+  neutral:{img:'hello'}, smile:{img:'hello', em:'smile'}, happy:{img:'happy'},
+  excited:{img:'happy', by:{genie:'proud'}, em:'happy'}, proud:{img:'proud'}, think:{img:'think'},
+  doubt:{img:'think', by:{guru:'stern', nadia:'mystery'}, em:'doubt'}, surprised:{img:'hello', em:'surprised'},
+  sad:{img:'sad'}, worried:{img:'sad', em:'worried'}, sly:{img:'sly'}, strict:{img:'sig'}
+};
+function hpEmoImg(p, emo){
+  const e=HP_EMO[emo];
+  if(!e) return HP[p] && HP[p].emos.includes(emo) ? emo : 'hello';
+  const i=(e.by&&e.by[p]) || e.img;
+  return i==='sig' ? HP[p].sig : i;
+}
+function hpEmoCls(p, emo){
+  const e=HP_EMO[emo];
+  if(!e) return HP_EM[emo]||'hello';
+  return e.em || HP_EM[hpEmoImg(p,emo)] || 'hello';
 }
 /* 1.7.8: моргание. Для картинок из списка есть кадры -b1 (веки прикрыты) и -b2 (закрыты),
    нарисованные поверх оригинала, — поза и размер те же. Раз в 2,5–6 с один видимый
@@ -6218,10 +6280,13 @@ function hpBlinkLoad(k){
   if(hpBlinkCache[k]) return hpBlinkCache[k];
   const c = hpBlinkCache[k] = {ready:false};
   const get=u=>fetch(u).then(r=>{ if(!r.ok) throw 0; return r.blob(); }).then(b=>URL.createObjectURL(b));
-  Promise.all(['', '-b1', '-b2'].map(x=>get('coach/'+k+x+'.webp')))
-    .then(([o,b1,b2])=>{ Object.assign(c,{o,b1,b2,ready:true});
+  // этап 1: та же загрузка для поз жестов (только исходник) и форм рта (-m0…-m3)
+  const sfx = (HP_BLINK.has(k) ? ['', '-b1', '-b2'] : ['']).concat(HP_MOUTH.has(k) ? ['-m0','-m1','-m2','-m3'] : []);
+  Promise.all(sfx.map(x=>get('coach/'+k+x+'.webp')))
+    .then(urls=>{ const o={}; sfx.forEach((x,i)=>{ o[x?x.slice(1):'o']=urls[i]; });
+      Object.assign(c, o, {ready:true});
       // декодируем заранее, чтобы первый кадр не мигал пустотой
-      [b1,b2].forEach(u=>{ const im=new Image(); im.src=u; });
+      urls.slice(1).forEach(u=>{ const im=new Image(); im.src=u; });
     }).catch(()=>{ c.failed=true; });
   return c;
 }
@@ -6236,7 +6301,7 @@ function hpBlinkTick(){
     const sel = document.getElementById('tourOv') ? '.tour-img'
       : (document.querySelector('#hqOv.show') ? '.hq-fig' : '.hp-fig,.hp-pop.show .hp-pimg');
     const imgs=[...document.querySelectorAll(sel)]
-      .filter(i=>i.isConnected && i.getClientRects().length && !i.dataset.blinking && hpBlinkKey(i));
+      .filter(i=>i.isConnected && i.getClientRects().length && !i.dataset.blinking && !i.dataset.talking && hpBlinkKey(i));
     imgs.forEach(i=>hpBlinkLoad(hpBlinkKey(i)));
     const img=imgs[Math.floor(Math.random()*imgs.length)]; if(!img) return;
     const k=hpBlinkKey(img), c=hpBlinkLoad(k);
@@ -6247,6 +6312,179 @@ function hpBlinkTick(){
   }catch(e){}
 }
 (function hpBlinkLoop(){ setTimeout(()=>{ hpBlinkTick(); hpBlinkLoop(); }, 2500+Math.random()*3500); })();
+/* ===== Этап 1 мастер-плана: Character Controller =====
+   Один на всех четверых и не зависит от того, чем рисуется персонаж: сейчас это
+   готовые картинки + CSS, потом Rive — меняется только нижний слой (hpChar.draw*).
+     hpChar.emote(emo, gesture, intensity) — лицо держится до следующей реплики или 8 с,
+                                             потом плавно возвращается к исходному;
+     hpChar.say(text, el)                  — печатает реплику в el и двигает рот;
+     hpChar.event(name)                    — реакция на действие пользователя, без AI.
+   Приоритеты: событие (3) > речь (2) > держащаяся эмоция; дыхание и моргание — всегда.
+   Одновременно играет один жест, в очереди не больше одного (новый заменяет ожидающий).
+   Жест на плоских картинках = разовое движение фигуры + наклейка, а где у персонажа есть
+   картинка с этим жестом — на время жеста показываем её (Надя с галочкой в ежедневнике,
+   Макс с большим пальцем, Джин потирает руки, Гуру опирается на посох). */
+/* Формы рта: ключ 'nadia-hello' → файлы coach/nadia-hello-m0…m3.webp (закрыт, приоткрыт,
+   открыт, «о»), собираются tools/mouth_frames.py из картинок GPT. Пока список пуст —
+   реплика просто печатается, рот не двигается. */
+const HP_MOUTH = new Set([]);
+const HP_GEST = {
+  wave:        {pose:{nadia:'hello', guru:'hello', genie:'hello'}, mv:'wave', st:{coach:'👋'}},
+  nod:         {mv:'nod'},
+  shake_head:  {mv:'shake'},
+  point_up:    {pose:{guru:'stern', nadia:'proud'}, mv:'up', st:{coach:'☝️', genie:'☝️'}},
+  thumbs_up:   {pose:{coach:'hello'}, mv:'pop', st:{nadia:'👍', guru:'👍', genie:'👍'}},
+  show_check:  {pose:{nadia:'happy', coach:'think'}, mv:'pop', st:'check'},
+  shrug:       {mv:'shrug'},
+  hand_on_chin:{pose:'think', mv:'tilt'},
+  celebrate:   {pose:{nadia:'happy', genie:'proud', guru:'happy', coach:'happy'}, mv:'hop', st:'confetti', ms:1500},
+  signature:   {pose:{nadia:'sly', genie:'sly', guru:'sly', coach:'strict'},
+                mv:{nadia:'pop', genie:'spin', guru:'dip', coach:'shake'},
+                st:{nadia:'spark', genie:'spark', guru:'leaves', coach:'!'}, ms:1800},
+};
+const HP_EV = {
+  done:['smile','nod'], dayDone:['excited','celebrate'], week:['proud','thumbs_up'], goalNew:['excited','show_check'],
+  moved:['doubt','none'], missed:['worried','shrug'], back:['happy','wave'], reward:['happy','signature']
+};
+const hpChar = (()=>{
+  let cur=null, pending=null, holdT=null, talkT=null, preloaded={};
+  const reduce=()=>{ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } };
+  const pick=(v,p,d)=> v && typeof v==='object' ? (v[p]!==undefined ? v[p] : d) : (v!==undefined ? v : d);
+  // видимые фигуры — тот же порядок, что у моргания: экскурсия → опрос → экран/всплывашка
+  function figs(){
+    const sel = document.getElementById('tourOv') ? '.tour-img-w'
+      : (document.querySelector('#hqOv.show') ? '.hq-fig-w' : '.hp-fig-w,.hp-pop.show .hp-pimg-w');
+    return [...document.querySelectorAll(sel)].filter(w=>w.isConnected && w.getClientRects().length);
+  }
+  function preload(p){
+    if(preloaded[p] || !HP[p]) return; preloaded[p]=1;
+    HP[p].emos.forEach(e=>hpBlinkLoad(p+'-'+e));
+  }
+  const imgOf=w=>w.querySelector('.hp-g>img');
+  // нижний слой: показать картинку key (персонаж-лицо) — плавно, без похода в сеть
+  function drawImg(w, key){
+    const img=imgOf(w); if(!img || img.dataset.k===key) return;
+    const c=hpBlinkCache[key], h=HP_HEAD[key]||[50,4];
+    img.dataset.k=key;
+    img.style.transition='none'; img.style.opacity='.45';
+    img.src=(c&&c.o)||('coach/'+key+'.webp');
+    w.style.setProperty('--hx',h[0]+'%'); w.style.setProperty('--hy',h[1]+'%');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ img.style.transition=''; img.style.opacity=''; }));
+  }
+  function drawEmo(w, p, emo){
+    w.dataset.emo=emo;
+    if(w.dataset.pose) return;               // идёт жест со своей картинкой — лицо вернётся после
+    const em=hpEmoCls(p,emo), was=(w.className.match(/\bem-(\w+)/)||[])[1];
+    drawImg(w, p+'-'+hpEmoImg(p,emo));
+    if(was!==em){
+      w.className=w.className.replace(/\bem-\w+/,'em-'+em).replace(/\bstill\b/,'');
+      w.querySelectorAll('.st:not(.gs)').forEach(x=>x.remove());
+      w.insertAdjacentHTML('beforeend', hpStickers(em));
+    }
+  }
+  function base(w){ return w.closest('#hqOv') ? 'neutral' : (w.dataset.emo0||'neutral'); }
+  function stickers(def, p){
+    const s=pick(def.st,p,null); if(!s) return '';
+    const st=(cls,x,y,extra,txt)=>`<i class="st gs ${cls}" style="--x:${x};--y:${y};${extra||''}">${txt||''}</i>`;
+    if(s==='check') return st('st-badge',26,16,'','✓');
+    if(s==='confetti'){
+      const col=['#ff5a5f','#ffb800','#3fa34d','#3cc6c0','#9b6bff'];
+      return [-160,-130,-100,-75,-50,-20,-145,-35].map((a,i)=>st('st-conf',0,6,`--a:${a}deg;--d:${30+(i%3)*7};background:${col[i%5]};animation-delay:${.25+i*.04}s`)).join('')
+        + [-120,-60].map((a,i)=>st('st-star st-burst',0,4,`--a:${a}deg;--d:34;animation-delay:${.3+i*.05}s`)).join('');
+    }
+    if(s==='spark') return st('st-spark st-white st-once',16,8);
+    if(s==='leaves') return [[14,-4],[-12,2],[20,10]].map(([x,y],i)=>st('st-leaf',x,y,`animation-delay:${i*.35}s;animation-duration:2.2s`)).join('');
+    if(s==='!') return `<i class="st gs st-ex" style="--x:22;--y:-1">!</i>`;
+    return st('st-badge',26,16,'',s);
+  }
+  function stop(){
+    if(!cur) return;
+    cur.timers.forEach(clearTimeout);
+    cur.ws.forEach(w=>{
+      const g=w.querySelector('.hp-g'); if(g){ g.className='hp-g'; }
+      w.querySelectorAll('.st.gs').forEach(x=>x.remove());
+      if(w.dataset.pose){ delete w.dataset.pose; if(w.isConnected) drawEmo(w, state.coach, w.dataset.emo||base(w)); }
+    });
+    cur=null;
+  }
+  function start(x){
+    const p=state.coach, def=HP_GEST[x.g]; if(!def || !HP[p]) return;
+    const ws=figs(); if(!ws.length) return;
+    const ms=def.ms||1300, pose=pick(def.pose,p,null), mv=pick(def.mv,p,null), red=reduce();
+    ws.forEach(w=>{
+      if(pose){ drawImg(w, p+'-'+pose); w.dataset.pose=pose; }
+      if(red) return;
+      const g=w.querySelector('.hp-g');
+      if(g && mv){ g.className='hp-g'; void g.offsetWidth; g.className='hp-g g-'+mv; g.style.setProperty('--k', x.k); }
+      w.insertAdjacentHTML('beforeend', stickers(def,p));
+    });
+    cur={g:x.g, pri:x.pri, ws, timers:[setTimeout(()=>{ stop(); if(pending){ const n=pending; pending=null; start(n); } }, ms)]};
+  }
+  function play(x){
+    if(cur && cur.ws.some(w=>w.isConnected) && cur.pri>x.pri){ pending=x; return; }   // важнее уже идёт — ждём
+    stop(); pending=null; start(x);
+  }
+  function emote(emo, gesture, intensity, o){
+    o=o||{}; const p=state.coach; if(!p || !HP[p]) return false;
+    preload(p);
+    const ws=figs(); if(!ws.length) return false;
+    const k=Math.min(Math.max(+intensity||.6,.3),1);
+    if(emo){
+      const e = (HP_EMO[emo] || HP[p].emos.includes(emo)) ? emo : 'think';
+      ws.forEach(w=>drawEmo(w,p,e));
+      if(typeof hq!=='undefined' && hq && document.querySelector('#hqOv.show')){ hq.emo=e; hq.lastEmo=e; }
+      clearTimeout(holdT);
+      holdT=setTimeout(()=>{ figs().forEach(w=>{ if(w.dataset.emo!==base(w)) drawEmo(w,p,base(w)); });
+        if(typeof hq!=='undefined' && hq && document.querySelector('#hqOv.show')){ hq.emo='neutral'; hq.lastEmo='neutral'; } }, 8000);
+    }
+    if(gesture && gesture!=='none' && HP_GEST[gesture]){
+      const x={g:gesture, k, pri:o.pri||2};
+      if(o.delay) setTimeout(()=>play(x), o.delay); else play(x);
+    }
+    return true;
+  }
+  // рот по тексту: гласная — открыт или «о», согласная — приоткрыт, пробел и знаки — закрыт
+  function mouthOf(ch){
+    if(/[\s.,!?;:…—–\-"«»()]/.test(ch)) return 'm0';
+    if(/[оуoуюuwё]/i.test(ch)) return 'm3';
+    if(/[аеиыэяaeiyáéíóúàèâêôãõäöü]/i.test(ch)) return 'm2';
+    return 'm1';
+  }
+  function say(text, el){
+    text=String(text||'');
+    clearInterval(talkT);
+    const w=figs()[0], img=w && imgOf(w), key=img && img.dataset.k, c=key && hpBlinkCache[key];
+    const mouth = c && c.ready && c.m0 && !w.dataset.pose;
+    if(!el || reduce() || text.length<2){ if(el) el.textContent=text; return 0; }
+    const step=Math.max(12, Math.min(28, 3200/text.length));
+    let i=0;
+    if(mouth) img.dataset.talking='1';
+    const chat=el.closest('.hq-chat');
+    talkT=setInterval(()=>{
+      if(!el.isConnected){ clearInterval(talkT); if(img){ delete img.dataset.talking; if(img.dataset.k===key && c) img.src=c.o; } return; }
+      i=Math.min(text.length, i+1+(step<14?1:0));
+      el.textContent=text.slice(0,i);
+      if(mouth && img.dataset.k===key) img.src=c[mouthOf(text[i-1])];
+      if(chat) chat.scrollTop=chat.scrollHeight;
+      if(i>=text.length){ clearInterval(talkT); if(mouth){ delete img.dataset.talking; if(img.dataset.k===key) img.src=c.o; } }
+    }, step);
+    return step*text.length;
+  }
+  function event(name){
+    const ev=HP_EV[name]; if(!ev) return false;
+    let [emo, g]=ev;
+    if(name==='missed' && state.helperStyle==='strict') emo='strict';
+    return emote(emo, g, name==='done' ? .5 : .8, {pri:3});
+  }
+  return {emote, say, event, figs, preload, stop};
+})();
+/* после отметки задачи: «все задачи дня» важнее «задача выполнена» */
+function hpTaskEv(){
+  try{
+    const T=todayStr(), list=state.tasks.filter(x=>x.date===T);
+    hpChar.event(list.length && list.every(x=>x.done) ? 'dayDone' : 'done');
+  }catch(e){}
+}
 function hpName(p){ return hpLine('name', p); }
 
 /* строка персонажа; массив → один вариант на день (стабильно, не прыгает при перерисовке) */
@@ -6263,12 +6501,17 @@ function hpLine(key, p, vars, salt){
   return v;
 }
 
+let hpGap = 0;
 function hpInit(){
   if(state.helperStyle===undefined) state.helperStyle='normal';   // soft | normal | strict
   if(state.helperFreq===undefined)  state.helperFreq=1;           // 0 | 1 | 3 реплик в день на других экранах
   if(state.helperMorning===undefined) state.helperMorning=true;
   if(state.helperAI===undefined) state.helperAI='gemini';         // off | gemini (позже: claude, gpt)
-  if(!state.helperSeen || state.helperSeen.date!==todayStr()) state.helperSeen={date:todayStr(), n:0, keys:[]};
+  if(!state.helperSeen || state.helperSeen.date!==todayStr()){
+    const prev = state.helperSeen && state.helperSeen.date;
+    hpGap = prev ? daysBetween(prev, todayStr()) : 0;              // этап 1: «долго не заходил»
+    state.helperSeen={date:todayStr(), n:0, keys:[]};
+  }
   if(state.themes && !state.themes.helper)
     state.themes.helper = JSON.parse(JSON.stringify(state.themes.undone || DEFAULT_THEMES.helper));
 }
@@ -6393,14 +6636,12 @@ let hpPokeN = 0;
 function hpPoke(){
   const p=state.coach; if(!p) return;
   hpPokeN++;
-  const fig=document.querySelector('.hp-fig'), bub=document.querySelector('.hp-bub');
-  if(p==='genie'){ if(fig){ fig.src=hpImg('genie','joke'); fig.dataset.k='genie-joke'; } if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); }
-  else { const k=['hello','pick'][hpPokeN%2]; if(fig){ const e=hpPokeN%2?'think':'hello'; fig.src=hpImg(p,e); fig.dataset.k=p+'-'+e; } if(bub) bub.textContent=hpLine(k,p,null,'poke'+hpPokeN); }
-  if(fig){ fig.classList.remove('hp-jump'); void fig.offsetWidth; fig.classList.add('hp-jump'); }
-  const w=fig && fig.closest('.hp-fw');
-  if(w){ const em = p==='genie' ? 'joke' : (hpPokeN%2 ? 'think' : 'hello');
-    w.className=w.className.replace(/\bem-\w+/,'em-'+em); w.querySelectorAll('.st').forEach(x=>x.remove());
-    w.insertAdjacentHTML('beforeend', hpStickers(em)); }
+  const bub=document.querySelector('.hp-bub');
+  // этап 1: каждый третий тап — фирменный жест персонажа
+  const sig = hpPokeN%3===0;
+  if(p==='genie'){ if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); hpChar.emote('joke', sig ? 'signature' : 'nod', .8, {pri:3}); }
+  else { const k=['hello','pick'][hpPokeN%2]; if(bub) bub.textContent=hpLine(k,p,null,'poke'+hpPokeN);
+    hpChar.emote(hpPokeN%2 ? 'think' : 'smile', sig ? 'signature' : (hpPokeN%2 ? 'hand_on_chin' : 'wave'), .8, {pri:3}); }
 }
 function hpChoose(id){ state.coach=id; save(); renderHelper(); }
 
@@ -6428,7 +6669,7 @@ function hpSet(key,val){ state[key]=val; save(); renderHelper(); }
 
 /* ---------- реплика на других экранах ---------- */
 let hpPopTimer=null;
-function hpPop(key, vars, emo){
+function hpPop(key, vars, emo, gesture){
   const p=state.coach; if(!p || !HP[p]) return;
   let el=document.getElementById('hpPop');
   if(!el){ el=document.createElement('div'); el.id='hpPop'; el.className='hp-pop'; document.body.appendChild(el); }
@@ -6437,7 +6678,8 @@ function hpPop(key, vars, emo){
   el.innerHTML = `${hpFigHTML(p, emo||'hello', 'hp-pimg', false, 'onclick="hpPopClose();switchScreen(\'helper\')"')}
     <div class="hp-pbub"><b>${esc(hpName(p))}</b>${esc(text)}</div>
     <button class="hp-px" onclick="hpPopClose()" aria-label="close">✕</button>`;
-  requestAnimationFrame(()=>el.classList.add('show'));
+  requestAnimationFrame(()=>{ el.classList.add('show');
+    if(gesture) setTimeout(()=>hpChar.emote(null, gesture, .7, {pri:3}), 450); });   // после выезда
   clearTimeout(hpPopTimer); hpPopTimer=setTimeout(hpPopClose, 8000);
 }
 function hpPopClose(){ const el=document.getElementById('hpPop'); if(el) el.classList.remove('show'); }
@@ -6454,11 +6696,14 @@ function hpCheck(){
   if(state.helperMorning && !seen('morning')){
     mark('morning');
     if(m.key==='dayDone'||m.key==='partial') return;  // уже работает — не отвлекаем
-    hpPop(m.key, m.vars, m.emo); return;
+    const miss = /^miss/.test(m.key);
+    const ev = miss ? HP_EV.missed : (hpGap>=3 ? HP_EV.back : null);
+    const emo = miss ? (state.helperStyle==='strict' ? 'strict' : m.emo) : (ev ? ev[0] : m.emo);
+    hpPop(m.key, m.vars, emo, ev ? ev[1] : (m.key==='hello'||m.key==='noTasks' ? 'wave' : null)); return;
   }
   if(state.helperFreq<=0 || S.n>=state.helperFreq) return;
-  if(m.key==='dayDone' && !seen('dayDone')){ mark('dayDone'); S.n++; save(); hpPop('dayDone', m.vars, 'happy'); return; }
-  if(m.key==='week' && !seen('week')){ mark('week'); S.n++; save(); hpPop('week', null, 'proud'); return; }
+  if(m.key==='dayDone' && !seen('dayDone')){ mark('dayDone'); S.n++; save(); hpPop('dayDone', m.vars, HP_EV.dayDone[0], HP_EV.dayDone[1]); return; }
+  if(m.key==='week' && !seen('week')){ mark('week'); S.n++; save(); hpPop('week', null, HP_EV.week[0], HP_EV.week[1]); return; }
   if(!seen('goalWarn')){
     const w=hpGoalWarn();
     if(w){ mark('goalWarn'); S.n++; save(); hpPop(hpGoalLineKey(w.s.st), hpGoalVars(w.g,w.s), w.s.st==='lost' ? 'sad' : HP[p].sig); }
@@ -6491,7 +6736,7 @@ async function hpAI(path, body){
   const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(), 25000);
   try{
     const res=await fetch(HP_AI_URL+path, {method:'POST', signal:ctl.signal, headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(Object.assign({lang:curLang(), persona:state.coach, style:state.helperStyle, model:state.helperAI, device:hpDev()}, body))});
+      body:JSON.stringify(Object.assign({lang:curLang(), persona:state.coach, style:state.helperStyle, model:state.helperAI, device:hpDev(), cv:2}, body))});
     if(res.status===429){ if(!hpAILimitShown){ hpAILimitShown=true; toast(t('hp.aiLimit')); } return null; }
     const j=await res.json().catch(()=>null);
     return (res.ok && j) ? j : null;
@@ -6552,8 +6797,10 @@ async function hqTurn(text, applied){
   hq.busy=false; hq.msgs=hq.msgs.filter(m=>!m.typing);
   if(!r || typeof r.reply!=='string' || !r.reply.trim()){ hqToScript(text, step, applied); return; }
   hqApply(r.set);
-  hq.msgs.push({who:'bot', text:r.reply, ai:true, answer:text});
-  hq.emo = ['think','happy','proud','sad','sly'].includes(r.emo) ? r.emo : 'think';
+  const msg={who:'bot', text:r.reply, ai:true, answer:text, fresh:true};
+  hq.msgs.push(msg);
+  hq.emo = HP_EMOS.includes(r.emo) ? r.emo : 'think';
+  hq.gest = {g:r.gesture||'none', k:r.intensity};
   let ask = r.ask || 'free';
   if(ask==='done'){
     const miss=hqMissing();
@@ -6567,7 +6814,13 @@ async function hqTurn(text, applied){
   }
   if(hq.turns>=HQ_AI_MAX){ hq.mode='script'; const st=hqMissing(); if(st==='sum') hqFinish(); else hqNext(st); return; }
   if(ask==='plan' && !hq.tip) hq.tip=t('hp.tipDefault');
-  hq.step=ask; hqRender();
+  hq.step=ask; hqRender(); hqPlay();
+}
+/* этап 1: новая реплика AI — жест по смыслу; печать с «говорящим» ртом — в hqRender */
+function hqPlay(){
+  const g=hq.gest; hq.gest=null;
+  if(g && g.g!=='none') hpChar.emote(null, g.g, g.k, {pri:2, delay:350});
+  hpChar.emote(hq.emo, null, g && g.k);    // держится 8 с, потом — нейтральное лицо
 }
 function hqFlag(i){
   const m=hq.msgs[i]; if(!m || !m.ai || m.flagged) return;
@@ -6623,7 +6876,7 @@ function hqRender(){
   const msgs = hq.msgs.map((m,i)=> m.typing
     ? `<div class="hq-m bot"><div class="hq-bub hq-typing"><i></i><i></i><i></i></div></div>`
     : m.who==='bot'
-    ? `<div class="hq-m bot"><div class="hq-bub">${esc(m.text)}${m.ai?`<button class="hq-flag${m.flagged?' on':''}" onclick="hqFlag(${i})" aria-label="${esc(t('hp.aiReport'))}" title="${esc(t('hp.aiReport'))}">⚑</button>`:''}</div></div>`
+    ? `<div class="hq-m bot"><div class="hq-bub">${m.fresh ? '<span class="hq-tw"></span>' : esc(m.text)}${m.ai?`<button class="hq-flag${m.flagged?' on':''}" onclick="hqFlag(${i})" aria-label="${esc(t('hp.aiReport'))}" title="${esc(t('hp.aiReport'))}">⚑</button>`:''}</div></div>`
     : `<div class="hq-m me"><div class="hq-bub">${esc(m.text)}</div></div>`).join('');
   const chips=(arr)=>`<div class="hq-chips">${arr.map((x,i)=>`<button onclick="hqChip(${i})">${esc(x)}</button>`).join('')}</div>`;
   const field=(ph,type)=>`<div class="hq-in"><input id="hqIn" type="${type||'text'}" placeholder="${esc(ph)}" onkeydown="if(event.key==='Enter')hqSend()"><button onclick="hqSend()">➤</button></div>`;
@@ -6651,6 +6904,9 @@ function hqRender(){
     <div class="hq-bottom">${input}</div>`);
   hq.lastEmo=hq.emo;
   const ch=document.getElementById('hqChat'); if(ch){ ch.scrollTop=ch.scrollHeight; requestAnimationFrame(()=>{ ch.scrollTop=ch.scrollHeight; }); }
+  // свежая реплика AI печатается, рот двигается; при следующей перерисовке она уже целиком
+  const f=hq.msgs.find(m=>m.fresh);
+  if(f){ f.fresh=false; const el=document.querySelector('#hqChat .hq-tw'); if(el) hpChar.say(f.text, el); }
 }
 function hqChip(i){
   if(hq.busy) return;
@@ -6740,7 +6996,8 @@ function hqCalc(){
   const nice=per>=10 ? Math.ceil(per) : Math.ceil(per*10)/10;
   return {n, per:nice, rate:nice+' '+g.unit};
 }
-function hqFinish(){ hq.step='sum'; hq.emo='happy'; if(hq.mode!=='ai') hqSay('iDone',{rate:hqCalc().rate}); hqRender(); }
+function hqFinish(){ hq.step='sum'; hq.emo=HP_EV.goalNew[0]; if(hq.mode!=='ai') hqSay('iDone',{rate:hqCalc().rate});
+  hqRender(); hpChar.event('goalNew'); }
 function hqSummaryHTML(){
   const g=hq.g, k=hqCalc();
   return `<div class="hq-sum">
@@ -9313,7 +9570,7 @@ function toggleItem(taskId,itemId,e){
   save();
   // не схлопываем карточку — обновляем только нужные части через render
   render();
-  if(t.done) rateOnSuccess('day');
+  if(t.done){ rateOnSuccess('day'); hpTaskEv(); }
 }
 function setManualStatus(taskId,key,e){
   if(e) e.stopPropagation();
@@ -9322,7 +9579,7 @@ function setManualStatus(taskId,key,e){
   t.status = t.status===key ? null : key;
   t.done = !!t.status; // любой выбранный статус = задача отработана за день
   save(); render();
-  if(t.status){ toast(tr('tt.status',{v:statusGlyph(t.status)})); rateOnSuccess('day'); }
+  if(t.status){ toast(tr('tt.status',{v:statusGlyph(t.status)})); rateOnSuccess('day'); hpTaskEv(); }
 }
 function taskTap(id,e){
   if(e) e.stopPropagation();
@@ -9347,7 +9604,7 @@ function markDone(id){
   t.doneAt = new Date().toISOString();
   selectedTaskId = null;
   save(); render(); toast(tr('tt.done'));
-  rateOnSuccess('day');
+  rateOnSuccess('day'); hpTaskEv();
 }
 function actDone(id,e){ e.stopPropagation(); markDone(id); }
 function actDelete(id,e){
@@ -9388,7 +9645,7 @@ function unskipTask(id){
   } else if(t.kind==='manual'){
     t.status = 'green';
   }
-  save(); render(); toast(tr('tt.markedDone'));
+  save(); render(); toast(tr('tt.markedDone')); hpTaskEv();
 }
 function actEdit(id,e){
   e.stopPropagation();
@@ -9767,7 +10024,7 @@ function doMove(id){
   if(!date){ toast(tr('tm.vDate')); return; }
   const t=state.tasks.find(x=>x.id===id);
   t.date=date; t.done=false; t.skipped=false;
-  selectedTaskId=null; save(); closeModal(); render(); toast(tr('mv.done',{v:fmtShort(date)}));
+  selectedTaskId=null; save(); closeModal(); render(); toast(tr('mv.done',{v:fmtShort(date)})); hpChar.event('moved');
 }
 
 /* ---- Goal modal (create + edit) — Stage 4 ---- */

@@ -1,4 +1,4 @@
-/* planner-ai — Cloudflare Worker для помощника Planner (1.7.8).
+/* planner-ai v6 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -6,6 +6,10 @@
                   контекста, может задать уточняющий вопрос в сторону, но ведёт
                   к цели, и сообщает, что нового узнал (set) и о чём спрашивает
                   дальше (ask) — по ask приложение показывает нужные кнопки.
+                  v6: персонаж выбирает лицо (emo, 12 вариантов), жест (gesture)
+                  и силу (intensity) из готовой библиотеки — приложение их играет.
+                  Старые версии приложения (без cv>=2 в запросе) получают emo
+                  из прежних пяти, поэтому 1.7.8 в проде не ломается.
    POST /report — жалоба на ответ AI (требование Google Play для AI-контента).
 
    Переменные окружения (Settings → Variables):
@@ -42,7 +46,12 @@ const STYLE = {
 const LANG = { ru: 'Russian', en: 'English', es: 'Spanish (Latin America)', pt: 'Portuguese (Brazil)', de: 'German', fr: 'French' };
 const ASK = ['goal', 'why', 'num', 'when', 'days', 'obst', 'plan', 'free', 'done'];
 const TYPES = ['physical', 'material', 'learning', 'travel'];
-const EMO = ['think', 'happy', 'proud', 'sad', 'sly'];
+// v6: единая библиотека для всех четырёх персонажей (мастер-план, Character Controller)
+const EMO = ['neutral', 'smile', 'happy', 'excited', 'proud', 'think', 'doubt', 'surprised', 'sad', 'worried', 'sly', 'strict'];
+const GESTURE = ['none', 'wave', 'nod', 'shake_head', 'point_up', 'thumbs_up', 'show_check', 'shrug', 'hand_on_chin', 'celebrate', 'signature'];
+// для приложений до cv=2 (прод 1.7.8): они понимают только эти пять лиц
+const EMO_OLD = { neutral: 'think', smile: 'happy', happy: 'happy', excited: 'happy', proud: 'proud', think: 'think',
+  doubt: 'think', surprised: 'think', sad: 'sad', worried: 'sad', sly: 'sly', strict: 'think' };
 
 const SCHEMA = {
   type: 'OBJECT',
@@ -50,6 +59,8 @@ const SCHEMA = {
     reply: { type: 'STRING' },
     ask:   { type: 'STRING', enum: ASK },
     emo:   { type: 'STRING', enum: EMO },
+    gesture:   { type: 'STRING', enum: GESTURE },
+    intensity: { type: 'NUMBER' },
     set: {
       type: 'OBJECT',
       properties: {
@@ -95,7 +106,9 @@ function system(p) {
     '- Put into "set" ONLY values the user clearly gave or explicitly accepted in THIS message or earlier. Never invent them.',
     '- "ask" = what your question is about: goal, why, num, when, days, obst, plan; "free" for a side question; "done" when title, target, unit, deadlineDays, days are known and obst/plan were discussed (or the user wants to finish) — then reply with a short encouraging wrap-up and no question.',
     '- Try to finish within about 10 of your messages.',
-    '- emo: your face for this reply (think, happy, proud, sad, sly — sly when the user dodges or jokes).',
+    '- emo: your face for this reply: neutral, smile, happy, excited (big step, the goal is ready), proud (user did well), think, doubt (the number or plan looks unrealistic), surprised, sad, worried (user struggles or misses), sly (user dodges or jokes), strict (user makes excuses; never in a gentle tone).',
+    '- gesture: ONE body move for this reply, or "none": wave (hello, bye), nod (agree, got it), shake_head (no, unrealistic), point_up (an important tip), thumbs_up (good answer), show_check (a field is settled), shrug (it is up to you, not sure), hand_on_chin (pondering), celebrate (only when ask="done"), signature (your trademark move — rarely, at most once per dialog). Most replies: "none" or nod. Do not repeat the same gesture twice in a row.',
+    '- intensity: 0.3 (calm) … 1 (strong) — how big the face and the move are.',
     '- No medical, legal or financial advice beyond common sense; for health goals mention checking with a doctor when relevant. If the user hints at self-harm, reply with care, suggest talking to someone close or a professional, ask="free".',
     '- Refuse harmful or illegal goals politely and offer to pick another goal (ask="goal").',
     p.mode === 'replan' ? [
@@ -106,7 +119,7 @@ function system(p) {
       '- Put into "set" ONLY values the user agreed to CHANGE. Never repeat unchanged values.',
       '- ask="done" as soon as the user accepts the new plan (or wants to keep it).'
     ].join('\n') : '',
-    'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"goal","emo":"think","set":{}}'
+    'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"goal","emo":"think","gesture":"none","intensity":0.5,"set":{}}'
   ].join('\n');
 }
 
@@ -241,7 +254,7 @@ async function gemini(env, sys, user) {
 }
 
 /* приводим ответ модели к безопасному виду: только известные поля и разумные значения */
-function clean(out) {
+function clean(out, cv) {
   const s = out.set && typeof out.set === 'object' ? out.set : {};
   const set = {};
   if (s.title) set.title = clip(s.title, 80).trim();
@@ -257,12 +270,19 @@ function clean(out) {
   if (s.obst) set.obst = clip(s.obst, 100).trim();
   if (s.tip) set.tip = clip(s.tip, 100).trim();
   if (s.plan) set.plan = clip(s.plan, 120).trim();
-  return {
+  const emo = EMO.includes(out.emo) ? out.emo : 'think';
+  const res = {
     reply: clip(out.reply, 500).trim(),
     ask: ASK.includes(out.ask) ? out.ask : 'free',
-    emo: EMO.includes(out.emo) ? out.emo : 'think',
+    emo: cv >= 2 ? emo : EMO_OLD[emo],
     set
   };
+  if (cv >= 2) {
+    res.gesture = GESTURE.includes(out.gesture) ? out.gesture : 'none';
+    const k = +out.intensity;
+    res.intensity = isFinite(k) && k > 0 ? Math.round(Math.min(Math.max(k, 0.3), 1) * 10) / 10 : 0.6;
+  }
+  return res;
 }
 
 export default {
@@ -270,7 +290,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 5 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 6 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -317,6 +337,6 @@ export default {
 
     const r = await gemini(env, system(p), user);
     if (!r || !r.out || typeof r.out.reply !== 'string' || !r.out.reply.trim()) return json({ error: 'model' }, 502, c.h);
-    return json({ ...clean(r.out), model: r.model }, 200, c.h);
+    return json({ ...clean(r.out, +b.cv || 1), model: r.model }, 200, c.h);
   }
 };

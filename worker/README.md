@@ -12,7 +12,7 @@ CI этот код не собирает — он вставляется в Clou
 4. **Лимиты (желательно).** Storage & Databases → KV → Create → `planner-ai-rl`.
    Worker → Settings → Bindings → Add → KV namespace → имя переменной `RL`, namespace `planner-ai-rl`.
    Без KV всё работает, но дневные лимиты не считаются, а жалобы видны только в логах.
-5. **Проверка.** Открыть `https://planner-ai.<твой-поддомен>.workers.dev/` — должно показать `{"ok":true,"service":"planner-ai"}`.
+5. **Проверка.** Открыть `https://planner-ai.<твой-поддомен>.workers.dev/` — должно показать `{"ok":true,"service":"planner-ai","v":6}`.
    Этот адрес вписывается в `HP_AI_URL` в index.html.
 
 ## Workers AI (основной вариант)
@@ -26,6 +26,18 @@ Worker → Settings → Bindings → Add binding → **Workers AI** → имя �
 | `MODEL` | `cf:@cf/qwen/qwen3.8-27b,cf:@cf/zai-org/glm-4.7-flash,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast` | модели через запятую: первая не ответила — пробуется следующая. `cf:` — Workers AI (привязка `AI`), без префикса — Gemini (только при платном тарифе) |
 | `DEVICE_LIMIT` | `80` | запросов в день на устройство (общий лимит держит квота Google) |
 | `ORIGINS` | `https://yuriilosiev-png.github.io,null` | откуда разрешены запросы (`null` — офлайн-копия в APK) |
+
+## Ответ `/chat` (v6)
+
+`reply`, `ask`, `set`, `emo` — как раньше. Приложение с `cv: 2` в запросе (planner-test после этапа 1) получает ещё:
+
+| Поле | Значения |
+|---|---|
+| `emo` | neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict |
+| `gesture` | none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature |
+| `intensity` | 0.3…1 |
+
+Неизвестное значение заменяется на `think` / `none`. Приложение без `cv` (прод 1.7.8) получает `emo` только из старых пяти (think, happy, proud, sad, sly) и без новых полей, поэтому v6 можно ставить, не дожидаясь обновления прода. Проверка: `GET /` → `"v":6`.
 
 ## Жалобы
 
