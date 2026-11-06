@@ -348,7 +348,9 @@ async function callGroq(env, model, sys, user, ms) {
     return { out, model };
   } catch (e) { console.log('groq error', model, String(e).slice(0, 200)); return { status: 0 }; }
 }
-async function gemini(env, sys, user) {
+/* Платные внешние модели (Anthropic, Groq) — только для клиентов cv>=3 (planner-test / 1.7.9+).
+   Прод 1.7.8 (cv<=2) остаётся на Workers AI, как написано в его политике конфиденциальности. */
+async function gemini(env, sys, user, cv) {
   const models = (env.MODEL || DEF_MODELS).split(',').map(s => s.trim()).filter(Boolean);
   const t0 = Date.now();
   for (const m of models) {
@@ -356,6 +358,7 @@ async function gemini(env, sys, user) {
     if (left < 2500) break;                               // не успеем — пусть приложение уйдёт на сценарий
     const ms = Math.min(STEP_MS, left);
     let r;
+    if ((m.startsWith('an:') || m.startsWith('gq:')) && !(cv >= 3)) continue;
     if (m.startsWith('an:')) r = await callAnthropic(env, m.slice(3), sys, user, ms);
     else if (m.startsWith('gq:')) r = await callGroq(env, m.slice(3), sys, user, ms);
     else if (m.startsWith('cf:')) r = await Promise.race([callCF(env, m.slice(3), sys, user),
@@ -529,7 +532,7 @@ export default {
       dialog: hist
     });
 
-    const r = await gemini(env, system(p), user);
+    const r = await gemini(env, system(p), user, p.cv);
     if (!r || !r.out || typeof r.out.reply !== 'string' || !r.out.reply.trim()) return json({ error: 'model' }, 502, c.h);
     return json({ ...clean(r.out, +b.cv || 1), model: r.model }, 200, c.h);
   }
