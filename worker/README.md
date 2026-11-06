@@ -12,7 +12,7 @@ CI этот код не собирает — он вставляется в Clou
 4. **Лимиты (желательно).** Storage & Databases → KV → Create → `planner-ai-rl`.
    Worker → Settings → Bindings → Add → KV namespace → имя переменной `RL`, namespace `planner-ai-rl`.
    Без KV всё работает, но дневные лимиты не считаются, а жалобы видны только в логах.
-5. **Проверка.** Открыть `https://planner-ai.<твой-поддомен>.workers.dev/` — должно показать `{"ok":true,"service":"planner-ai","v":6}`.
+5. **Проверка.** Открыть `https://planner-ai.<твой-поддомен>.workers.dev/` — должно показать `{"ok":true,"service":"planner-ai","v":7}`.
    Этот адрес вписывается в `HP_AI_URL` в index.html.
 
 ## Workers AI (основной вариант)
@@ -42,3 +42,26 @@ Worker → Settings → Bindings → Add binding → **Workers AI** → имя �
 ## Жалобы
 
 Кнопка ⚑ у ответа AI → `POST /report`. С KV — записи `r:…` в `planner-ai-rl` (хранятся 90 дней), без KV — строки `REPORT` в логах Worker'а (Worker → Logs).
+
+## v7: действия над записями (`cv: 3`)
+
+Приложение с `cv: 3` (planner-test с 1.7.9) присылает в `/chat` ещё `data` — краткую сводку записей с id
+(goals, tree, tasks на 14 дней вперёд и невыполненные за 7 дней назад, events, rewards) и может прислать
+`mode: "assist"` — свободный разговор «Попросить помощника» без опроса по цели.
+
+В ответ, кроме полей v6, приходит `actions` (до 3), только если человек сам попросил что-то изменить:
+
+| op | поля |
+|---|---|
+| `event.add` / `event.update` / `event.delete` | date, title, note, time (напоминание), type meeting/event/birthday, repeat once/monthly/yearly, alert:false |
+| `task.add` / `task.update` / `task.done` / `task.delete` | date, title, time; удалять можно только задачи без цели |
+| `goal.update` / `goal.delete` / `goal.achieve` | title, deadline, target, unit, days (0=Пн…6=Вс), time, vision |
+| `tree.add` / `tree.update` / `tree.delete` | parent, title, deadline, time |
+| `reward.add` / `reward.update` / `reward.delete` | title, price, emoji |
+
+Worker отбрасывает неизвестные операции и поля с неверным форматом, приложение ещё раз проверяет каждое
+действие по своим данным и применяет только после кнопки «Выполнить» (есть «Отменить»).
+Клиенты с `cv` 1–2 (прод 1.7.8) не получают `actions` и `data` не шлют — v7 можно ставить сразу.
+Им добавлено только правило «не описывать кнопки и жесты приложения».
+Сводка записей увеличивает запрос, поэтому бесплатных ходов Workers AI в день станет меньше (примерно в 1,5–2 раза).
+Проверка: `GET /` → `"v":7`.

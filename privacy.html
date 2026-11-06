@@ -76,7 +76,7 @@
 <header>
   <span class="badge">Planner · com.losev.planner</span>
   <h1 id="pageTitle">Политика конфиденциальности</h1>
-  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 04.11.2026</p>
+  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 06.11.2026</p>
   <div class="langbar">
     <button id="btnRu" class="on" onclick="setLang('ru')">Русский</button>
     <button id="btnEn" onclick="setLang('en')">English</button>
@@ -89,8 +89,8 @@
     Коротко: <strong>Planner не собирает ваши данные.</strong> Нет регистрации, нет аккаунта,
     нет аналитики и рекламы. Цели, задачи, события и история остаются на вашем устройстве,
     разработчик к ним доступа не имеет. Исключение одно и по вашему выбору — AI-помощник:
-    если он включён, ваши ответы в разговоре о цели отправляются для обработки модели AI
-    на серверах Cloudflare (подробно — в разделе «AI-помощник»).
+    если он включён, ваши сообщения помощнику и краткий список ваших записей отправляются
+    для обработки модели AI на серверах Cloudflare (подробно — в разделе «AI-помощник»).
   </p>
 
   <h2>Кто отвечает за приложение</h2>
@@ -133,14 +133,23 @@
 
   <h2>AI-помощник</h2>
   <p>
-    На вкладке «Помощник» можно поставить цель в разговоре с персонажем. В настройках помощника
+    На вкладке «Помощник» можно поставить цель в разговоре с персонажем или попросить его
+    изменить ваши записи: добавить событие в календарь, перенести задачу, поменять срок цели и т. п.
+    Персонаж только предлагает изменение — приложение применяет его после того, как вы нажмёте
+    «Выполнить», и его можно отменить. В настройках помощника
     выбирается, кто отвечает: <strong>«Сценарий»</strong> — готовые реплики, всё работает на
     устройстве и ничего не отправляется; <strong>«AI»</strong> — отвечает модель
     искусственного интеллекта.
   </p>
-  <p>Когда отвечает AI, во время разговора о цели передаётся:</p>
+  <p>Когда отвечает AI, при каждом сообщении в разговоре с помощником передаётся:</p>
   <ul>
-    <li>текст ваших ответов в этом разговоре (напечатанный или продиктованный) и реплики персонажа;</li>
+    <li>текст ваших сообщений в этом разговоре (напечатанный или продиктованный) и реплики персонажа;</li>
+    <li>краткий список ваших записей, чтобы помощник мог ответить на вопрос о них или изменить
+      нужную по вашей просьбе: цели (название, срок, число, единица, дни, время), подцели из дерева
+      целей (название, срок), задачи на ближайшие 14 дней и невыполненные за последние 7 дней
+      (название, дата, время, отметка о выполнении), события календаря (название, дата, тип, повтор,
+      заметка, время напоминания), награды (название, цена). Идентификаторы записей — случайные
+      строки, созданные приложением;</li>
     <li>то, что уже известно о цели в этом разговоре: название, причина, число и единица, срок,
       дни, препятствие и правило;</li>
     <li>при перепланировании существующей цели — её показатели: прогресс, срок, доля выполненных
@@ -150,7 +159,8 @@
       с вашим именем, аккаунтом или устройством и нужен только для дневного лимита запросов.</li>
   </ul>
   <p>
-    Остальные цели, задачи, события и история в AI не отправляются.
+    История выполненного, баллы, резервные копии и настройки в AI не отправляются. Если AI выключен,
+    не отправляется ничего.
   </p>
   <p>
     <strong>Куда идут данные.</strong> Запрос уходит на сервер разработчика на платформе
@@ -249,8 +259,8 @@
     In short: <strong>Planner does not collect your data.</strong> No sign-up, no account,
     no analytics, no ads. Your goals, tasks, events and history stay on your device,
     and the developer has no access to them. There is one exception, and it is your choice:
-    the AI helper. When it is on, your answers in the goal conversation are sent to an AI model
-    on Cloudflare’s servers for processing (details in “AI helper”).
+    the AI helper. When it is on, your messages to the helper and a short list of your records are
+    sent to an AI model on Cloudflare’s servers for processing (details in “AI helper”).
   </p>
 
   <h2>Who is responsible</h2>
@@ -292,13 +302,20 @@
 
   <h2>AI helper</h2>
   <p>
-    On the Helper tab you can set a goal in a conversation with a character. In the helper
+    On the Helper tab you can set a goal in a conversation with a character or ask it to change
+    your records: add a calendar event, move a task, change a goal’s deadline and so on. The character
+    only proposes a change — the app applies it after you tap “Do it”, and it can be undone. In the helper
     settings you choose who answers: <strong>“Script”</strong> — ready-made lines, everything runs
     on the device and nothing is sent; <strong>“AI”</strong> — an artificial intelligence model answers.
   </p>
-  <p>When the AI answers, the following is sent during the goal conversation:</p>
+  <p>When the AI answers, the following is sent with each message in the helper conversation:</p>
   <ul>
-    <li>the text of your answers in that conversation (typed or dictated) and the character’s lines;</li>
+    <li>the text of your messages in that conversation (typed or dictated) and the character’s lines;</li>
+    <li>a short list of your records, so the helper can answer questions about them or change the
+      right one at your request: goals (title, deadline, number, unit, days, time), sub-goals from the
+      goal tree (title, deadline), tasks for the next 14 days and unfinished ones from the last 7 days
+      (title, date, time, done mark), calendar events (title, date, type, repeat, note, reminder time),
+      rewards (name, price). Record identifiers are random strings created by the app;</li>
     <li>what is already known about the goal in that conversation: title, reason, number and unit,
       deadline, days, obstacle and rule;</li>
     <li>when re-planning an existing goal — its figures: progress, deadline, share of completed days
@@ -307,7 +324,8 @@
     <li>a random installation identifier created by the app itself. It is not linked to your name,
       account or device and is used only for the daily request limit.</li>
   </ul>
-  <p>Your other goals, tasks, events and history are not sent to the AI.</p>
+  <p>Your completion history, points, backups and settings are not sent to the AI. When AI is off,
+    nothing is sent.</p>
   <p>
     <strong>Where the data goes.</strong> The request goes to the developer’s server on Cloudflare
     Workers (Cloudflare, Inc.), and the reply is generated by an AI model in Cloudflare Workers AI
@@ -405,10 +423,10 @@
 <script>
   var TXT = {
     ru:{title:'Политика конфиденциальности',
-        date:'Действует с: 27.07.2026 · Последнее обновление: 04.11.2026',
+        date:'Действует с: 27.07.2026 · Последнее обновление: 06.11.2026',
         foot:'Planner · com.losev.planner<br>Ваши записи остаются на вашем устройстве.'},
     en:{title:'Privacy Policy',
-        date:'Effective from: July 27, 2026 · Last updated: November 4, 2026',
+        date:'Effective from: July 27, 2026 · Last updated: November 6, 2026',
         foot:'Planner · com.losev.planner<br>Your data stays on your device.'}
   };
   function setLang(l){

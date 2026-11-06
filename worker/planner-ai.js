@@ -1,4 +1,4 @@
-/* planner-ai v6 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v7 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -10,6 +10,12 @@
                   и силу (intensity) из готовой библиотеки — приложение их играет.
                   Старые версии приложения (без cv>=2 в запросе) получают emo
                   из прежних пяти, поэтому 1.7.8 в проде не ломается.
+                  v7 (cv>=3): приложение присылает краткую сводку записей (data:
+                  цели, дерево, задачи, события календаря, награды), а персонаж
+                  может вернуть actions — предложить изменить любую запись по
+                  просьбе пользователя. Приложение показывает их на подтверждение
+                  и само проверяет каждое действие. mode=assist — свободный режим
+                  «попроси помощника», без опроса по цели.
    POST /report — жалоба на ответ AI (требование Google Play для AI-контента).
 
    Переменные окружения (Settings → Variables):
@@ -45,6 +51,12 @@ const STYLE = {
 };
 const LANG = { ru: 'Russian', en: 'English', es: 'Spanish (Latin America)', pt: 'Portuguese (Brazil)', de: 'German', fr: 'French' };
 const ASK = ['goal', 'why', 'num', 'when', 'days', 'obst', 'plan', 'free', 'done'];
+// v7: действия над записями приложения (подтверждает пользователь, проверяет приложение)
+const OPS = ['event.add', 'event.update', 'event.delete', 'task.add', 'task.update', 'task.done', 'task.delete',
+  'goal.update', 'goal.delete', 'goal.achieve', 'tree.add', 'tree.update', 'tree.delete',
+  'reward.add', 'reward.update', 'reward.delete'];
+const EV_TYPES = ['meeting', 'event', 'birthday'];
+const EV_REPEATS = ['once', 'monthly', 'yearly'];
 const TYPES = ['physical', 'material', 'learning', 'travel'];
 // v6: единая библиотека для всех четырёх персонажей (мастер-план, Character Controller)
 const EMO = ['neutral', 'smile', 'happy', 'excited', 'proud', 'think', 'doubt', 'surprised', 'sad', 'worried', 'sly', 'strict'];
@@ -75,12 +87,53 @@ const SCHEMA = {
         tip:          { type: 'STRING' },
         plan:         { type: 'STRING' }
       }
+    },
+    actions: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          op: { type: 'STRING', enum: OPS }, id: { type: 'STRING' }, parent: { type: 'STRING' },
+          date: { type: 'STRING' }, time: { type: 'STRING' }, title: { type: 'STRING' }, note: { type: 'STRING' },
+          type: { type: 'STRING', enum: EV_TYPES }, repeat: { type: 'STRING', enum: EV_REPEATS }, alert: { type: 'BOOLEAN' },
+          deadline: { type: 'STRING' }, target: { type: 'NUMBER' }, unit: { type: 'STRING' },
+          days: { type: 'ARRAY', items: { type: 'INTEGER' } }, vision: { type: 'STRING' },
+          price: { type: 'INTEGER' }, emoji: { type: 'STRING' }
+        },
+        required: ['op']
+      }
     }
   },
   required: ['reply', 'ask']
 };
 
+const ACTIONS_HELP = [
+  '',
+  'USER RECORDS AND ACTIONS. "data" in the input lists the user\'s records with ids: goals, tree (goal tree nodes), tasks (today, upcoming and unfinished), events (calendar), rewards. You may read them to answer questions («what do I have tomorrow?»).',
+  'When — and only when — the user asks to create, change, move, complete or delete a record, put it into "actions" (max 3). The app shows them to the user for confirmation and applies them itself. So in "reply" say what you are going to do and ask to confirm (e.g. «Добавлю в календарь: пт, 7 ноября, 18:00 — встреча с Никой. Подтвердите кнопкой ниже.»). Never say it is already done.',
+  'Ops and fields (dates YYYY-MM-DD computed from "today", time HH:MM 24h):',
+  '- event.add {date, title, note?, time? (reminder time), type: meeting|event|birthday, repeat: once|monthly|yearly}; event.update {id, any of: date, title, note, time, type, repeat, alert (false = no reminder)}; event.delete {id}',
+  '- task.add {date, title, time?}; task.update {id, any of: title, date (= move to another day), time}; task.done {id}; task.delete {id} (only tasks with goal=null; a goal\'s task can be moved or done instead)',
+  '- goal.update {id, any of: title, deadline, target (number goals only), unit, days (0=Mon…6=Sun), time, vision}; goal.delete {id}; goal.achieve {id} (mark as achieved, moves to History)',
+  '- tree.add {parent? (node id, empty = top level), title, deadline?}; tree.update {id, any of: title, deadline, time}; tree.delete {id} (with all sub-goals)',
+  '- reward.add {title, price (points), emoji?}; reward.update {id, any of: title, price, emoji}; reward.delete {id}',
+  'Rules: use ids ONLY from "data", never invent them. If it is unclear which record or what date/time the user means, ask instead of guessing (ask="free"). Include in an update only the fields that change. To create a NEW goal, do not use actions — collect it in the conversation as usual.',
+  'Never describe buttons, gestures or menus of the app — you do not see the screen. If the user asks how to do something, offer to do it yourself with an action.'
+].join('\n');
+
 function system(p) {
+  if (p.mode === 'assist') return [
+    'You are a character inside "Planner", a mobile app for goals and tasks. The user opened a free chat with you to look at or change their records: goals, tasks, calendar events, the goal tree, rewards.',
+    'Character: ' + (PERSONA[p.persona] || PERSONA.coach),
+    'Tone: ' + (STYLE[p.style] || STYLE.normal),
+    'Language: write "reply" in ' + (LANG[p.lang] || 'English') + '. 1–3 short sentences, plain text, no markdown, no lists. Stay in character.',
+    '- Help with what the user asks. If they want a brand-new goal, say they can start it with the «New goal with helper» flow, or collect it here only if they insist.',
+    '- ask is always "free" in this mode. emo, gesture, intensity: as usual (see below).',
+    '- emo: neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict. gesture: none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature (rarely). intensity 0.3–1.',
+    '- No medical, legal or financial advice beyond common sense. If the user hints at self-harm, reply with care and suggest talking to someone close or a professional.',
+    ACTIONS_HELP,
+    'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"free","emo":"smile","gesture":"nod","intensity":0.5,"actions":[{"op":"event.add","date":"2026-11-07","time":"18:00","title":"Встреча с Никой","type":"meeting","repeat":"once"}]}'
+  ].join('\n');
   return [
     'You are a character inside "Planner", a mobile app for goals and tasks. In a short chat you help the user turn a wish into ONE measurable goal with a daily norm. The app then creates the goal and its daily tasks.',
     'Character: ' + (PERSONA[p.persona] || PERSONA.coach),
@@ -119,6 +172,7 @@ function system(p) {
       '- Put into "set" ONLY values the user agreed to CHANGE. Never repeat unchanged values.',
       '- ask="done" as soon as the user accepts the new plan (or wants to keep it).'
     ].join('\n') : '',
+    p.cv >= 3 ? ACTIONS_HELP : '- Never describe buttons, gestures or menus of the app: you do not see the screen. If asked how to do something in the app, say it is done on the matching screen (Today, Goals, Calendar) without inventing details.',
     'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"goal","emo":"think","gesture":"none","intensity":0.5,"set":{}}'
   ].join('\n');
 }
@@ -204,7 +258,8 @@ function stdSchema(x) {
   if (Array.isArray(x)) return x.map(stdSchema);
   if (x && typeof x === 'object') {
     const o = {};
-    for (const k in x) o[k] = k === 'type' ? String(x[k]).toLowerCase() : stdSchema(x[k]);
+    // поле действия тоже называется type (тип события) — приводим к нижнему регистру только строки
+    for (const k in x) o[k] = k === 'type' && typeof x[k] === 'string' ? x[k].toLowerCase() : stdSchema(x[k]);
     return o;
   }
   return x;
@@ -253,6 +308,56 @@ async function gemini(env, sys, user) {
   return null;
 }
 
+/* сводка записей из приложения: только известные поля, короткие строки, ограниченное число */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+function cleanData(d) {
+  if (!d || typeof d !== 'object') return null;
+  const arr = (a, n, f) => (Array.isArray(a) ? a : []).slice(0, n).filter(x => x && typeof x === 'object').map(f);
+  const s = (v, n) => clip(v, n);
+  const dt = v => (DATE_RE.test(v) ? v : '');
+  return {
+    goals: arr(d.goals, 30, g => ({ id: s(g.id, 24), title: s(g.title, 80), kind: s(g.kind, 10), deadline: dt(g.deadline),
+      target: +g.target || 0, unit: s(g.unit, 16), progress: +g.progress || 0, days: Array.isArray(g.days) ? g.days.slice(0, 7) : [],
+      time: TIME_RE.test(g.time) ? g.time : '' })),
+    tree: arr(d.tree, 40, n => ({ id: s(n.id, 24), parent: s(n.parent, 24), title: s(n.title, 80), deadline: dt(n.deadline) })),
+    tasks: arr(d.tasks, 50, t => ({ id: s(t.id, 24), date: dt(t.date), title: s(t.title, 80), time: TIME_RE.test(t.time) ? t.time : '',
+      done: !!t.done, goal: t.goal ? s(t.goal, 24) : null })),
+    events: arr(d.events, 40, e => ({ id: s(e.id, 24), date: dt(e.date), title: s(e.title, 80), note: s(e.note, 120),
+      type: EV_TYPES.includes(e.type) ? e.type : 'event', repeat: EV_REPEATS.includes(e.repeat) ? e.repeat : 'once',
+      time: TIME_RE.test(e.time) ? e.time : '' })),
+    rewards: arr(d.rewards, 20, r => ({ id: s(r.id, 24), title: s(r.title, 60), price: +r.price || 0 })),
+    points: +d.points || 0
+  };
+}
+/* действия: только известные операции и поля с проверкой формата; окончательно проверяет приложение */
+function cleanActions(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const a of list.slice(0, 8)) {
+    if (out.length >= 3) break;
+    if (!a || !OPS.includes(a.op)) continue;
+    const r = { op: a.op };
+    if (a.id) r.id = clip(a.id, 24);
+    if (a.parent) r.parent = clip(a.parent, 24);
+    if (DATE_RE.test(a.date)) r.date = a.date;
+    if (DATE_RE.test(a.deadline)) r.deadline = a.deadline;
+    if (TIME_RE.test(a.time)) r.time = a.time;
+    if (a.title) r.title = clip(a.title, 80).trim();
+    if (typeof a.note === 'string') r.note = clip(a.note, 300).trim();
+    if (typeof a.vision === 'string') r.vision = clip(a.vision, 300).trim();
+    if (EV_TYPES.includes(a.type)) r.type = a.type;
+    if (EV_REPEATS.includes(a.repeat)) r.repeat = a.repeat;
+    if (typeof a.alert === 'boolean') r.alert = a.alert;
+    if (typeof a.target === 'number' && isFinite(a.target) && a.target > 0) r.target = a.target;
+    if (a.unit) r.unit = clip(a.unit, 16).trim();
+    if (Array.isArray(a.days)) { const d = [...new Set(a.days.filter(x => Number.isInteger(x) && x >= 0 && x <= 6))].sort(); if (d.length) r.days = d; }
+    if (typeof a.price === 'number' && a.price >= 1) r.price = Math.min(Math.round(a.price), 9999);
+    if (a.emoji) r.emoji = clip(a.emoji, 4);
+    out.push(r);
+  }
+  return out;
+}
+
 /* приводим ответ модели к безопасному виду: только известные поля и разумные значения */
 function clean(out, cv) {
   const s = out.set && typeof out.set === 'object' ? out.set : {};
@@ -282,6 +387,7 @@ function clean(out, cv) {
     const k = +out.intensity;
     res.intensity = isFinite(k) && k > 0 ? Math.round(Math.min(Math.max(k, 0.3), 1) * 10) / 10 : 0.6;
   }
+  if (cv >= 3) res.actions = cleanActions(out.actions);
   return res;
 }
 
@@ -290,7 +396,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 6 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 7 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -317,7 +423,8 @@ export default {
       persona: PERSONA[b.persona] ? b.persona : 'coach',
       style: STYLE[b.style] ? b.style : 'normal',
       lang: LANG[b.lang] ? b.lang : 'en',
-      mode: b.mode === 'replan' ? 'replan' : 'new'
+      mode: ['replan', 'assist'].includes(b.mode) ? b.mode : 'new',
+      cv: +b.cv || 1
     };
     const hist = (Array.isArray(b.history) ? b.history : []).slice(-24)
       .map(m => (m && m.who === 'me' ? 'USER: ' : 'YOU: ') + clip(m && m.text, 400));
@@ -332,6 +439,7 @@ export default {
       },
       units: Array.isArray(b.units) ? b.units.slice(0, 12).map(u => clip(u, 12)) : [],
       context: clip(b.context, 600),
+      data: p.cv >= 3 ? cleanData(b.data) : undefined,
       dialog: hist
     });
 
