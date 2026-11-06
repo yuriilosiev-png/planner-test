@@ -64,4 +64,14 @@ Worker отбрасывает неизвестные операции и пол�
 Клиенты с `cv` 1–2 (прод 1.7.8) не получают `actions` и `data` не шлют — v7 можно ставить сразу.
 Им добавлено только правило «не описывать кнопки и жесты приложения».
 Сводка записей увеличивает запрос, поэтому бесплатных ходов Workers AI в день станет меньше (примерно в 1,5–2 раза).
-Проверка: `GET /` → `"v":7`.
+Проверка: `GET /` → `"v":8`.
+
+## v8: быстрые платные модели
+
+Перебор моделей: `an:claude-haiku-5-5` (Anthropic) → `gq:openai/gpt-oss-120b` (Groq) → Workers AI.
+Модель без ключа пропускается. На одну модель — 9 с, на весь перебор — 20 с (приложение ждёт 25 с и уходит на сценарий).
+
+- **Anthropic:** console.anthropic.com → Billing (пополнить от $5) → API Keys → Create. В Worker: Settings → Variables and Secrets → Add → Secret `ANTHROPIC_KEY`.
+- **Groq:** console.groq.com → API Keys → Create. Secret `GROQ_KEY`. Бесплатно ~1000 запросов в день и 8000 токенов в минуту (это 1–2 хода в минуту на всех), платно — Developer.
+- Если в Worker задана переменная `MODEL`, она перекрывает порядок по умолчанию: удалить её или вписать `an:claude-haiku-5-5,gq:openai/gpt-oss-120b,cf:@cf/qwen/qwen3.8-27b,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast`.
+- Проверка: `GET /` → `"v":8`. В логах Worker (Observability) видно, какая модель ответила (поле `model` в ответе).

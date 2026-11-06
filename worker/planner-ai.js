@@ -1,4 +1,4 @@
-/* planner-ai v7 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v8 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -34,7 +34,11 @@
    запрос не ломают. Общий дневной лимит держит сам Google (квота модели). */
 
 const DEF_ORIGINS = 'https://yuriilosiev-png.github.io,null';
-const DEF_MODELS = 'cf:@cf/qwen/qwen3.8-27b,cf:@cf/zai-org/glm-4.7-flash,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+// v8: an: — Anthropic (секрет ANTHROPIC_KEY), gq: — Groq (секрет GROQ_KEY), cf: — Workers AI (привязка AI).
+// Модель без ключа пропускается, поэтому без секретов всё работает как в v7.
+const DEF_MODELS = 'an:claude-haiku-5-5,gq:openai/gpt-oss-120b,cf:@cf/qwen/qwen3.8-27b,cf:@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const STEP_MS = 9000;     // на одну модель
+const TOTAL_MS = 20000;   // на весь перебор: приложение ждёт 25 с
 // модели Workers AI, которые умеют строгий JSON по схеме (у остальных — разбор ответа)
 const CF_JSON = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct'];
 
@@ -172,7 +176,7 @@ function system(p) {
       '- Put into "set" ONLY values the user agreed to CHANGE. Never repeat unchanged values.',
       '- ask="done" as soon as the user accepts the new plan (or wants to keep it).'
     ].join('\n') : '',
-    p.cv >= 3 ? ACTIONS_HELP : '- Never describe buttons, gestures or menus of the app: you do not see the screen. If asked how to do something in the app, say it is done on the matching screen (Today, Goals, Calendar) without inventing details.',
+    p.cv >= 3 ? ACTIONS_HELP + '\n- In this goal interview, if the user asks to change existing records (tasks, calendar, goals) instead of describing a new goal, do that with actions, set ask="free" and do not take that message as the goal; after it, offer to continue with the new goal or to close the chat.' : '- Never describe buttons, gestures or menus of the app: you do not see the screen. If asked how to do something in the app, say it is done on the matching screen (Today, Goals, Calendar) without inventing details.',
     'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"goal","emo":"think","gesture":"none","intensity":0.5,"set":{}}'
   ].join('\n');
 }
@@ -293,11 +297,57 @@ async function callCF(env, model, sys, user) {
     return { status: 0 };
   }
 }
+/* fetch с ограничением по времени */
+async function timed(url, init, ms) {
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms);
+  try { return await fetch(url, { ...init, signal: ctl.signal }); } finally { clearTimeout(tm); }
+}
+/* Anthropic Messages API: быстрая Haiku, ответ — JSON текстом */
+async function callAnthropic(env, model, sys, user, ms) {
+  if (!env.ANTHROPIC_KEY) return { status: -1 };
+  try {
+    const r = await timed('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model, max_tokens: 700, temperature: 0.7, system: sys, messages: [{ role: 'user', content: user }] })
+    }, ms);
+    if (!r.ok) { console.log('anthropic', model, r.status, (await r.text()).slice(0, 300)); return { status: r.status }; }
+    const j = await r.json();
+    const txt = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+    const out = pickJson(txt);
+    if (!out) console.log('anthropic no json', model, txt.slice(0, 300));
+    return { out, model };
+  } catch (e) { console.log('anthropic error', model, String(e).slice(0, 200)); return { status: 0 }; }
+}
+/* Groq (OpenAI-совместимый): gpt-oss, очень быстрый вывод */
+async function callGroq(env, model, sys, user, ms) {
+  if (!env.GROQ_KEY) return { status: -1 };
+  const body = { model, max_completion_tokens: 900, temperature: 0.7, response_format: { type: 'json_object' },
+    messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] };
+  if (/gpt-oss/.test(model)) body.reasoning_effort = 'low';
+  try {
+    const r = await timed('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + env.GROQ_KEY }, body: JSON.stringify(body)
+    }, ms);
+    if (!r.ok) { console.log('groq', model, r.status, (await r.text()).slice(0, 300)); return { status: r.status }; }
+    const j = await r.json();
+    const out = pickJson(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+    if (!out) console.log('groq no json', model, JSON.stringify(j).slice(0, 300));
+    return { out, model };
+  } catch (e) { console.log('groq error', model, String(e).slice(0, 200)); return { status: 0 }; }
+}
 async function gemini(env, sys, user) {
   const models = (env.MODEL || DEF_MODELS).split(',').map(s => s.trim()).filter(Boolean);
+  const t0 = Date.now();
   for (const m of models) {
+    const left = TOTAL_MS - (Date.now() - t0);
+    if (left < 2500) break;                               // не успеем — пусть приложение уйдёт на сценарий
+    const ms = Math.min(STEP_MS, left);
     let r;
-    if (m.startsWith('cf:')) r = await callCF(env, m.slice(3), sys, user);
+    if (m.startsWith('an:')) r = await callAnthropic(env, m.slice(3), sys, user, ms);
+    else if (m.startsWith('gq:')) r = await callGroq(env, m.slice(3), sys, user, ms);
+    else if (m.startsWith('cf:')) r = await Promise.race([callCF(env, m.slice(3), sys, user),
+      new Promise(res => setTimeout(() => res({ status: 0, slow: true }), ms))]);
     else {
       if (!env.GEMINI_KEY) continue;
       r = await callModel(env, m, sys, user, true);
@@ -396,7 +446,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 7 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 8 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
@@ -416,7 +466,7 @@ export default {
     }
 
     if (url.pathname !== '/chat') return json({ error: 'path' }, 404, c.h);
-    if (!env.AI && !env.GEMINI_KEY) return json({ error: 'nokey' }, 503, c.h);
+    if (!env.AI && !env.GEMINI_KEY && !env.ANTHROPIC_KEY && !env.GROQ_KEY) return json({ error: 'nokey' }, 503, c.h);
     if (await overLimit(env, device)) return json({ error: 'limit' }, 429, c.h);
 
     const p = {
