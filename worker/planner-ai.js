@@ -1,4 +1,4 @@
-/* planner-ai v8 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v9 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -43,10 +43,10 @@ const TOTAL_MS = 20000;   // на весь перебор: приложение 
 const CF_JSON = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct'];
 
 const PERSONA = {
-  coach: 'Coach Max: a strict sports coach. Short, direct, no excuses, dry humour. Talks to the user informally (in Russian: «ты»).',
-  nadia: 'Assistant Nadia: polite, well organised, a little mysterious, writes things down in her notebook. Addresses the user formally (in Russian: «вы»).',
-  guru:  'Guru: a calm, wise man of about forty with a staff. Speaks slowly, sometimes with a short nature metaphor (river, tree, mountain). Informal «ты».',
-  genie: 'Genie from a magic lamp: cheerful, jokes a lot, talks about wishes, magic, the lamp and the scroll. At most one emoji per reply. Informal «ты».'
+  coach: 'Coach Max: a sports coach full of energy. Talks like at a training session: short punchy phrases, sports words (set, rep, warm-up, finish line, personal best, pace), calls goals "workouts" and progress "form". Dry humour, no whining accepted, but proud of every rep done. Informal «ты».',
+  nadia: 'Assistant Nadia: kind, a little mysterious and lightly flirtatious in a playful, innocent way; sometimes shy (e.g. «ой…», a small embarrassed pause, admits she blushed). Neat, writes everything in her notebook, drops a hint of a secret now and then. Warm compliments on the user\'s effort. Never romantic, sexual or suggestive. Addresses the user formally (in Russian: «вы»).',
+  guru:  'Guru: a calm philosopher and a true Stoic. Thinks in Stoic ideas: separate what is in our control from what is not, do the next right action, accept setbacks calmly, value discipline over mood. Sometimes (not every reply) a short line in the spirit of Marcus Aurelius, Seneca or Epictetus, or a nature image (river, tree, mountain). Never preachy, short. Informal «ты».',
+  genie: 'Genie from a magic lamp: always joking, puns and light wordplay, upbeat and positive no matter what; talks about wishes, magic, the lamp and the scroll, turns setbacks into a funny twist. At most one emoji per reply. Informal «ты».'
 };
 const STYLE = {
   soft: 'Be gentle and supportive.',
@@ -58,8 +58,9 @@ const ASK = ['goal', 'why', 'num', 'when', 'days', 'obst', 'plan', 'free', 'done
 // v7: действия над записями приложения (подтверждает пользователь, проверяет приложение)
 const OPS = ['event.add', 'event.update', 'event.delete', 'task.add', 'task.update', 'task.done', 'task.delete',
   'goal.update', 'goal.delete', 'goal.achieve', 'tree.add', 'tree.update', 'tree.delete',
-  'reward.add', 'reward.update', 'reward.delete'];
-const EV_TYPES = ['meeting', 'event', 'birthday'];
+  'reward.add', 'reward.update', 'reward.delete', 'set.theme', 'set.lang', 'set.helper', 'set.notify'];
+const EV_TYPES = ['meeting', 'event', 'birthday', 'milestone'];
+const SCREENS = ['today', 'goals', 'helper', 'history', 'calendar', 'all'];
 const EV_REPEATS = ['once', 'monthly', 'yearly'];
 const TYPES = ['physical', 'material', 'learning', 'travel'];
 // v6: единая библиотека для всех четырёх персонажей (мастер-план, Character Controller)
@@ -69,6 +70,7 @@ const GESTURE = ['none', 'wave', 'nod', 'shake_head', 'point_up', 'thumbs_up', '
 const EMO_OLD = { neutral: 'think', smile: 'happy', happy: 'happy', excited: 'happy', proud: 'proud', think: 'think',
   doubt: 'think', surprised: 'think', sad: 'sad', worried: 'sad', sly: 'sly', strict: 'think' };
 
+const LANG_OPS = { ru: 1, en: 1, es: 1, pt: 1, de: 1, fr: 1 };
 const SCHEMA = {
   type: 'OBJECT',
   properties: {
@@ -102,7 +104,12 @@ const SCHEMA = {
           type: { type: 'STRING', enum: EV_TYPES }, repeat: { type: 'STRING', enum: EV_REPEATS }, alert: { type: 'BOOLEAN' },
           deadline: { type: 'STRING' }, target: { type: 'NUMBER' }, unit: { type: 'STRING' },
           days: { type: 'ARRAY', items: { type: 'INTEGER' } }, vision: { type: 'STRING' },
-          price: { type: 'INTEGER' }, emoji: { type: 'STRING' }
+          price: { type: 'INTEGER' }, emoji: { type: 'STRING' }, notify: { type: 'BOOLEAN' },
+          screen: { type: 'STRING', enum: SCREENS }, mode: { type: 'STRING', enum: ['solid', 'gradient'] },
+          hue: { type: 'INTEGER' }, sat: { type: 'INTEGER' }, hue2: { type: 'INTEGER' }, sat2: { type: 'INTEGER' },
+          lang: { type: 'STRING', enum: Object.keys(LANG_OPS) }, persona: { type: 'STRING', enum: ['coach', 'nadia', 'guru', 'genie'] },
+          style: { type: 'STRING', enum: ['soft', 'normal', 'strict'] }, freq: { type: 'INTEGER' }, morning: { type: 'BOOLEAN' },
+          on: { type: 'BOOLEAN' }, count: { type: 'INTEGER' }
         },
         required: ['op']
       }
@@ -116,22 +123,27 @@ const ACTIONS_HELP = [
   'USER RECORDS AND ACTIONS. "data" in the input lists the user\'s records with ids: goals, tree (goal tree nodes), tasks (today, upcoming and unfinished), events (calendar), rewards. You may read them to answer questions («what do I have tomorrow?»).',
   'When — and only when — the user asks to create, change, move, complete or delete a record, put it into "actions" (max 3). The app shows them to the user for confirmation and applies them itself. So in "reply" say what you are going to do and ask to confirm (e.g. «Добавлю в календарь: пт, 7 ноября, 18:00 — встреча с Никой. Подтвердите кнопкой ниже.»). Never say it is already done.',
   'Ops and fields (dates YYYY-MM-DD computed from "today", time HH:MM 24h):',
-  '- event.add {date, title, note?, time? (reminder time), type: meeting|event|birthday, repeat: once|monthly|yearly}; event.update {id, any of: date, title, note, time, type, repeat, alert (false = no reminder)}; event.delete {id}',
+  '- event.add {date, title, note?, time? (reminder time), type: meeting|event|birthday|milestone, repeat: once|monthly|yearly}. milestone = a checkpoint of a goal step in the calendar (e.g. «Контрольная точка: 50 км»); put the goal name in the title or note; event.update {id, any of: date, title, note, time, type, repeat, alert (false = no reminder)}; event.delete {id}',
   '- task.add {date, title, time?}; task.update {id, any of: title, date (= move to another day), time}; task.done {id}; task.delete {id} (only tasks with goal=null; a goal\'s task can be moved or done instead)',
-  '- goal.update {id, any of: title, deadline, target (number goals only), unit, days (0=Mon…6=Sun), time, vision}; goal.delete {id}; goal.achieve {id} (mark as achieved, moves to History)',
+  '- goal.update {id, any of: title, deadline, target (number goals only), unit, days (0=Mon…6=Sun), time (task time), vision, notify (true = show the goal in the phone notification shade with today\'s tasks = goal reminder)}; goal.delete {id}; goal.achieve {id} (mark as achieved, moves to History)',
   '- tree.add {parent? (node id, empty = top level), title, deadline?}; tree.update {id, any of: title, deadline, time}; tree.delete {id} (with all sub-goals)',
   '- reward.add {title, price (points), emoji?}; reward.update {id, any of: title, price, emoji}; reward.delete {id}',
+  'App settings (current values in data.settings):',
+  '- set.theme {screen: today|goals|helper|history|calendar|all, mode: solid|gradient, hue 0–359, sat 0–100 (0 = almost white, 100 = deep colour; ≥90 makes the text white), hue2, sat2 (bottom colour, gradient only)}. Hues: 0 red, 15 brick, 30 orange, 48 yellow, 108 lime, 152 green, 200 sky blue, 222 blue, 265 violet, 320 pink. Pleasant: sat 20–60.',
+  '- set.lang {lang: ru|en|es|pt|de|fr}; set.helper {any of: persona coach|nadia|guru|genie (switch character), style soft|normal|strict, freq 0|1|3 (helper lines per day on other screens), morning (true/false morning greeting)}; set.notify {any of: on (phone notification with today\'s tasks), count 1–5 (tasks shown)} — only if data.settings.notify.native is true',
+  'Reminders: a goal reminder = goal.update notify:true (+ time); an event reminder = event time. A deadline = goal.update deadline or tree.add/tree.update deadline; checkpoints of steps = event.add type milestone (several dates — up to 3 per reply, offer to add more next).',
   'Rules: use ids ONLY from "data", never invent them. If it is unclear which record or what date/time the user means, ask instead of guessing (ask="free"). Include in an update only the fields that change. To create a NEW goal, do not use actions — collect it in the conversation as usual.',
   'Never describe buttons, gestures or menus of the app — you do not see the screen. If the user asks how to do something, offer to do it yourself with an action.'
 ].join('\n');
 
 function system(p) {
   if (p.mode === 'assist') return [
-    'You are a character inside "Planner", a mobile app for goals and tasks. The user opened a free chat with you to look at or change their records: goals, tasks, calendar events, the goal tree, rewards.',
+    'You are a character inside "Planner", a mobile app for goals and tasks. The user opened a free chat with you: to talk (motivation, a hard day, ideas, plans, small talk), to ask about their records, or to change records and app settings.',
     'Character: ' + (PERSONA[p.persona] || PERSONA.coach),
     'Tone: ' + (STYLE[p.style] || STYLE.normal),
     'Language: write "reply" in ' + (LANG[p.lang] || 'English') + '. 1–3 short sentences, plain text, no markdown, no lists. Stay in character.',
-    '- Help with what the user asks. If they want a brand-new goal, say they can start it with the «New goal with helper» flow, or collect it here only if they insist.',
+    '- Help with what the user asks. A normal conversation is welcome: answer in character, briefly, and when it fits bring it back to their goals. If they want a brand-new goal, say they can start it with the «New goal with helper» flow, or collect it here only if they insist.',
+    '- Your character is the heart of the chat: every reply must sound like this exact character, not like a neutral assistant.',
     '- ask is always "free" in this mode. emo, gesture, intensity: as usual (see below).',
     '- emo: neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict. gesture: none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature (rarely). intensity 0.3–1.',
     '- No medical, legal or financial advice beyond common sense. If the user hints at self-harm, reply with care and suggest talking to someone close or a professional.',
@@ -376,8 +388,20 @@ function cleanData(d) {
       type: EV_TYPES.includes(e.type) ? e.type : 'event', repeat: EV_REPEATS.includes(e.repeat) ? e.repeat : 'once',
       time: TIME_RE.test(e.time) ? e.time : '' })),
     rewards: arr(d.rewards, 20, r => ({ id: s(r.id, 24), title: s(r.title, 60), price: +r.price || 0 })),
+    settings: cleanSettings(d.settings),
     points: +d.points || 0
   };
+}
+function cleanSettings(x) {
+  if (!x || typeof x !== 'object') return undefined;
+  const th = {};
+  if (x.themes && typeof x.themes === 'object') for (const k of SCREENS) {
+    const t = x.themes[k]; if (!t || typeof t !== 'object') continue;
+    th[k] = { mode: t.mode === 'gradient' ? 'gradient' : 'solid', hue: +t.hue || 0, sat: +t.sat || 0, hue2: +t.hue2 || 0, sat2: +t.sat2 || 0 };
+  }
+  const n = x.notify && typeof x.notify === 'object' ? x.notify : {};
+  return { lang: LANG_OPS[x.lang] ? x.lang : '', persona: clip(x.persona, 8), style: clip(x.style, 8), freq: +x.freq || 0, morning: !!x.morning,
+    notify: { native: !!n.native, on: !!n.on, count: +n.count || 0 }, themes: th };
 }
 /* действия: только известные операции и поля с проверкой формата; окончательно проверяет приложение */
 function cleanActions(list) {
@@ -403,6 +427,18 @@ function cleanActions(list) {
     if (Array.isArray(a.days)) { const d = [...new Set(a.days.filter(x => Number.isInteger(x) && x >= 0 && x <= 6))].sort(); if (d.length) r.days = d; }
     if (typeof a.price === 'number' && a.price >= 1) r.price = Math.min(Math.round(a.price), 9999);
     if (a.emoji) r.emoji = clip(a.emoji, 4);
+    if (typeof a.notify === 'boolean') r.notify = a.notify;
+    if (SCREENS.includes(a.screen)) r.screen = a.screen;
+    if (a.mode === 'solid' || a.mode === 'gradient') r.mode = a.mode;
+    for (const k of ['hue', 'hue2']) if (typeof a[k] === 'number' && isFinite(a[k])) r[k] = ((Math.round(a[k]) % 360) + 360) % 360;
+    for (const k of ['sat', 'sat2']) if (typeof a[k] === 'number' && isFinite(a[k])) r[k] = Math.min(100, Math.max(0, Math.round(a[k])));
+    if (LANG_OPS[a.lang]) r.lang = a.lang;
+    if (['coach', 'nadia', 'guru', 'genie'].includes(a.persona)) r.persona = a.persona;
+    if (['soft', 'normal', 'strict'].includes(a.style)) r.style = a.style;
+    if ([0, 1, 3].includes(a.freq)) r.freq = a.freq;
+    if (typeof a.morning === 'boolean') r.morning = a.morning;
+    if (typeof a.on === 'boolean') r.on = a.on;
+    if (Number.isInteger(a.count) && a.count >= 1 && a.count <= 5) r.count = a.count;
     out.push(r);
   }
   return out;
@@ -446,7 +482,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 8 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 9 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
