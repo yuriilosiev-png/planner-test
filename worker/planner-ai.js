@@ -1,4 +1,4 @@
-/* planner-ai v10 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v11 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -109,7 +109,7 @@ const SCHEMA = {
           hue: { type: 'INTEGER' }, sat: { type: 'INTEGER' }, hue2: { type: 'INTEGER' }, sat2: { type: 'INTEGER' },
           lang: { type: 'STRING', enum: Object.keys(LANG_OPS) }, persona: { type: 'STRING', enum: ['coach', 'nadia', 'guru', 'genie'] },
           style: { type: 'STRING', enum: ['soft', 'normal', 'strict'] }, freq: { type: 'INTEGER' }, morning: { type: 'BOOLEAN' },
-          on: { type: 'BOOLEAN' }, count: { type: 'INTEGER' }
+          on: { type: 'BOOLEAN' }, count: { type: 'INTEGER' }, reset: { type: 'BOOLEAN' }
         },
         required: ['op']
       }
@@ -129,9 +129,10 @@ const ACTIONS_HELP = [
   '- tree.add {parent? (node id, empty = top level), title, deadline?}; tree.update {id, any of: title, deadline, time}; tree.delete {id} (with all sub-goals)',
   '- reward.add {title, price (points), emoji?}; reward.update {id, any of: title, price, emoji}; reward.delete {id}',
   'App settings (current values in data.settings):',
-  '- set.theme {screen: today|goals|helper|history|calendar|all, mode: solid|gradient, hue 0–359, sat 0–100 (0 = almost white, 100 = deep colour; ≥90 makes the text white), hue2, sat2 (bottom colour, gradient only)}. Hues: 0 red, 15 brick, 30 orange, 48 yellow, 108 lime, 152 green, 200 sky blue, 222 blue, 265 violet, 320 pink. Pleasant: sat 20–60.',
+  '- set.theme {screen: today|goals|helper|history|calendar|all (default all), mode: solid|gradient, hue 0–359, sat 0–100, hue2, sat2 (bottom colour, gradient only)} or {screen, reset: true} = back to the app\'s standard colours («верни как было», «стандартный фон»). hue/sat = TOP colour, hue2/sat2 = BOTTOM colour — follow the user\'s order exactly («сверху красный, снизу синий» → hue 0, hue2 222). Hues: 0 red, 15 brick, 30 orange, 48 yellow, 90 lime, 140 green, 175 turquoise, 195 light blue (голубой), 222 blue (синий), 265 violet, 290 purple, 330 pink. sat: 0 = white, 20 = barely tinted, 70 = clearly coloured, 90+ = deep (text turns white). When the user names colours use sat 65–85 for both; 30–45 only if they ask for light/pastel; 90+ only for dark/bright.',
   '- set.lang {lang: ru|en|es|pt|de|fr}; set.helper {any of: persona coach|nadia|guru|genie (switch character), style soft|normal|strict, freq 0|1|3 (helper lines per day on other screens), morning (true/false morning greeting)}; set.notify {any of: on (phone notification with today\'s tasks), count 1–5 (tasks shown)} — only if data.settings.notify.native is true',
   'Reminders: a goal reminder = goal.update notify:true (+ time); an event reminder = event time. A deadline = goal.update deadline or tree.add/tree.update deadline; checkpoints of steps = event.add type milestone (several dates — up to 3 per reply, offer to add more next).',
+  'Never write op names, JSON, field names or hue/sat numbers in "reply" — describe the change in plain words («сверху красный, снизу синий»). Never say that something is already set or changed unless you return the action for it now.',
   'Rules: use ids ONLY from "data", never invent them. If it is unclear which record or what date/time the user means, ask instead of guessing (ask="free"). Include in an update only the fields that change. To create a NEW goal, do not use actions — collect it in the conversation as usual.',
   'Never describe buttons, gestures or menus of the app — you do not see the screen. If the user asks how to do something, offer to do it yourself with an action.'
 ].join('\n');
@@ -444,6 +445,7 @@ function cleanActions(list) {
     if ([0, 1, 3].includes(a.freq)) r.freq = a.freq;
     if (typeof a.morning === 'boolean') r.morning = a.morning;
     if (typeof a.on === 'boolean') r.on = a.on;
+    if (a.reset === true) r.reset = true;
     if (Number.isInteger(a.count) && a.count >= 1 && a.count <= 5) r.count = a.count;
     out.push(r);
   }
@@ -488,7 +490,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 10 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 11 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
