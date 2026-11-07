@@ -6241,7 +6241,7 @@ Object.assign(I18N.ru, {
 const HP_LIST = ['coach','nadia','guru','genie'];
 const HP = {
   coach:{color:'#ff7a45', sig:'strict', emos:['hello','think','happy','proud','sad','strict','sly']},
-  nadia:{color:'#9b6bff', sig:'mystery', emos:['hello','think','happy','proud','sad','mystery','sly']},
+  nadia:{color:'#9b6bff', sig:'mystery', emos:['hello','think','happy','proud','sad','mystery','sly','calm','smile','shy','laugh','surprised','worried','wink','point','shrug','blush']},
   guru: {color:'#3fa34d', sig:'stern', emos:['hello','think','happy','proud','sad','stern','sly']},
   genie:{color:'#3cc6c0', sig:'tease', emos:['hello','think','happy','proud','sad','tease','sly','joke']},
 };
@@ -6251,7 +6251,7 @@ function hpImg(p, emo){ return 'coach/'+p+'-'+emo+'.webp'; }
    + картинка внутри (дыхание/парение — всё время) + наклейки (звёзды, «?», тучка…).
    Ничего не скачивается: двигается та же картинка, наклейки нарисованы CSS.
    still — эмоция не сменилась (перерисовка опроса): разовые движения сразу в конце. */
-const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6]};   // верх головы на картинке: [x%, y%]
+const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6], "nadia-calm": [56.1, 2.6], "nadia-smile": [45.5, 2.6], "nadia-shy": [51.1, 2.6], "nadia-laugh": [45.9, 2.6], "nadia-surprised": [43.5, 2.6], "nadia-worried": [50.0, 2.6], "nadia-wink": [40.3, 2.6], "nadia-point": [53.3, 2.6], "nadia-shrug": [48.2, 2.6], "nadia-blush": [45.9, 2.6]};   // верх головы на картинке: [x%, y%]
 const HP_EM = {hello:'hello', think:'think', happy:'happy', proud:'proud', sad:'sad', sly:'sly',
   mystery:'mystery', strict:'strict', stern:'stern', tease:'sly', joke:'joke'};
 function hpStickers(em){
@@ -6281,12 +6281,14 @@ function hpFigHTML(p, emo, imgCls, still, attrs){
 }
 /* Этап 1: единая библиотека лиц (12) для всех четверых → готовая картинка персонажа.
    Старые имена (hello, joke, mystery, tease, stern…) остаются как есть. */
-const HP_EMOS = ['neutral','smile','happy','excited','proud','think','doubt','surprised','sad','worried','sly','strict'];
+const HP_EMOS = ['neutral','smile','happy','excited','proud','think','doubt','surprised','sad','worried','sly','strict','shy'];
 const HP_EMO = {
-  neutral:{img:'hello'}, smile:{img:'hello', em:'smile'}, happy:{img:'happy'},
-  excited:{img:'happy', by:{genie:'proud'}, em:'happy'}, proud:{img:'proud'}, think:{img:'think'},
-  doubt:{img:'think', by:{guru:'stern', nadia:'mystery'}, em:'doubt'}, surprised:{img:'hello', em:'surprised'},
-  sad:{img:'sad'}, worried:{img:'sad', em:'worried'}, sly:{img:'sly'}, strict:{img:'sig'}
+  // 1.7.9: у Надежды свои позы для спокойного лица, улыбки, смеха, удивления, тревоги, сомнения и смущения
+  neutral:{img:'hello', by:{nadia:'calm'}}, smile:{img:'hello', by:{nadia:'smile'}, em:'smile'}, happy:{img:'happy'},
+  excited:{img:'happy', by:{genie:'proud', nadia:'laugh'}, em:'happy'}, proud:{img:'proud'}, think:{img:'think'},
+  doubt:{img:'think', by:{guru:'stern', nadia:'shrug'}, em:'doubt'}, surprised:{img:'hello', by:{nadia:'surprised'}, em:'surprised'},
+  sad:{img:'sad'}, worried:{img:'sad', by:{nadia:'worried'}, em:'worried'}, sly:{img:'sly'}, strict:{img:'sig'},
+  shy:{img:'happy', by:{nadia:'shy'}, em:'smile'}
 };
 function hpEmoImg(p, emo){
   const e=HP_EMO[emo];
@@ -6366,10 +6368,10 @@ const HP_GEST = {
   point_up:    {pose:{guru:'stern', nadia:'proud'}, mv:'up', st:{coach:'☝️', genie:'☝️'}},
   thumbs_up:   {pose:{coach:'hello'}, mv:'pop', st:{nadia:'👍', guru:'👍', genie:'👍'}},
   show_check:  {pose:{nadia:'happy', coach:'think'}, mv:'pop', st:'check'},
-  shrug:       {mv:'shrug'},
+  shrug:       {pose:{nadia:'shrug'}, mv:'shrug'},
   hand_on_chin:{pose:'think', mv:'tilt'},
   celebrate:   {pose:{nadia:'happy', genie:'proud', guru:'happy', coach:'happy'}, mv:'hop', st:'confetti', ms:1500},
-  signature:   {pose:{nadia:'sly', genie:'sly', guru:'sly', coach:'strict'},
+  signature:   {pose:{nadia:'wink', genie:'sly', guru:'sly', coach:'strict'},
                 mv:{nadia:'pop', genie:'spin', guru:'dip', coach:'shake'},
                 st:{nadia:'spark', genie:'spark', guru:'leaves', coach:'!'}, ms:1800},
 };

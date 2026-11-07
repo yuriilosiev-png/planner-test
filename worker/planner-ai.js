@@ -1,4 +1,4 @@
-/* planner-ai v12 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v13 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -64,11 +64,11 @@ const SCREENS = ['today', 'goals', 'helper', 'history', 'calendar', 'all'];
 const EV_REPEATS = ['once', 'monthly', 'yearly'];
 const TYPES = ['physical', 'material', 'learning', 'travel'];
 // v6: единая библиотека для всех четырёх персонажей (мастер-план, Character Controller)
-const EMO = ['neutral', 'smile', 'happy', 'excited', 'proud', 'think', 'doubt', 'surprised', 'sad', 'worried', 'sly', 'strict'];
+const EMO = ['neutral', 'smile', 'happy', 'excited', 'proud', 'think', 'doubt', 'surprised', 'sad', 'worried', 'sly', 'strict', 'shy'];   // shy — с v13, только cv>=3
 const GESTURE = ['none', 'wave', 'nod', 'shake_head', 'point_up', 'thumbs_up', 'show_check', 'shrug', 'hand_on_chin', 'celebrate', 'signature'];
 // для приложений до cv=2 (прод 1.7.8): они понимают только эти пять лиц
 const EMO_OLD = { neutral: 'think', smile: 'happy', happy: 'happy', excited: 'happy', proud: 'proud', think: 'think',
-  doubt: 'think', surprised: 'think', sad: 'sad', worried: 'sad', sly: 'sly', strict: 'think' };
+  doubt: 'think', surprised: 'think', sad: 'sad', worried: 'sad', sly: 'sly', strict: 'think', shy: 'happy' };
 
 const LANG_OPS = { ru: 1, en: 1, es: 1, pt: 1, de: 1, fr: 1 };
 const SCHEMA = {
@@ -147,7 +147,7 @@ function system(p) {
     '- Your character is the heart of the chat: every reply must sound like this exact character, not like a neutral assistant.',
     '- Natural talk: do not open a reply by restating what the user just wrote; never repeat your previous replies; off-topic questions get a short correct answer in character.',
     '- ask is always "free" in this mode. emo, gesture, intensity: as usual (see below).',
-    '- emo: neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict. gesture: none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature (rarely). intensity 0.3–1.',
+    '- emo: neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict, shy (embarrassed smile — mostly Nadia). gesture: none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature (rarely). intensity 0.3–1.',
     '- No medical, legal or financial advice beyond common sense. If the user hints at self-harm, reply with care and suggest talking to someone close or a professional.',
     ACTIONS_HELP,
     'OUTPUT: return ONLY one JSON object, no other text, no markdown, e.g. {"reply":"…","ask":"free","emo":"smile","gesture":"nod","intensity":0.5,"actions":[{"op":"event.add","date":"2026-11-07","time":"18:00","title":"Встреча с Никой","type":"meeting","repeat":"once"}]}'
@@ -182,7 +182,7 @@ function system(p) {
     '- Put into "set" ONLY values the user clearly gave or explicitly accepted in THIS message or earlier. Never invent them.',
     '- "ask" = what your question is about: goal, why, num, when, days, obst, plan; "free" for a side question; "done" when title, target, unit, deadlineDays, days are known and obst/plan were discussed (or the user wants to finish) — then reply with a short encouraging wrap-up and no question.',
     '- Try to finish within about 10 of your messages.',
-    '- emo: your face for this reply: neutral, smile, happy, excited (big step, the goal is ready), proud (user did well), think, doubt (the number or plan looks unrealistic), surprised, sad, worried (user struggles or misses), sly (user dodges or jokes), strict (user makes excuses; never in a gentle tone).',
+    '- emo: your face for this reply: neutral, smile, happy, excited (big step, the goal is ready), proud (user did well), think, doubt (the number or plan looks unrealistic), surprised, sad, worried (user struggles or misses), sly (user dodges or jokes), strict (user makes excuses; never in a gentle tone), shy (an embarrassed smile at a compliment — mostly Nadia, rarely).',
     '- gesture: ONE body move for this reply, or "none": wave (hello, bye), nod (agree, got it), shake_head (no, unrealistic), point_up (an important tip), thumbs_up (good answer), show_check (a field is settled), shrug (it is up to you, not sure), hand_on_chin (pondering), celebrate (only when ask="done"), signature (your trademark move — rarely, at most once per dialog). Most replies: "none" or nod. Do not repeat the same gesture twice in a row.',
     '- intensity: 0.3 (calm) … 1 (strong) — how big the face and the move are.',
     '- No medical, legal or financial advice beyond common sense; for health goals mention checking with a doctor when relevant. If the user hints at self-harm, reply with care, suggest talking to someone close or a professional, ask="free".',
@@ -476,7 +476,7 @@ function clean(out, cv) {
   const res = {
     reply: clip(out.reply, 500).trim(),
     ask: ASK.includes(out.ask) ? out.ask : 'free',
-    emo: cv >= 2 ? emo : EMO_OLD[emo],
+    emo: cv >= 3 ? emo : cv >= 2 ? (emo === 'shy' ? 'smile' : emo) : EMO_OLD[emo],
     set
   };
   if (cv >= 2) {
@@ -493,7 +493,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 12 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 13 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
