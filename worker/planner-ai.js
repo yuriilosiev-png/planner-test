@@ -1,4 +1,4 @@
-/* planner-ai v13 — Cloudflare Worker для помощника Planner (1.7.8+).
+/* planner-ai v14 — Cloudflare Worker для помощника Planner (1.7.8+).
    Не собирается CI: код вставляется в Cloudflare вручную (см. worker/README.md).
 
    POST /chat   — один ход живого опроса по цели. Приложение присылает историю
@@ -120,7 +120,8 @@ const SCHEMA = {
 
 const ACTIONS_HELP = [
   '',
-  'USER RECORDS AND ACTIONS. "data" in the input lists the user\'s records with ids: goals, tree (goal tree nodes), tasks (today, upcoming and unfinished), events (calendar), rewards. You may read them to answer questions («what do I have tomorrow?»).',
+  'USER RECORDS AND ACTIONS. "data" in the input lists the user\'s records with ids: goals, tree (goal tree nodes), tasks (yesterday, today, the next 14 days and unfinished ones of the last week), events (calendar), rewards.',
+  'QUESTIONS ABOUT RECORDS come first: «что сегодня / на завтра / что вчера не сделал» — answer right away from data, listing the task titles. rel = days from today: 0 today, -1 yesterday, 1 tomorrow. A task with rel<0 and done=false was not done (skipped=true = the user skipped it). If there is nothing, say so. Never answer such a question with another question.',
   'When — and only when — the user asks to create, change, move, complete or delete a record, put it into "actions" (max 3). The app shows them to the user for confirmation and applies them itself. So in "reply" say what you are going to do and ask to confirm (e.g. «Добавлю в календарь: пт, 7 ноября, 18:00 — встреча с Никой. Подтвердите кнопкой ниже.»). Never say it is already done.',
   'Ops and fields (dates YYYY-MM-DD computed from "today", time HH:MM 24h):',
   '- event.add {date, title, note?, time? (reminder time), type: meeting|event|birthday|milestone, repeat: once|monthly|yearly}. milestone = a checkpoint of a goal step in the calendar (e.g. «Контрольная точка: 50 км»); put the goal name in the title or note; event.update {id, any of: date, title, note, time, type, repeat, alert (false = no reminder)}; event.delete {id}',
@@ -139,14 +140,15 @@ const ACTIONS_HELP = [
 
 function system(p) {
   if (p.mode === 'assist') return [
-    'You are a character inside "Planner", a mobile app for goals and tasks. The user opened a free chat with you: to talk (motivation, a hard day, ideas, plans, small talk), to ask about their records, or to change records and app settings.',
+    'You are a character inside "Planner", a mobile app for goals and tasks. This is the one chat with you: the user can talk (motivation, a hard day, ideas, plans, small talk), ask about their records, change records and app settings, or set a new goal.',
+    '- NEW GOAL: when the user wants to set a new goal («хочу новую цель», «давай поставим цель», «хочу научиться…»), reply with one short line and set ask="goal" — the app then starts the goal interview right in this chat. Otherwise ask is "free".',
     'Character: ' + (PERSONA[p.persona] || PERSONA.coach),
     'Tone: ' + (STYLE[p.style] || STYLE.normal),
     'Language: write "reply" in ' + (LANG[p.lang] || 'English') + '. 1–3 short sentences, plain text, no markdown, no lists. Stay in character.',
-    '- Help with what the user asks. A normal conversation is welcome: answer in character, briefly, and when it fits bring it back to their goals. If they want a brand-new goal, say they can start it with the «New goal with helper» flow, or collect it here only if they insist.',
+    '- Help with what the user asks. A normal conversation is welcome: answer in character, briefly, and when it fits bring it back to their goals.',
     '- Your character is the heart of the chat: every reply must sound like this exact character, not like a neutral assistant.',
     '- Natural talk: do not open a reply by restating what the user just wrote; never repeat your previous replies; off-topic questions get a short correct answer in character.',
-    '- ask is always "free" in this mode. emo, gesture, intensity: as usual (see below).',
+    '- emo, gesture, intensity: as usual (see below).',
     '- emo: neutral, smile, happy, excited, proud, think, doubt, surprised, sad, worried, sly, strict, shy (embarrassed smile — mostly Nadia). gesture: none, wave, nod, shake_head, point_up, thumbs_up, show_check, shrug, hand_on_chin, celebrate, signature (rarely). intensity 0.3–1.',
     '- No medical, legal or financial advice beyond common sense. If the user hints at self-harm, reply with care and suggest talking to someone close or a professional.',
     ACTIONS_HELP,
@@ -382,6 +384,7 @@ async function gemini(env, sys, user, cv) {
 
 /* сводка записей из приложения: только известные поля, короткие строки, ограниченное число */
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const relDay = v => (Number.isInteger(v) && Math.abs(v) < 1000 ? v : null);
 function cleanData(d) {
   if (!d || typeof d !== 'object') return null;
   const arr = (a, n, f) => (Array.isArray(a) ? a : []).slice(0, n).filter(x => x && typeof x === 'object').map(f);
@@ -392,9 +395,9 @@ function cleanData(d) {
       target: +g.target || 0, unit: s(g.unit, 16), progress: +g.progress || 0, days: Array.isArray(g.days) ? g.days.slice(0, 7) : [],
       time: TIME_RE.test(g.time) ? g.time : '' })),
     tree: arr(d.tree, 40, n => ({ id: s(n.id, 24), parent: s(n.parent, 24), title: s(n.title, 80), deadline: dt(n.deadline) })),
-    tasks: arr(d.tasks, 50, t => ({ id: s(t.id, 24), date: dt(t.date), title: s(t.title, 80), time: TIME_RE.test(t.time) ? t.time : '',
-      done: !!t.done, goal: t.goal ? s(t.goal, 24) : null })),
-    events: arr(d.events, 40, e => ({ id: s(e.id, 24), date: dt(e.date), title: s(e.title, 80), note: s(e.note, 120),
+    tasks: arr(d.tasks, 60, t => ({ id: s(t.id, 24), date: dt(t.date), rel: relDay(t.rel), title: s(t.title, 80), time: TIME_RE.test(t.time) ? t.time : '',
+      done: !!t.done, skipped: !!t.skipped, goal: t.goal ? s(t.goal, 24) : null })),
+    events: arr(d.events, 40, e => ({ id: s(e.id, 24), date: dt(e.date), rel: relDay(e.rel), title: s(e.title, 80), note: s(e.note, 120),
       type: EV_TYPES.includes(e.type) ? e.type : 'event', repeat: EV_REPEATS.includes(e.repeat) ? e.repeat : 'once',
       time: TIME_RE.test(e.time) ? e.time : '' })),
     rewards: arr(d.rewards, 20, r => ({ id: s(r.id, 24), title: s(r.title, 60), price: +r.price || 0 })),
@@ -493,7 +496,7 @@ export default {
     const url = new URL(req.url);
     const c = cors(req.headers.get('Origin'), env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.h });
-    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 13 }, 200, c.h);
+    if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'planner-ai', v: 14 }, 200, c.h);
     if (req.method !== 'POST') return json({ error: 'method' }, 405, c.h);
     if (!c.ok) return json({ error: 'origin' }, 403, c.h);
 
