@@ -76,7 +76,7 @@
 <header>
   <span class="badge">Planner · com.losev.planner</span>
   <h1 id="pageTitle">Политика конфиденциальности</h1>
-  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 06.11.2026</p>
+  <p class="sub" id="pageDate">Действует с: 27.07.2026 · Последнее обновление: 09.11.2026</p>
   <div class="langbar">
     <button id="btnRu" class="on" onclick="setLang('ru')">Русский</button>
     <button id="btnEn" onclick="setLang('en')">English</button>
@@ -147,7 +147,7 @@
     <li>текст ваших сообщений в этом разговоре (напечатанный или продиктованный) и реплики персонажа;</li>
     <li>краткий список ваших записей, чтобы помощник мог ответить на вопрос о них или изменить
       нужную по вашей просьбе: цели (название, срок, число, единица, дни, время), подцели из дерева
-      целей (название, срок), задачи на ближайшие 14 дней и невыполненные за последние 7 дней
+      целей (название, срок), задачи за вчера, на сегодня и ближайшие 14 дней и невыполненные за последние 7 дней
       (название, дата, время, отметка о выполнении), события календаря (название, дата, тип, повтор,
       заметка, время напоминания), награды (название, цена), настройки (язык, цвета экранов, персонаж
       и стиль помощника, включено ли уведомление). Идентификаторы записей — случайные
@@ -161,7 +161,7 @@
       с вашим именем, аккаунтом или устройством и нужен только для дневного лимита запросов.</li>
   </ul>
   <p>
-    История выполненного, баллы, резервные копии и настройки в AI не отправляются. Если AI выключен,
+    История достигнутых целей, баллы и резервные копии в AI не отправляются. Если AI выключен,
     не отправляется ничего.
   </p>
   <p>
@@ -316,7 +316,7 @@
     <li>the text of your messages in that conversation (typed or dictated) and the character’s lines;</li>
     <li>a short list of your records, so the helper can answer questions about them or change the
       right one at your request: goals (title, deadline, number, unit, days, time), sub-goals from the
-      goal tree (title, deadline), tasks for the next 14 days and unfinished ones from the last 7 days
+      goal tree (title, deadline), tasks for yesterday, today and the next 14 days and unfinished ones from the last 7 days
       (title, date, time, done mark), calendar events (title, date, type, repeat, note, reminder time),
       rewards (name, price), settings (language, screen colours, helper character and style, whether the
       notification is on). Record identifiers are random strings created by the app;</li>
@@ -328,7 +328,7 @@
     <li>a random installation identifier created by the app itself. It is not linked to your name,
       account or device and is used only for the daily request limit.</li>
   </ul>
-  <p>Your completion history, points, backups and settings are not sent to the AI. When AI is off,
+  <p>Your achieved-goals history, points and backups are not sent to the AI. When AI is off,
     nothing is sent.</p>
   <p>
     <strong>Where the data goes.</strong> The request goes to the developer’s server on Cloudflare
@@ -427,10 +427,10 @@
 <script>
   var TXT = {
     ru:{title:'Политика конфиденциальности',
-        date:'Действует с: 27.07.2026 · Последнее обновление: 06.11.2026',
+        date:'Действует с: 27.07.2026 · Последнее обновление: 09.11.2026',
         foot:'Planner · com.losev.planner<br>Ваши записи остаются на вашем устройстве.'},
     en:{title:'Privacy Policy',
-        date:'Effective from: July 27, 2026 · Last updated: November 6, 2026',
+        date:'Effective from: July 27, 2026 · Last updated: November 9, 2026',
         foot:'Planner · com.losev.planner<br>Your data stays on your device.'}
   };
   function setLang(l){
