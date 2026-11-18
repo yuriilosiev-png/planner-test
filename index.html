@@ -4548,7 +4548,7 @@ let _saveErrAt = 0;
    (второй экземпляр WebView) — см. syncFromStorage(). */
 let _lastRaw = null;
 function save(){
-  try{ const raw=JSON.stringify(state); localStorage.setItem('planner_v1', raw); _lastRaw=raw; return true; }
+  try{ const raw=JSON.stringify(state); localStorage.setItem('planner_v1', raw); _lastRaw=raw; nudgeSync(); return true; }
   catch(e){
     if(Date.now()-_saveErrAt > 60000){ _saveErrAt=Date.now(); try{ toast(tr('save.fail')); }catch(_){} }
     return false;
@@ -6693,6 +6693,9 @@ function hpSettingsHTML(){
     <label class="th-label">${t('hp.sFreq')}</label>
     ${seg('helperFreq',[{v:0,l:t('hp.f0')},{v:1,l:t('hp.f1')},{v:3,l:t('hp.f3')}])}
     <label class="hp-row"><span>${t('hp.sMorning')}</span><input type="checkbox" ${state.helperMorning?'checked':''} onchange="hpSet('helperMorning',this.checked)"></label>
+    ${hasNudge() ? `<label class="hp-row"><span>${t('hp.sNudge')}</span><input type="checkbox" ${state.helperNudge!==false?'checked':''} onchange="hpSet('helperNudge',this.checked)"></label>
+    <div class="hp-hint">${t('hp.nudgeHint')}</div>
+    ${nudgeIsTest() ? `<button class="hp-tour" onclick="nudgeTest()">🔔 ${t('nudge.test')}</button>` : ''}` : ''}
     <button class="hp-tour" onclick="tourStart()">🧭 ${t('tour.btn')}</button>
     ${HP_AI_URL ? `<label class="th-label">${t('hp.sAI')}</label>
     ${seg('helperAI',[{v:'off',l:t('hp.aiOff')},{v:'gemini',l:'AI'}])}
@@ -7541,6 +7544,184 @@ Object.assign(I18N.de, {"act.talk": "Mit dem Helfer reden", "hp.numHint": "Schre
 Object.assign(I18N.fr, {"act.talk": "Parler à l’assistant", "hp.numHint": "Écris un nombre, par exemple 25. Choisis l’unité à droite.", "act.limit": "La limite d’IA du jour est atteinte. À demain.", "act.thmReset": "couleurs standard", "hp.sNormM": "Rythme par mois", "hp.sNormW": "Rythme par semaine", "hp.sObst": "Ce qui peut gêner", "hp.sPlan": "Comment y faire face", "hp.sWhere": "Où placer l’objectif", "hp.termLong": "Plus de 3 mois : l’objectif va dans l’arbre « Long terme », avec une tâche portant le rythme les jours choisis.", "hp.termActive": "Un objectif normal avec un rythme quotidien et une progression chiffrée.", "hp.longAct": "Travail régulier", "hp.longItem": "Rythme : {v}", "hp.numPhAi": "Un nombre ou une réponse en mots", "hp.daysPh": "Ou écris-le en mots…", "hp.edit": "Modifier"});
 
 HL.fr = {"name": {"coach": "Coach Max", "nadia": "Assistante Nadia", "guru": "Gourou", "genie": "Génie"}, "tag": {"coach": "Strict et direct", "nadia": "Polie et organisée", "guru": "Calme et profond", "genie": "Joyeux et blagueur"}, "pick": {"coach": "Pas d’excuses. On fixe un objectif, on calcule le quota du jour et on le fait. Fait : je félicite. Manqué : je demande pourquoi.", "nadia": "Je retiendrai votre objectif, calculerai le quota du jour et suivrai le résultat. Vous n’avez qu’à faire le travail.", "guru": "Un voyage de mille lieues commence par un pas. Je t’aiderai à voir ce pas chaque jour.", "genie": "Je ne promets pas trois vœux. Mais un vrai, on le réalise ensemble : un petit morceau chaque jour !"}, "hello": {"coach": ["Nouveau jour. Les tâches attendent : au travail.", "Debout. Le plan est prêt, maintenant on le fait.", "Aujourd’hui, seul ce qui est fait compte."], "nadia": ["Bonjour ! Le plan du jour est prêt, je suis là.", "Bonjour ! Les tâches du jour sont déjà en place.", "Belle journée ! On commence par la tâche la plus facile ?"], "guru": ["Un nouveau jour est un nouveau pas. Sans hâte, mais avance.", "Le matin est calme. Un bon moment pour commencer.", "Fais bien une seule chose aujourd’hui."], "genie": ["Pouf ! ✨ Nouveau jour, nouveaux vœux !", "Bonjour ! La lampe est astiquée, les tâches attendent 🪔", "Je me suis réveillé de super humeur. Et toi ?"]}, "partial": {"coach": "{d} sur {t}. Pas mal, mais la journée n’est pas finie.", "nadia": "{d} sur {t} faites. Il reste très peu.", "guru": "{d} pas sur {t}. Le chemin continue.", "genie": "{d} sur {t} ! Encore un peu de magie et la journée est à nous ✨"}, "dayDone": {"coach": ["{d} sur {t}. C’est comme ça qu’on travaille.", "Tout est bouclé. Bien joué.", "{t} sur {t}. Pareil demain."], "nadia": ["Toutes les tâches sont faites. Une journée magnifique !", "{d} sur {t} : journée terminée. Je suis fière de vous.", "Tout est fait. Vous pouvez vous reposer l’esprit tranquille."], "guru": ["La journée n’a pas été vaine. {d} pas accomplis.", "Tout est fait. Repose-toi maintenant : cela aussi fait partie du chemin.", "La montagne baisse à chaque journée comme celle-ci."], "genie": ["✨ {d} sur {t} ! La lampe brille de fierté !", "Toutes les coches en place ! Tu es presque un génie toi-même 🧞", "C’est fait ! J’exauce ton vœu : un repos bien mérité ✨"]}, "week": {"coach": "Une semaine sans raté. +10 points. Ne te relâche pas.", "nadia": "Félicitations : une semaine sans jour manqué ! +10 points ajoutés.", "guru": "Sept jours sans raté. C’est ainsi que naît une habitude.", "genie": "Une semaine sans raté ! Voici +10 points magiques 🌟"}, "miss1": {"coach": "Rien hier. Ça arrive. Aujourd’hui, au moins une tâche.", "nadia": "Les tâches d’hier sont restées en plan. Aujourd’hui, une seule suffit pour ne rien perdre.", "guru": "Hier est passé. Aujourd’hui t’appartient encore.", "genie": "Ma lampe s’est ennuyée de toi hier 🥺 Au moins une coche aujourd’hui ?"}, "miss2": {"coach": "Deux jours de silence. Encore un et tu perds des points. Une tâche. Maintenant.", "nadia": "J’ai quelque chose pour vous… mais seulement si au moins une tâche est faite aujourd’hui. Vous ne voulez pas savoir ce qui arrive le troisième jour, n’est-ce pas ?", "guru": "Depuis deux jours tu restes immobile. Un petit pas, et le chemin reprend.", "genie": "Deux jours sans magie… Je suis un génie, pas un canapé ! Une coche, s’il te plaît ? 😉"}, "miss3": {"coach": "{n} jours d’affilée sans rien. Les points s’envolent. Ça suffit : une tâche tout de suite.", "nadia": "{n} jours d’affilée sans tâche terminée, des points sont retirés. Une tâche arrête ça.", "guru": "{n} jours immobile, et les points s’effacent. Fais un pas, n’importe lequel.", "genie": "{n} jours sans coche : mes points fondent comme une glace ! Sauve-les avec une tâche 🙏"}, "noTasks": {"coach": "Pas de tâches aujourd’hui. Fixe un objectif, et il y aura du travail.", "nadia": "Aucune tâche pour aujourd’hui. On fait un plan ensemble ?", "guru": "Le chemin est libre aujourd’hui. Peut-être le moment de choisir un nouveau sommet ?", "genie": "Pas de tâches : c’est le moment de faire un nouveau vœu ! ✨"}, "joke": {"genie": ["Tu sais pourquoi les génies ne sont jamais en retard ? Nos délais durent mille ans !", "Un jour, je suis resté dix siècles dans une lampe. Belle série… assis.", "On dit que les vœux ne se réalisent pas tout seuls. C’est vrai : ils se réalisent avec des coches ✅", "Je t’aiderais bien pour ta tâche, mais j’ai de la fumée à la place des jambes.", "Trois vœux, c’est dépassé. Une tâche par jour, c’est la nouvelle tendance !", "Quelqu’un a souhaité des vœux infinis. Je lui ai donné une liste de tâches quotidienne.", "La magie, c’est juste une habitude de tous les jours. Plus un peu de fumée pour le style.", "Frotte la lampe et j’apparais. Frotte une tâche, elle ne se fera quand même pas toute seule : j’ai essayé.", "Mon sport préféré, c’est l’échauffement pour les vœux. Tu t’es échauffé aujourd’hui ?", "Abracadabra ! La tâche a disparu… ah non, il faut quand même la faire 😅", "Un génie sans lampe, c’est comme un agenda sans tâches : triste et sans maison.", "Je voulais un jour de congé, puis je me suis rappelé que tu n’as encore rien coché ✨"]}, "iHello": {"coach": "Au travail. Sept questions, deux minutes, et tu as un plan.", "nadia": "Bonjour ! Je vais vous poser sept courtes questions et transformer vos réponses en plan prêt à l’emploi. Cela prend deux minutes.", "guru": "Assieds-toi. Sept questions, et le brouillard autour de ton objectif se dissipera.", "genie": "Pouf ! ✨ Sept questions et ton vœu devient un plan !"}, "iGoal": {"coach": "Quel est l’objectif ? Court, en une ligne.", "nadia": "Quel objectif souhaitez-vous atteindre ? Choisissez un exemple ou écrivez le vôtre.", "guru": "Que veux-tu vraiment accomplir ?", "genie": "Alors, quel est ton vœu ? Vas-y, dis-le !"}, "iWhy": {"coach": "Pourquoi tu en as besoin ? Sans un « pourquoi », tu abandonnes la deuxième semaine.", "nadia": "Qu’est-ce qui changera quand vous l’atteindrez ? Je vous le rappellerai un jour difficile.", "guru": "Imagine que l’objectif est atteint. Qu’est-ce qui a changé ?", "genie": "Que se passe-t-il quand le vœu se réalise ? Raconte : je le garderai dans ma lampe 🪔"}, "iNum": {"coach": "Des chiffres. Combien au total, et en quoi ?", "nadia": "Comment mesurerons-nous le résultat ? Indiquez un nombre et une unité.", "guru": "Comment sauras-tu que tu es arrivé ? Donne un nombre.", "genie": "La magie adore la précision ! Combien de quoi ?"}, "iWhen": {"coach": "Échéance. Pour quelle date ?", "nadia": "Pour quand aimeriez-vous y arriver ?", "guru": "Combien de temps donnes-tu à ce chemin ?", "genie": "Quand doit-il se réaliser ? Même les génies ont des délais ⏳"}, "iDays": {"coach": "Quels jours tu t’y mets ? Choisis honnêtement, sans héroïsme.", "nadia": "Quels jours de la semaine vous conviennent ?", "guru": "Quels jours es-tu prêt à marcher ? Moins, mais toujours.", "genie": "Quels jours fait-on de la magie ? Choisis-les !"}, "iObst": {"coach": "Qu’est-ce qui va te freiner ? Nomme l’ennemi principal.", "nadia": "Qu’est-ce qui vous gêne d’habitude ? Prévoyons-le dès maintenant.", "guru": "Quel obstacle rencontreras-tu sur le chemin ?", "genie": "Quel méchant sorcier pourrait tout gâcher ? 😈"}, "iPlan": {"coach": "Quand ça arrive, tu fais quoi ? Mon conseil : « {tip} ».", "nadia": "Je propose une règle pour ce cas : « {tip} ». Gardez-la ou écrivez la vôtre.", "guru": "Prépare ta réponse à l’avance. Par exemple : « {tip} ».", "genie": "J’ai un contre-sort : « {tip} ». Ou invente le tien !"}, "iDone": {"coach": "C’est prêt. Le quota est de {rate} par jour. On commence demain.", "nadia": "Votre plan est prêt ! Chaque jour : {rate}. Je suivrai vos progrès.", "guru": "Le chemin est clair : {rate} chaque jour. Le reste est une habitude.", "genie": "Tadam ! ✨ Ton vœu est découpé en étapes : {rate} par jour. C’est parti !"}, "iOk": {"coach": "Compris.", "nadia": "C’est noté.", "guru": "Bien.", "genie": "Inscrit sur le parchemin ! 📜"}, "iSly": {"coach": "Bien essayé. Retour aux chiffres.", "nadia": "Idée intéressante. Mais revenons à l’objectif.", "guru": "La rivière aime serpenter, elle aussi. Mais elle va à la mer.", "genie": "Hé hé, malin ! Mais on ne me la fait pas 😏"}, "gGood": {"coach": "« {g} » : {r} % fait en deux semaines. Continue comme ça.", "nadia": "« {g} » suit le plan : {r} % fait. Excellent travail.", "guru": "« {g} » pousse régulièrement, comme un arbre au bord de l’eau. {r} % : un bon chemin.", "genie": "« {g} » : {r} % ! La lampe brille de fierté ✨"}, "gOk": {"coach": "« {g} » : {r} % fait. Tu peux faire mieux.", "nadia": "« {g} » : {r} % fait. Pas mal, il y a de la marge.", "guru": "« {g} » : {r} %. Le chemin continue, avec quelques haltes.", "genie": "« {g} » : {r} %, magie en cours !"}, "gNew": {"coach": "« {g} » : c’est parti. Les premiers jours décident.", "nadia": "« {g} » vient de commencer, je suis ses progrès.", "guru": "« {g} » : la graine est plantée. Arrose-la chaque jour.", "genie": "« {g} » : un vœu tout frais ! Les premiers pas sont les plus magiques."}, "gMiss": {"coach": "« {g} » : {n} jours manqués d’affilée. On regarde ce qui bloque ?", "nadia": "« {g} » compte {n} jours manqués d’affilée. On le retravaille ?", "guru": "« {g} » t’attend depuis {n} jours. Le sentier est peut-être trop raide ?", "genie": "Oh là là, « {g} » est seul depuis {n} jours ! On ajuste le sort ?"}, "gBehind": {"coach": "« {g} » : {d} {u} de retard sur le plan. Rattrape ou on change le plan.", "nadia": "« {g} » a {d} {u} de retard sur le plan. On peut ajuster l’échéance ou le quota.", "guru": "« {g} » : il manque {d} {u} pour suivre le plan. Peu importe, le chemin peut se redresser.", "genie": "« {g} » a {d} {u} de retard. On règle le sort ?"}, "gLost": {"coach": "« {g} » : {n} jours de silence. Soit on revient, soit on raye honnêtement.", "nadia": "Vous n’êtes pas revenu à « {g} » depuis {n} jours. Replanifier ou supprimer ?", "guru": "« {g} » se tait depuis {n} jours. Lâcher prise, c’est aussi un chemin.", "genie": "« {g} » prend la poussière dans la lampe depuis {n} jours ! On le ranime ou on le libère ?"}, "iRe": {"coach": "Qu’est-ce qui a coincé ? Dis-le franchement, on ajuste le plan.", "nadia": "Dites-moi ce qui vous gêne, et j’adapterai le plan à votre vie.", "guru": "Qu’est-ce qui se dresse sur ton chemin ? Raconte, on trouvera un sentier plus facile.", "genie": "Qu’est-ce qui a brisé le sort ? Raconte, on le relance !"}, "iReS": {"coach": "Reprenons le plan. On garde le chiffre ou on le change ?", "nadia": "Reprenons le plan. On garde l’objectif tel quel ou on le change ?", "guru": "Regardons à nouveau le chemin. Même sommet ?", "genie": "C’est l’heure de refaire le sort ! On garde le vœu tel quel ?"}, "iAsk": {"coach": "Les questions, plus tard. Réponds d’abord à la mienne.", "nadia": "Je ne peux établir qu’un plan pour votre objectif. Revenons à la question ci-dessus.", "guru": "Bonne question. Mais aujourd’hui, c’est moi qui demande. Réponds à la mienne.", "genie": "Ho ho, ici c’est moi qui pose les questions ! 😏 Réponds à la mienne et ton vœu se réalise."}};
+/* ===== 1.7.9: напоминание от помощника тем, кто ушёл =====
+   Каждое открытие (и каждое сохранение) переписывает план в нативе:
+   кто говорит и 1–2 реплики со временем. Пока человек заходит, время
+   всё время сдвигается вперёд, поэтому реплика приходит, только если
+   приложение не открывали:
+   • цели нет (или открыт только пример) — завтра в 19:00, потом через 3 дня;
+   • цель есть — через 2 дня в 19:00, потом через 5 дней.
+   Больше двух раз подряд не пишем. Тап по уведомлению открывает помощника. */
+const NUDGE_HL = {
+  ru:{
+    ngoal1:{coach:'Приложение поставил, а цель — нет. Две минуты, и у тебя план. Погнали?',
+      nadia:'Вы установили Planner, а первую цель так и не поставили. Давайте вместе? Это пара минут.',
+      guru:'Путь начинается с выбора вершины. Давай выберем твою?',
+      genie:'Пуф! ✨ Лампу потёр, а желание не загадал. Загадаешь первую цель?'},
+    ngoal2:{coach:'Без цели это просто значок на экране. Давай поставим первую, я помогу.',
+      nadia:'Я всё ещё жду вашу первую цель. Семь коротких вопросов — и план готов.',
+      guru:'Дерево не растёт без семени. Посади первую цель — я помогу.',
+      genie:'Скучаю в лампе без дела 🪔 Давай исполним твоё первое желание?'},
+    away1:{coach:'Два дня тебя не видно. Одна задача сегодня — и серия жива.',
+      nadia:'Вас не было два дня. Я сохранила все задачи — заглянете?',
+      guru:'Два дня тропа пустует. Один шаг сегодня — и путь продолжается.',
+      genie:'Два дня без магии! Лампа пылится — заглянешь на одну задачку? ✨'},
+    away2:{coach:'Пять дней тишины. Не бросай на полпути: заходи, начнём с малого.',
+      nadia:'Скучаю по вашим отметкам. Начнём с одной маленькой задачи?',
+      guru:'Река не спешит, но и не останавливается. Вернись — сделаем шаг вместе.',
+      genie:'Я начинаю забывать, как ты выглядишь 😅 Возвращайся, магия ждёт!'}
+  },
+  en:{
+    ngoal1:{coach:'You installed the app but set no goal. Two minutes and you have a plan. Let’s go?',
+      nadia:'You installed Planner but haven’t set your first goal yet. Shall we do it together? It takes a couple of minutes.',
+      guru:'Every path begins with choosing a summit. Shall we choose yours?',
+      genie:'Poof! ✨ You rubbed the lamp but made no wish. Ready to set your first goal?'},
+    ngoal2:{coach:'Without a goal it’s just an icon on your screen. Let’s set the first one — I’ll help.',
+      nadia:'I’m still waiting for your first goal. Seven short questions and your plan is ready.',
+      guru:'A tree doesn’t grow without a seed. Plant your first goal — I’ll help.',
+      genie:'I’m bored in my lamp with nothing to do 🪔 Shall we grant your first wish?'},
+    away1:{coach:'Haven’t seen you in two days. One task today keeps the streak alive.',
+      nadia:'You’ve been away for two days. I’ve kept all your tasks — will you drop by?',
+      guru:'The trail has been empty for two days. One step today and the path goes on.',
+      genie:'Two days without magic! The lamp is gathering dust — drop by for one little task? ✨'},
+    away2:{coach:'Five days of silence. Don’t quit halfway: come back, we’ll start small.',
+      nadia:'I miss your check marks. Shall we start with one small task?',
+      guru:'A river doesn’t hurry, but it doesn’t stop. Come back — we’ll take a step together.',
+      genie:'I’m starting to forget what you look like 😅 Come back, the magic is waiting!'}
+  },
+  es:{
+    ngoal1:{coach:'Instalaste la app, pero no fijaste ninguna meta. Dos minutos y tienes un plan. ¿Vamos?',
+      nadia:'Instaló Planner, pero aún no ha fijado su primera meta. ¿La hacemos juntos? Son un par de minutos.',
+      guru:'Todo camino empieza eligiendo una cima. ¿Elegimos la tuya?',
+      genie:'¡Puf! ✨ Frotaste la lámpara, pero no pediste ningún deseo. ¿Fijamos tu primera meta?'},
+    ngoal2:{coach:'Sin una meta, esto es solo un icono en tu pantalla. Fijemos la primera: te ayudo.',
+      nadia:'Sigo esperando su primera meta. Siete preguntas cortas y su plan está listo.',
+      guru:'Un árbol no crece sin semilla. Planta tu primera meta: te ayudo.',
+      genie:'Me aburro en la lámpara sin nada que hacer 🪔 ¿Cumplimos tu primer deseo?'},
+    away1:{coach:'Dos días sin verte. Una tarea hoy y la racha sigue viva.',
+      nadia:'Lleva dos días sin entrar. Guardé todas sus tareas: ¿se pasa un momento?',
+      guru:'El sendero lleva dos días vacío. Un paso hoy y el camino sigue.',
+      genie:'¡Dos días sin magia! La lámpara junta polvo: ¿te pasas por una tarea pequeña? ✨'},
+    away2:{coach:'Cinco días de silencio. No lo dejes a medias: vuelve y empezamos con poco.',
+      nadia:'Echo de menos sus marcas. ¿Empezamos con una tarea pequeña?',
+      guru:'El río no tiene prisa, pero no se detiene. Vuelve: daremos un paso juntos.',
+      genie:'Empiezo a olvidar tu cara 😅 ¡Vuelve, la magia te espera!'}
+  },
+  pt:{
+    ngoal1:{coach:'Você instalou o app, mas não definiu nenhuma meta. Dois minutos e você tem um plano. Bora?',
+      nadia:'Você instalou o Planner, mas ainda não definiu sua primeira meta. Vamos fazer juntos? Leva uns dois minutos.',
+      guru:'Todo caminho começa pela escolha de um pico. Vamos escolher o seu?',
+      genie:'Puf! ✨ Você esfregou a lâmpada, mas não fez nenhum desejo. Vamos definir sua primeira meta?'},
+    ngoal2:{coach:'Sem meta, é só um ícone na tela. Vamos definir a primeira: eu ajudo.',
+      nadia:'Ainda estou esperando sua primeira meta. Sete perguntas curtas e o plano fica pronto.',
+      guru:'Uma árvore não cresce sem semente. Plante sua primeira meta: eu ajudo.',
+      genie:'Estou entediado na lâmpada sem nada para fazer 🪔 Vamos realizar seu primeiro desejo?'},
+    away1:{coach:'Dois dias sem te ver. Uma tarefa hoje e a sequência continua viva.',
+      nadia:'Você está há dois dias sem entrar. Guardei todas as suas tarefas: vai dar uma passada?',
+      guru:'A trilha está vazia há dois dias. Um passo hoje e o caminho continua.',
+      genie:'Dois dias sem mágica! A lâmpada está juntando poeira: passa aqui para uma tarefinha? ✨'},
+    away2:{coach:'Cinco dias de silêncio. Não pare no meio: volte, começamos pequeno.',
+      nadia:'Sinto falta das suas marcas. Vamos começar com uma tarefa pequena?',
+      guru:'O rio não tem pressa, mas não para. Volte: daremos um passo juntos.',
+      genie:'Estou começando a esquecer seu rosto 😅 Volte, a mágica está esperando!'}
+  },
+  de:{
+    ngoal1:{coach:'App installiert, aber kein Ziel gesetzt. Zwei Minuten, und du hast einen Plan. Los?',
+      nadia:'Sie haben Planner installiert, aber noch kein erstes Ziel gesetzt. Machen wir es zusammen? Es dauert nur ein paar Minuten.',
+      guru:'Jeder Weg beginnt mit der Wahl eines Gipfels. Wählen wir deinen?',
+      genie:'Puff! ✨ Lampe gerieben, aber nichts gewünscht. Setzen wir dein erstes Ziel?'},
+    ngoal2:{coach:'Ohne Ziel ist das nur ein Symbol auf dem Bildschirm. Setzen wir das erste – ich helfe.',
+      nadia:'Ich warte noch auf Ihr erstes Ziel. Sieben kurze Fragen, und Ihr Plan steht.',
+      guru:'Ohne Samen wächst kein Baum. Pflanze dein erstes Ziel – ich helfe dir.',
+      genie:'Mir ist langweilig in der Lampe 🪔 Erfüllen wir deinen ersten Wunsch?'},
+    away1:{coach:'Seit zwei Tagen nichts von dir. Eine Aufgabe heute, und die Serie lebt.',
+      nadia:'Sie waren zwei Tage nicht da. Ich habe alle Aufgaben aufbewahrt – schauen Sie kurz vorbei?',
+      guru:'Der Pfad ist seit zwei Tagen leer. Ein Schritt heute, und der Weg geht weiter.',
+      genie:'Zwei Tage ohne Magie! Die Lampe verstaubt – schaust du für eine kleine Aufgabe vorbei? ✨'},
+    away2:{coach:'Fünf Tage Funkstille. Gib nicht auf halbem Weg auf: Komm zurück, wir fangen klein an.',
+      nadia:'Mir fehlen Ihre Haken. Fangen wir mit einer kleinen Aufgabe an?',
+      guru:'Der Fluss eilt nicht, aber er bleibt nicht stehen. Komm zurück – wir gehen einen Schritt zusammen.',
+      genie:'Ich vergesse langsam, wie du aussiehst 😅 Komm zurück, die Magie wartet!'}
+  },
+  fr:{
+    ngoal1:{coach:'Tu as installé l’app, mais aucun objectif. Deux minutes et tu as un plan. On y va ?',
+      nadia:'Vous avez installé Planner, mais vous n’avez pas encore fixé votre premier objectif. On le fait ensemble ? Cela prend deux minutes.',
+      guru:'Tout chemin commence par le choix d’un sommet. On choisit le tien ?',
+      genie:'Pouf ! ✨ Tu as frotté la lampe, mais aucun vœu. On fixe ton premier objectif ?'},
+    ngoal2:{coach:'Sans objectif, ce n’est qu’une icône sur ton écran. Fixons le premier : je t’aide.',
+      nadia:'J’attends toujours votre premier objectif. Sept petites questions et votre plan est prêt.',
+      guru:'Un arbre ne pousse pas sans graine. Plante ton premier objectif : je t’aide.',
+      genie:'Je m’ennuie dans ma lampe sans rien à faire 🪔 On exauce ton premier vœu ?'},
+    away1:{coach:'Deux jours sans nouvelles. Une tâche aujourd’hui et la série continue.',
+      nadia:'Vous n’êtes pas venu depuis deux jours. J’ai gardé toutes vos tâches : vous passez ?',
+      guru:'Le sentier est vide depuis deux jours. Un pas aujourd’hui et le chemin continue.',
+      genie:'Deux jours sans magie ! La lampe prend la poussière : tu passes pour une petite tâche ? ✨'},
+    away2:{coach:'Cinq jours de silence. N’abandonne pas en route : reviens, on commence petit.',
+      nadia:'Vos coches me manquent. On commence par une petite tâche ?',
+      guru:'La rivière ne se presse pas, mais elle ne s’arrête pas. Reviens : on fera un pas ensemble.',
+      genie:'Je commence à oublier ton visage 😅 Reviens, la magie t’attend !'}
+  }
+};
+for(const lg in NUDGE_HL){ if(HL[lg]) Object.assign(HL[lg], NUDGE_HL[lg]); }
+
+Object.assign(I18N.ru, {'hp.sNudge':'Напоминания от помощника', 'hp.nudgeHint':'Если цель не создана — на следующий день, если не заходили — через 2 дня. Не больше двух раз подряд.', 'nudge.ch':'Напоминания помощника', 'nudge.chDesc':'Если цель не создана или приложение давно не открывали', 'nudge.test':'Проверить напоминание (через 10 с)', 'nudge.testOk':'Сверни приложение — через 10 секунд придёт напоминание'});
+Object.assign(I18N.en, {'hp.sNudge':'Reminders from the helper', 'hp.nudgeHint':'The next day if no goal is set, after 2 days if you haven’t opened the app. No more than twice in a row.', 'nudge.ch':'Helper reminders', 'nudge.chDesc':'When no goal is set or the app hasn’t been opened for a while', 'nudge.test':'Test the reminder (in 10 s)', 'nudge.testOk':'Minimize the app — the reminder will arrive in 10 seconds'});
+Object.assign(I18N.es, {'hp.sNudge':'Recordatorios del asistente', 'hp.nudgeHint':'Al día siguiente si no hay meta, y tras 2 días sin abrir la app. Como mucho dos veces seguidas.', 'nudge.ch':'Recordatorios del asistente', 'nudge.chDesc':'Si no hay ninguna meta o hace tiempo que no abres la app', 'nudge.test':'Probar el recordatorio (en 10 s)', 'nudge.testOk':'Minimiza la app: el recordatorio llegará en 10 segundos'});
+Object.assign(I18N.pt, {'hp.sNudge':'Lembretes do assistente', 'hp.nudgeHint':'No dia seguinte se não houver meta, e após 2 dias sem abrir o app. No máximo duas vezes seguidas.', 'nudge.ch':'Lembretes do assistente', 'nudge.chDesc':'Se não houver meta ou o app não for aberto há algum tempo', 'nudge.test':'Testar o lembrete (em 10 s)', 'nudge.testOk':'Minimize o app: o lembrete chega em 10 segundos'});
+Object.assign(I18N.de, {'hp.sNudge':'Erinnerungen vom Helfer', 'hp.nudgeHint':'Am nächsten Tag, wenn kein Ziel gesetzt ist, und nach 2 Tagen ohne Öffnen. Höchstens zweimal hintereinander.', 'nudge.ch':'Erinnerungen vom Helfer', 'nudge.chDesc':'Wenn kein Ziel gesetzt ist oder die App länger nicht geöffnet wurde', 'nudge.test':'Erinnerung testen (in 10 s)', 'nudge.testOk':'Minimiere die App – die Erinnerung kommt in 10 Sekunden'});
+Object.assign(I18N.fr, {'hp.sNudge':'Rappels de l’assistant', 'hp.nudgeHint':'Le lendemain si aucun objectif n’est fixé, et après 2 jours sans ouvrir l’app. Deux fois de suite au maximum.', 'nudge.ch':'Rappels de l’assistant', 'nudge.chDesc':'Si aucun objectif n’est fixé ou si l’app n’a pas été ouverte depuis un moment', 'nudge.test':'Tester le rappel (dans 10 s)', 'nudge.testOk':'Réduis l’app : le rappel arrivera dans 10 secondes'});
+
+function hasNudge(){
+  try{ return typeof AndroidBridge!=='undefined' && AndroidBridge && typeof AndroidBridge.scheduleNudge==='function'; }
+  catch(e){ return false; }
+}
+/* есть ли настоящая цель (пример не считается) */
+function nudgeHasGoal(){ return !state.demo && (state.goals||[]).length>0; }
+function nudgeAt(days, hour){
+  const d=new Date(); d.setDate(d.getDate()+days); d.setHours(hour,0,0,0); return d.getTime();
+}
+function nudgePlan(items){
+  const p = HP[state.coach] ? state.coach : 'nadia';   // помощник не выбран — пишет Надежда
+  const steps = items || (nudgeHasGoal() ? [['away1',2],['away2',5]] : [['ngoal1',1],['ngoal2',3]]);
+  return {char:p, color:HP[p].color, channel:t('nudge.ch'), channelDesc:t('nudge.chDesc'),
+    items: steps.map(([k,d,at])=>({at: at || nudgeAt(d,19), title: hpName(p), text: hpLine(k,p,null,'nudge')}))};
+}
+var _nudgeTimer=null;   // var, не let: save() может прийти раньше этой строки
+function nudgeSync(){
+  if(!hasNudge() || location.hash==='#legacy-export') return;   // не LEGACY_EXPORT: save() бывает раньше его объявления
+  clearTimeout(_nudgeTimer);
+  _nudgeTimer=setTimeout(()=>{
+    try{
+      if(state.helperNudge===false) AndroidBridge.cancelNudge();
+      else AndroidBridge.scheduleNudge(JSON.stringify(nudgePlan()));
+    }catch(e){}
+  }, 1200);
+}
+/* кнопка проверки — только в planner-test */
+function nudgeIsTest(){ return /planner-test/.test(location.href); }
+function nudgeTest(){
+  if(!hasNudge()) return;
+  clearTimeout(_nudgeTimer);
+  try{
+    const k = nudgeHasGoal() ? 'away1' : 'ngoal1';
+    AndroidBridge.scheduleNudge(JSON.stringify(nudgePlan([[k,0,Date.now()+10000]])));
+    toast(t('nudge.testOk'));
+  }catch(e){}
+}
+/* тап по напоминанию: открыть помощника, а без цели — сразу разговор о цели */
+window.onNativeOpen = function(what){
+  if(what!=='helper') return;
+  try{ closeModal(); }catch(e){}
+  switchScreen('helper');
+  if(!nudgeHasGoal() && state.coach && typeof hpStart==='function') setTimeout(hpStart, 350);
+};
+function nudgeTakeOpen(){
+  try{
+    if(typeof AndroidBridge==='undefined' || typeof AndroidBridge.takePendingOpen!=='function') return;
+    const w=AndroidBridge.takePendingOpen();
+    if(w) setTimeout(()=>window.onNativeOpen(w), 400);
+  }catch(e){}
+}
 
 function render(){
   fitHeadDate();
@@ -11413,6 +11594,8 @@ function init(){
   voiceInit();        // 1.7.4: микрофоны в текстовых полях (если есть распознаватель)
   if(firstRun) setTimeout(openWelcome, 350);   // 1.7.5: пример или шаблоны
   rateCountOpen();    // считаем дни использования для просьбы об оценке
+  nudgeSync();        // 1.7.9: напоминание помощника сдвигается вперёд при каждом открытии
+  nudgeTakeOpen();    // 1.7.9: запуск тапом по напоминанию — открыть помощника
 }
 init();
 
@@ -11440,6 +11623,7 @@ document.addEventListener('visibilitychange',()=>{
     if(state.lastGen!==todayStr()){ runDailyGen(); }
     render(); // обновить баннеры событий (время могло наступить) и бэйдж
     rateCountOpen();
+    nudgeSync();   // 1.7.9
   }
 });
 

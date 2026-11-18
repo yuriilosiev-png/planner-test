@@ -92,6 +92,9 @@ public class MainActivity extends Activity {
     private static final int REQ_PICK_BACKUP = 2001;
     private static final int REQ_VOICE = 3001;
     private static final String CHANNEL_ID = "planner_tasks";
+    /** 1.7.9: тап по напоминанию помощника — что открыть на странице. */
+    static final String EXTRA_OPEN = "planner_open";
+    private volatile String pendingOpen = null;
 
     private WebView webView;
 
@@ -292,6 +295,7 @@ public class MainActivity extends Activity {
 
         // файл мог прийти вместе с запуском («Поделиться» из Telegram, тап в Файлах)
         handleIncomingFile(getIntent());
+        takeOpenExtra(getIntent(), false);   // 1.7.9: запуск тапом по напоминанию помощника
 
         // vC 11: первый запуск — включаем шторку сами, если уведомления разрешены.
         // Стоит ПЕРЕД restore, чтобы сервис поднялся тем же вызовом.
@@ -318,6 +322,22 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleIncomingFile(intent);
+        takeOpenExtra(intent, true);
+    }
+
+    /** 1.7.9: из напоминания помощника пришёл запрос открыть экран.
+     *  Холодный старт — страница ещё грузится, кладём в очередь (JS заберёт
+     *  takePendingOpen). Приложение уже открыто — говорим странице сразу. */
+    private void takeOpenExtra(Intent intent, boolean live) {
+        if (intent == null) return;
+        String what = intent.getStringExtra(EXTRA_OPEN);
+        if (what == null || !what.matches("[a-z]{1,16}")) return;
+        intent.removeExtra(EXTRA_OPEN);
+        if (live) {
+            callJs("window.onNativeOpen&&onNativeOpen('" + what + "')");
+        } else {
+            pendingOpen = what;
+        }
     }
 
     /** Вытащить ссылку на файл из SEND или VIEW и передать в общий читатель. */
@@ -812,6 +832,33 @@ public class MainActivity extends Activity {
         public void legacyStoreDone() {
             final MainActivity a = activityRef.get();
             if (a != null) a.markLegacyDone();
+        }
+
+        /** 1.7.9: план напоминаний помощника (JSON: char, color, channel,
+         *  channelDesc, items[{at,title,text}]). Каждое открытие переписывает. */
+        @JavascriptInterface
+        public void scheduleNudge(final String json) {
+            final MainActivity a = activityRef.get();
+            if (a == null || json == null || json.length() > 20000) return;
+            NudgeReceiver.save(a.getApplicationContext(), json);
+        }
+
+        /** 1.7.9: напоминания выключены в настройках помощника. */
+        @JavascriptInterface
+        public void cancelNudge() {
+            final MainActivity a = activityRef.get();
+            if (a == null) return;
+            NudgeReceiver.cancel(a.getApplicationContext());
+        }
+
+        /** 1.7.9: экран, который просили открыть тапом по напоминанию (или ""). */
+        @JavascriptInterface
+        public String takePendingOpen() {
+            final MainActivity a = activityRef.get();
+            if (a == null || a.pendingOpen == null) return "";
+            String v = a.pendingOpen;
+            a.pendingOpen = null;
+            return v;
         }
 
         /** 1.7.7: отметки «выполнено» из шторки и виджета, ещё не применённые

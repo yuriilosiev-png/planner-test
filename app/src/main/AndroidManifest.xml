@@ -108,6 +108,23 @@
             android:name=".NotifAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+        <!-- 1.7.9: напоминание от помощника тем, кто не открывал приложение
+             (цель не создана — через день, не заходил — через два).
+             Будит только наш же AlarmManager — exported=false. -->
+        <receiver
+            android:name=".NudgeReceiver"
+            android:exported="false" />
+        <!-- 1.7.9: после перезагрузки и обновления вернуть будильник напоминания.
+             Системные события доходят только до exported=true; оба действия
+             защищены, прислать их может только система. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <!-- 1.7.7: «выполнено» из шторки и виджета. Шлём только сами себе
              через PendingIntent — exported=false. -->
         <receiver
