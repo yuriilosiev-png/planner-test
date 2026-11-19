@@ -941,6 +941,7 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
    --k — сила (intensity 0.3…1) из ответа AI или таблицы событий. */
 .hp-g{position:relative;display:inline-block;line-height:0;transform-origin:50% 100%;--k:.6}
 .hp-g>img{transition:opacity .25s ease-out}
+.hp-g>video.hp-vid{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;object-position:bottom;pointer-events:none;background:transparent}
 .hp-fw.em-doubt{animation:hpTilt 1.3s ease-in-out both}
 .hp-fw.em-surprised{animation:hpJump .5s ease-out .05s both}
 .hp-fw.em-worried{animation:hpSink 1.2s ease-out both}
@@ -6246,13 +6247,31 @@ const HP = {
   guru: {color:'#3fa34d', sig:'stern', emos:['hello','think','happy','proud','sad','stern','sly']},
   genie:{color:'#3cc6c0', sig:'tease', emos:['hello','think','happy','proud','sad','tease','sly','joke']},
 };
-function hpImg(p, emo){ return 'coach/'+p+'-'+emo+'.webp'; }
+/* ===== Видео-персонажи (Kling) =====
+   Персонаж из HP_VID стоит на базовом кадре (base), а жесты играют ролики
+   coach/<p>-<clip>.webm с прозрачным фоном. Каждый ролик начинается и кончается
+   базовой позой, поэтому стыкуется со стоящей фигурой без скачка. Старые
+   картинки такого персонажа не показываются — стиль другой. var, не const:
+   hpImg зовут из ранних мест. */
+var HP_VID = {
+  nadia:{ base:'v-base', clips:{ wave:{f:'v-wave', ms:4600} } }
+};
+var hpVidCache = {};
+function hpVidLoad(p){
+  const vd=HP_VID[p]; if(!vd) return;
+  Object.values(vd.clips).forEach(c=>{
+    const k=p+'-'+c.f; if(hpVidCache[k]) return; hpVidCache[k]='…';
+    // WebView грузит без кэша — держим ролик в памяти как blob, иначе каждый жест идёт в сеть
+    fetch('coach/'+k+'.webm').then(r=>r.ok?r.blob():null).then(b=>{ hpVidCache[k]=b?URL.createObjectURL(b):null; }).catch(()=>{ hpVidCache[k]=null; });
+  });
+}
+function hpImg(p, emo){ if(HP_VID[p]) emo=HP_VID[p].base; return 'coach/'+p+'-'+emo+'.webp'; }
 /* ===== 1.7.8: анимации эмоций — «как в CapCut», но прямо в приложении =====
    Персонаж — обёртка .hp-fw (поза: прыжок, наклон, оседание — один раз при появлении)
    + картинка внутри (дыхание/парение — всё время) + наклейки (звёзды, «?», тучка…).
    Ничего не скачивается: двигается та же картинка, наклейки нарисованы CSS.
    still — эмоция не сменилась (перерисовка опроса): разовые движения сразу в конце. */
-const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6], "nadia-calm": [56.1, 2.6], "nadia-smile": [45.5, 2.6], "nadia-shy": [51.1, 2.6], "nadia-laugh": [45.9, 2.6], "nadia-surprised": [43.5, 2.6], "nadia-worried": [50.0, 2.6], "nadia-wink": [40.3, 2.6], "nadia-point": [53.3, 2.6], "nadia-shrug": [48.2, 2.6], "nadia-blush": [45.9, 2.6], "nadia-celebrate": [43.9, 2.6], "nadia-thumbs": [52.9, 2.6], "nadia-idea": [55.5, 2.6], "nadia-hug": [51.8, 2.6], "nadia-write": [54.8, 2.6], "nadia-hip": [50.9, 2.6], "nadia-curtsy": [60.5, 2.6], "nadia-wave": [57.5, 2.6]};   // верх головы на картинке: [x%, y%]
+const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6], "nadia-calm": [56.1, 2.6], "nadia-smile": [45.5, 2.6], "nadia-shy": [51.1, 2.6], "nadia-laugh": [45.9, 2.6], "nadia-surprised": [43.5, 2.6], "nadia-worried": [50.0, 2.6], "nadia-wink": [40.3, 2.6], "nadia-point": [53.3, 2.6], "nadia-shrug": [48.2, 2.6], "nadia-blush": [45.9, 2.6], "nadia-celebrate": [43.9, 2.6], "nadia-thumbs": [52.9, 2.6], "nadia-idea": [55.5, 2.6], "nadia-hug": [51.8, 2.6], "nadia-write": [54.8, 2.6], "nadia-hip": [50.9, 2.6], "nadia-curtsy": [60.5, 2.6], "nadia-wave": [57.5, 2.6], "nadia-v-base": [50.3, 1.3]};   // верх головы на картинке: [x%, y%]
 const HP_EM = {hello:'hello', think:'think', happy:'happy', proud:'proud', sad:'sad', sly:'sly',
   mystery:'mystery', strict:'strict', stern:'stern', tease:'sly', joke:'joke'};
 function hpStickers(em){
@@ -6292,6 +6311,7 @@ const HP_EMO = {
   shy:{img:'happy', by:{nadia:'shy'}, em:'smile'}
 };
 function hpEmoImg(p, emo){
+  if(HP_VID[p]) return HP_VID[p].base;      // видео-персонаж: лицо меняют ролики, не картинки
   const e=HP_EMO[emo];
   if(!e) return HP[p] && HP[p].emos.includes(emo) ? emo : 'hello';
   const i=(e.by&&e.by[p]) || e.img;
@@ -6392,7 +6412,22 @@ const hpChar = (()=>{
   }
   function preload(p){
     if(preloaded[p] || !HP[p]) return; preloaded[p]=1;
+    if(HP_VID[p]){ hpVidLoad(p); hpBlinkLoad(p+'-'+HP_VID[p].base); return; }
     HP[p].emos.forEach(e=>hpBlinkLoad(p+'-'+e));
+  }
+  // видео-жест поверх стоящей фигуры: картинку прячем, только когда ролик реально пошёл
+  function vidPlay(w, key){
+    const g=w.querySelector('.hp-g'), img=imgOf(w); if(!g || !img) return;
+    g.querySelectorAll('video.hp-vid').forEach(v=>v.remove());
+    const src=hpVidCache[key]; if(src===null) return;
+    const v=document.createElement('video');
+    v.className='hp-vid'; v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
+    v.src=(src && src!=='…') ? src : 'coach/'+key+'.webm';
+    const end=()=>{ img.style.visibility=''; v.remove(); };
+    v.addEventListener('playing',()=>{ img.style.visibility='hidden'; },{once:true});
+    v.addEventListener('ended',end); v.addEventListener('error',end);
+    g.appendChild(v);
+    const pr=v.play(); if(pr && pr.catch) pr.catch(end);
   }
   const imgOf=w=>w.querySelector('.hp-g>img');
   // нижний слой: показать картинку key (персонаж-лицо) — плавно, без похода в сеть
@@ -6435,7 +6470,8 @@ const hpChar = (()=>{
     if(!cur) return;
     cur.timers.forEach(clearTimeout);
     cur.ws.forEach(w=>{
-      const g=w.querySelector('.hp-g'); if(g){ g.className='hp-g'; }
+      const g=w.querySelector('.hp-g'); if(g){ g.className='hp-g'; g.querySelectorAll('video.hp-vid').forEach(v=>v.remove()); }
+      const im=imgOf(w); if(im) im.style.visibility='';
       w.querySelectorAll('.st.gs').forEach(x=>x.remove());
       if(w.dataset.pose){ delete w.dataset.pose; if(w.isConnected) drawEmo(w, state.coach, w.dataset.emo||base(w)); }
     });
@@ -6444,9 +6480,11 @@ const hpChar = (()=>{
   function start(x){
     const p=state.coach, def=HP_GEST[x.g]; if(!def || !HP[p]) return;
     const ws=figs(); if(!ws.length) return;
-    const ms=def.ms||1300, pose=pick(def.pose,p,null), mv=pick(def.mv,p,null), red=reduce();
+    const vd=HP_VID[p], clip=vd && vd.clips[x.g] && !reduce() ? vd.clips[x.g] : null;
+    let ms=clip ? clip.ms+200 : (def.ms||1300), pose=vd ? null : pick(def.pose,p,null), mv=clip ? null : pick(def.mv,p,null), red=reduce();
     ws.forEach(w=>{
       if(pose){ drawImg(w, p+'-'+pose); w.dataset.pose=pose; }
+      if(clip) vidPlay(w, p+'-'+clip.f);
       if(red) return;
       const g=w.querySelector('.hp-g');
       if(g && mv){ g.className='hp-g'; void g.offsetWidth; g.className='hp-g g-'+mv; g.style.setProperty('--k', x.k); }
