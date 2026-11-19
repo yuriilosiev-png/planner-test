@@ -942,6 +942,7 @@ label.gm-lbl span, .field label.gm-lbl span{color:var(--muted);font-weight:400;f
 .hp-g{position:relative;display:inline-block;line-height:0;transform-origin:50% 100%;--k:.6}
 .hp-g>img{transition:opacity .25s ease-out}
 .hp-g>video.hp-vid{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;object-position:bottom;pointer-events:none;background:transparent}
+.hp-g>video.hp-idle{pointer-events:auto;cursor:pointer}   /* картинка под ним спрятана — тап ловит ролик и передаёт картинке */
 .hp-fw.em-doubt{animation:hpTilt 1.3s ease-in-out both}
 .hp-fw.em-surprised{animation:hpJump .5s ease-out .05s both}
 .hp-fw.em-worried{animation:hpSink 1.2s ease-out both}
@@ -6276,7 +6277,7 @@ function hpIdleHTML(p, imgCls){
   try{ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return ''; }catch(e){}
   hpVidLoad(p);
   const k=p+'-'+vd.idle, c=hpVidCache[k], src=(c && c!=='…') ? c : 'coach/'+k+'.webm';
-  return `<video class="hp-vid hp-idle" src="${src}" autoplay loop muted playsinline preload="auto" onplaying="this.parentNode.querySelector('img').style.visibility='hidden'" onerror="this.parentNode.querySelector('img').style.visibility='';this.remove()"></video>`;
+  return `<video class="hp-vid hp-idle" src="${src}" autoplay loop muted playsinline preload="auto" onclick="this.parentNode.querySelector('img').click()" onplaying="this.parentNode.querySelector('img').style.visibility='hidden'" onerror="this.parentNode.querySelector('img').style.visibility='';this.remove()"></video>`;
 }
 /* ===== 1.7.8: анимации эмоций — «как в CapCut», но прямо в приложении =====
    Персонаж — обёртка .hp-fw (поза: прыжок, наклон, оседание — один раз при появлении)
@@ -6724,10 +6725,22 @@ function renderHelper(){
 }
 /* тап по персонажу — Джин шутит, остальные повторяют реплику дня с другой фразой */
 let hpPokeN = 0;
-function hpPoke(){
+function hpPoke(inChat){
   const p=state.coach; if(!p) return;
+  // видео-персонаж: пока идёт ролик, тап не обрывает его
+  if(HP_VID[p] && document.querySelector('video.hp-vid:not(.hp-idle)')) return;
   hpPokeN++;
-  const bub=document.querySelector('.hp-bub');
+  const bub=inChat ? null : document.querySelector('.hp-bub');
+  const vd=HP_VID[p];
+  if(vd){
+    // по очереди все готовые ролики: машет → записывает → сочувствует → радуется
+    const gs=['wave','show_check','shrug','celebrate'].filter(g=>vd.clips[g]);
+    if(gs.length){
+      if(bub) bub.textContent=hpLine(['hello','pick'][hpPokeN%2],p,null,'poke'+hpPokeN);
+      hpChar.emote(null, gs[(hpPokeN-1)%gs.length], .8, {pri:3});
+      return;
+    }
+  }
   // этап 1: каждый третий тап — фирменный жест персонажа
   const sig = hpPokeN%3===0;
   if(p==='genie'){ if(bub) bub.textContent=hpLine('joke','genie',null,'poke'+hpPokeN); hpChar.emote('joke', sig ? 'signature' : 'nod', .8, {pri:3}); }
@@ -7004,7 +7017,7 @@ function hqRender(){
   }
   const i = hq.mode==='ai' ? (hq.step==='sum' ? 6 : Math.min(hq.done.size, 6)) : HQ_ORDER.indexOf(hq.step);
   hqShow(`<div class="hq-top" style="--cc:${c.color}"><b>${esc(hpName(p))}</b>${hq.mode==='ai'?'<span class="hq-ai">AI</span>':''}${hq.assist?'':`<span class="hq-prog">${Math.min(i+1,7)}/7</span>`}<button class="hq-x" onclick="hqClose()">✕</button></div>
-    <div class="hq-stage">${hpFigHTML(p, hq.emo, 'hq-fig', hq.emo===hq.lastEmo)}<div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
+    <div class="hq-stage">${hpFigHTML(p, hq.emo, 'hq-fig', hq.emo===hq.lastEmo, 'onclick="hpPoke(true)"')}<div class="hq-chat" id="hqChat">${msgs}${hq.step==='sum'?hqSummaryHTML():''}</div></div>
     <div class="hq-bottom">${input}</div>`);
   hq.lastEmo=hq.emo;
   const ch=document.getElementById('hqChat'); if(ch){ ch.scrollTop=ch.scrollHeight; requestAnimationFrame(()=>{ ch.scrollTop=ch.scrollHeight; }); }
@@ -7206,7 +7219,10 @@ function hqSaveReplan(){
 function hqShow(html){
   let ov=document.getElementById('hqOv');
   if(!ov){ ov=document.createElement('div'); ov.id='hqOv'; ov.className='hq-ov'; document.body.appendChild(ov); }
+  const opening=!ov.classList.contains('show');
   ov.innerHTML=html; ov.classList.add('show');
+  // видео-персонаж встречает взмахом руки при открытии разговора
+  if(opening && HP_VID[state.coach]) setTimeout(()=>hpChar.emote(null,'wave',.8,{pri:2}), 600);
 }
 function hqClose(){ const ov=document.getElementById('hqOv'); if(ov) ov.classList.remove('show'); }
 
