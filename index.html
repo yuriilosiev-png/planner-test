@@ -6256,10 +6256,11 @@ const HP = {
    ролик «стоит, дышит, моргает» под крупными фигурами. var, не const:
    hpImg зовут из ранних мест.
    Ролики делаются в Kling в режиме Keyframes: первый и последний кадр — base. */
-// Видео-персонажи пока только в planner-test: ролики ещё с водяным знаком Kling
-// и остальные трое в старом стиле. В проде (/planner/) — обычные картинки.
+// Видео-персонажи пока только в planner-test, пока не готовы все четверо
+// В проде (/planner/) — обычные картинки. Джин пока только с idle.
 var HP_VID = !/\/planner-test\//.test(location.pathname) ? {} : {
-  nadia:{ base:'v-base', idle:'v-idle', clips:{ wave:{f:'v-wave', ms:5050}, show_check:{f:'v-write', ms:5050}, celebrate:{f:'v-celebrate', ms:5050}, shrug:{f:'v-shrug', ms:5050} } }
+  nadia:{ base:'v-base', idle:'v-idle', clips:{ wave:{f:'v-wave', ms:5050}, show_check:{f:'v-write', ms:5050}, celebrate:{f:'v-celebrate', ms:5050}, shrug:{f:'v-shrug', ms:5050} } },
+  genie:{ base:'v-base', idle:'v-idle', clips:{} }
 };
 var hpVidCache = {};
 var HP_VID_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';   // прозрачная заглушка вместо серого значка «play»
@@ -6287,7 +6288,7 @@ function hpIdleHTML(p, imgCls){
    + картинка внутри (дыхание/парение — всё время) + наклейки (звёзды, «?», тучка…).
    Ничего не скачивается: двигается та же картинка, наклейки нарисованы CSS.
    still — эмоция не сменилась (перерисовка опроса): разовые движения сразу в конце. */
-const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6], "nadia-calm": [56.1, 2.6], "nadia-smile": [45.5, 2.6], "nadia-shy": [51.1, 2.6], "nadia-laugh": [45.9, 2.6], "nadia-surprised": [43.5, 2.6], "nadia-worried": [50.0, 2.6], "nadia-wink": [40.3, 2.6], "nadia-point": [53.3, 2.6], "nadia-shrug": [48.2, 2.6], "nadia-blush": [45.9, 2.6], "nadia-celebrate": [43.9, 2.6], "nadia-thumbs": [52.9, 2.6], "nadia-idea": [55.5, 2.6], "nadia-hug": [51.8, 2.6], "nadia-write": [54.8, 2.6], "nadia-hip": [50.9, 2.6], "nadia-curtsy": [60.5, 2.6], "nadia-wave": [57.5, 2.6], "nadia-v-base": [49.9, 1.3]};   // верх головы на картинке: [x%, y%]
+const HP_HEAD = {"coach-happy": [46.2, 2.8], "coach-hello": [49.8, 2.6], "coach-proud": [49.4, 2.9], "coach-sad": [50.5, 3.0], "coach-sly": [52.3, 3.0], "coach-strict": [46.6, 2.6], "coach-think": [47.5, 3.8], "genie-happy": [49.3, 9.9], "genie-hello": [39.8, 10.0], "genie-joke": [35.3, 14.8], "genie-proud": [51.3, 2.6], "genie-sad": [44.9, 10.5], "genie-sly": [39.9, 16.5], "genie-tease": [34.5, 14.0], "genie-think": [50.0, 6.2], "guru-happy": [54.6, 4.2], "guru-hello": [47.5, 8.3], "guru-proud": [56.7, 7.6], "guru-sad": [44.3, 6.4], "guru-sly": [55.7, 7.7], "guru-stern": [53.3, 8.2], "guru-think": [62.6, 21.3], "nadia-happy": [41.2, 2.6], "nadia-hello": [42.4, 2.6], "nadia-mystery": [52.4, 2.6], "nadia-proud": [48.4, 2.6], "nadia-sad": [45.2, 2.6], "nadia-sly": [49.9, 2.6], "nadia-think": [42.7, 2.6], "nadia-calm": [56.1, 2.6], "nadia-smile": [45.5, 2.6], "nadia-shy": [51.1, 2.6], "nadia-laugh": [45.9, 2.6], "nadia-surprised": [43.5, 2.6], "nadia-worried": [50.0, 2.6], "nadia-wink": [40.3, 2.6], "nadia-point": [53.3, 2.6], "nadia-shrug": [48.2, 2.6], "nadia-blush": [45.9, 2.6], "nadia-celebrate": [43.9, 2.6], "nadia-thumbs": [52.9, 2.6], "nadia-idea": [55.5, 2.6], "nadia-hug": [51.8, 2.6], "nadia-write": [54.8, 2.6], "nadia-hip": [50.9, 2.6], "nadia-curtsy": [60.5, 2.6], "nadia-wave": [57.5, 2.6], "nadia-v-base": [49.9, 1.3], "genie-v-base": [44.0, 1.3]};   // верх головы на картинке: [x%, y%]
 const HP_EM = {hello:'hello', think:'think', happy:'happy', proud:'proud', sad:'sad', sly:'sly',
   mystery:'mystery', strict:'strict', stern:'stern', tease:'sly', joke:'joke'};
 function hpStickers(em){
