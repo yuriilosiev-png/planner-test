@@ -6256,7 +6256,9 @@ const HP = {
    ролик «стоит, дышит, моргает» под крупными фигурами. var, не const:
    hpImg зовут из ранних мест.
    Ролики делаются в Kling в режиме Keyframes: первый и последний кадр — base. */
-var HP_VID = {
+// Видео-персонажи пока только в planner-test: ролики ещё с водяным знаком Kling
+// и остальные трое в старом стиле. В проде (/planner/) — обычные картинки.
+var HP_VID = !/\/planner-test\//.test(location.pathname) ? {} : {
   nadia:{ base:'v-base', idle:'v-idle', clips:{ wave:{f:'v-wave', ms:5050}, show_check:{f:'v-write', ms:5050}, celebrate:{f:'v-celebrate', ms:5050}, shrug:{f:'v-shrug', ms:5050} } }
 };
 var hpVidCache = {};
@@ -9017,6 +9019,37 @@ function openGoalTemplate(k){
    (мост openStore появился в 1.7.4) — вместо кнопки текстовая подсказка.
    Браузер/PWA (нет AndroidBridge) — плашки нет. */
 const APP_RELEASES = [
+  { code:18, name:'1.7.9', live:false, notes:{
+    ru:['Помощник в одном чате: спросите, что у вас завтра, попросите перенести задачу, поставить контрольные точки или сменить оформление — он сделает после вашего «да», а изменение можно отменить',
+        'AI-помощник теперь отвечает на модели Claude от Anthropic',
+        'Надежда получила новые позы и эмоции: радуется, задумывается, подмигивает, записывает в ежедневник',
+        'Напоминание от помощника, если цель ещё не поставлена или вы давно не заходили. Отключается в настройках помощника',
+        'Запуск при слабом интернете: индикатор загрузки вместо чёрного экрана, приложение открывается быстрее'],
+    en:['The helper in one chat: ask what’s on tomorrow, ask to move a task, set checkpoints or change the look — it does it after your “yes”, and any change can be undone',
+        'The AI helper now answers with Claude by Anthropic',
+        'Nadia got new poses and emotions: she cheers, thinks, winks and writes in her planner',
+        'A reminder from the helper if you haven’t set a goal yet or haven’t opened the app for a while. Turn it off in the helper settings',
+        'Starting on a weak connection: a loading indicator instead of a black screen, and the app opens faster'],
+    es:['El asistente en un solo chat: pregunta qué tienes mañana, pide mover una tarea, poner puntos de control o cambiar el aspecto; lo hace tras tu «sí» y cualquier cambio se puede deshacer',
+        'El asistente de IA ahora responde con Claude de Anthropic',
+        'Nadia tiene nuevas poses y emociones: se alegra, piensa, guiña un ojo y escribe en su agenda',
+        'Un recordatorio del asistente si aún no fijaste una meta o hace tiempo que no abres la app. Se desactiva en los ajustes del asistente',
+        'Inicio con conexión débil: un indicador de carga en lugar de la pantalla negra, y la app abre más rápido'],
+    pt:['O assistente em um só chat: pergunte o que você tem amanhã, peça para mover uma tarefa, definir pontos de controle ou mudar o visual — ele faz depois do seu «sim», e qualquer mudança pode ser desfeita',
+        'O assistente de IA agora responde com o Claude, da Anthropic',
+        'A Nadia ganhou novas poses e emoções: comemora, pensa, pisca e escreve na agenda',
+        'Um lembrete do assistente se você ainda não definiu uma meta ou não abre o app há algum tempo. Desative nas configurações do assistente',
+        'Início com internet fraca: indicador de carregamento em vez de tela preta, e o app abre mais rápido'],
+    de:['Der Helfer in einem Chat: Frag, was morgen ansteht, lass eine Aufgabe verschieben, Kontrollpunkte setzen oder das Design ändern – er macht es nach deinem „Ja“, und jede Änderung lässt sich rückgängig machen',
+        'Der KI-Helfer antwortet jetzt mit Claude von Anthropic',
+        'Nadia hat neue Posen und Emotionen: Sie jubelt, denkt nach, zwinkert und schreibt in ihren Planer',
+        'Eine Erinnerung vom Helfer, wenn du noch kein Ziel gesetzt oder die App länger nicht geöffnet hast. Abschaltbar in den Helfer-Einstellungen',
+        'Start bei schwacher Verbindung: Ladeanzeige statt schwarzem Bildschirm, und die App öffnet schneller'],
+    fr:['L’assistant dans un seul chat : demande ce que tu as demain, fais déplacer une tâche, fixer des étapes ou changer l’apparence — il le fait après ton « oui », et chaque changement peut être annulé',
+        'L’assistant IA répond désormais avec Claude d’Anthropic',
+        'Nadia a de nouvelles poses et émotions : elle se réjouit, réfléchit, fait un clin d’œil et écrit dans son agenda',
+        'Un rappel de l’assistant si tu n’as pas encore fixé d’objectif ou n’as pas ouvert l’app depuis un moment. Désactivable dans les réglages de l’assistant',
+        'Démarrage avec une connexion faible : un indicateur de chargement au lieu d’un écran noir, et l’app s’ouvre plus vite'] }},
   // 1.7.8 вышла в Play 5 ноября 2026 — live:true. Новый релиз: live:false до одобрения в Play; после выхода в прод — live:true (иначе старым версиям покажется «доступно обновление» раньше времени)
   { code:17, name:'1.7.8', live:true, notes:{
     ru:['Вкладка «Помощник»: четыре персонажа — Тренер Макс, Надежда, Гуру и Джин — с эмоциями и анимацией. «Незавершённые» переехали в «Историю»',
