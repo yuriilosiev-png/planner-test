@@ -58,8 +58,8 @@ android {
         buildConfigField "String", "PAGES_PATH", plannerTest ? '"/planner-test/"' : '"/planner/"'
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 18
-        versionName "1.7.9"
+        versionCode 19
+        versionName "1.7.10"
     }
     signingConfigs {
         // Тестовая сборка подписывается своим ключом app/test.jks — он лежит только

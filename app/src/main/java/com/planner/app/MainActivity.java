@@ -175,6 +175,8 @@ public class MainActivity extends Activity {
             FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         loader = new ProgressBar(this);
         loader.setIndeterminate(true);
+        // 1.7.10: светлый индикатор — тёмный по умолчанию на тёмном фоне не виден
+        loader.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#8b93a3")));
         int sz = (int) (44 * getResources().getDisplayMetrics().density);
         root.addView(loader, new FrameLayout.LayoutParams(sz, sz, Gravity.CENTER));
         setContentView(root);
@@ -205,8 +207,12 @@ public class MainActivity extends Activity {
         // если сети нет — разрешаем кэш (LOAD_CACHE_ELSE_NETWORK), а при полном
         // провале загрузки onReceivedError уведёт на офлайн-копию из assets.
         // Это убирает баг «белый экран / старая версия до перезапуска».
+        // 1.7.10: картинки и ролики помощников берём из обычного HTTP-кэша
+        // (Pages разрешает хранить их 10 минут, потом короткая сверка 304).
+        // Раньше LOAD_NO_CACHE + clearCache при каждом запуске заново качали всё.
+        // Сам index.html кэш не касается — его отдаёт shouldInterceptRequest.
         settings.setCacheMode(isOnline()
-            ? WebSettings.LOAD_NO_CACHE
+            ? WebSettings.LOAD_DEFAULT
             : WebSettings.LOAD_CACHE_ELSE_NETWORK);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setAllowFileAccess(true);
@@ -310,7 +316,8 @@ public class MainActivity extends Activity {
         // до ручного перезапуска. JS со своей стороны тоже снимает регистрацию SW.
         if (isOnline()) {
             try {
-                webView.clearCache(true);
+                // 1.7.10: clearCache(true) убран — он стирал кэш картинок и роликов
+                // при каждом запуске. Старый service worker снимает сама страница.
                 webView.clearHistory();
             } catch (Exception e) {
                 Log.w(TAG, "clearCache failed", e);
@@ -403,35 +410,42 @@ public class MainActivity extends Activity {
             || p.substring(0, p.length() - 1).equals(path);
     }
 
-    /** Сеть → свежий index.html с Pages; не вышло → офлайн-копия из assets.
-     *  В обоих случаях WebView считает, что страница пришла с Pages, —
-     *  хранилище localStorage одно. Вызывается на фоновом потоке WebView. */
+    /** 1.7.10: БЫСТРЫЙ ЗАПУСК. Страница открывается сразу из копии на телефоне,
+     *  сеть не ждём. Копия — последний index.html, скачанный с Pages (файл
+     *  pages_index.html), а если его нет или он старше установленной версии
+     *  приложения — офлайн-копия из APK. Свежий index.html качается в фоне и
+     *  открывается при следующем запуске. Раньше (до 1.7.9) каждый запуск ждал
+     *  770 КБ из сети: на медленном интернете — чёрный экран на 5–11 секунд.
+     *  WebView по-прежнему считает, что страница пришла с Pages, — хранилище
+     *  localStorage одно. Вызывается на фоновом потоке WebView. */
+    private static final String INDEX_CACHE = "pages_index.html";
+    private static final String KEY_INDEX_ETAG = "pages_index_etag";
+    private final java.util.concurrent.atomic.AtomicBoolean indexRefreshStarted =
+        new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    private File indexCacheFile() { return new File(getFilesDir(), INDEX_CACHE); }
+
+    /** Скачанная копия годится, только если она новее установки/обновления приложения:
+     *  после обновления из Play офлайн-копия в APK свежее старой скачанной. */
+    private boolean indexCacheUsable() {
+        File f = indexCacheFile();
+        if (!f.isFile() || f.length() < 100000) return false;
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return f.lastModified() > pi.lastUpdateTime;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private WebResourceResponse loadIndexNetworkFirst() {
-        if (isOnline()) {
-            HttpURLConnection c = null;
+        refreshIndexInBackground();
+        if (indexCacheUsable()) {
             try {
-                c = (HttpURLConnection) new URL(PAGES_URL).openConnection();
-                // 1.7.9: на медленной сети не держим человека на пустом экране 11 секунд —
-                // раньше отдаём офлайн-копию из APK (та же версия), свежая придёт при следующем запуске
-                c.setConnectTimeout(3000);
-                c.setReadTimeout(5000);
-                c.setUseCaches(false);
-                c.setRequestProperty("Cache-Control", "no-cache");
-                if (c.getResponseCode() == 200) {
-                    InputStream is = c.getInputStream();
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    byte[] buf = new byte[16384];
-                    int n;
-                    while ((n = is.read(buf)) != -1) bos.write(buf, 0, n);
-                    is.close();
-                    return new WebResourceResponse("text/html", "utf-8",
-                        new ByteArrayInputStream(bos.toByteArray()));
-                }
-                Log.w(TAG, "Pages HTTP " + c.getResponseCode() + ", serving offline copy");
+                return new WebResourceResponse("text/html", "utf-8",
+                    new java.io.FileInputStream(indexCacheFile()));
             } catch (Exception e) {
-                Log.w(TAG, "Pages fetch failed, serving offline copy", e);
-            } finally {
-                if (c != null) c.disconnect();
+                Log.w(TAG, "index cache unreadable, using APK copy", e);
             }
         }
         try {
@@ -439,6 +453,69 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             Log.e(TAG, "offline copy missing", e);
             return null;
+        }
+    }
+
+    /** Фоном: свежий index.html с Pages → pages_index.html (через временный файл,
+     *  чтобы недокачанная страница никогда не открылась). ETag — чтобы без изменений
+     *  на сайте не качать 770 КБ заново. Один раз за запуск приложения. */
+    private void refreshIndexInBackground() {
+        if (!isOnline() || !indexRefreshStarted.compareAndSet(false, true)) return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection c = null;
+                File tmp = new File(getFilesDir(), INDEX_CACHE + ".part");
+                try {
+                    SharedPreferences sp = getSharedPreferences(MIG_PREFS, MODE_PRIVATE);
+                    String etag = indexCacheUsable() ? sp.getString(KEY_INDEX_ETAG, null) : null;
+                    c = (HttpURLConnection) new URL(PAGES_URL).openConnection();
+                    c.setConnectTimeout(15000);
+                    c.setReadTimeout(20000);
+                    c.setUseCaches(false);
+                    if (etag != null) c.setRequestProperty("If-None-Match", etag);
+                    int code = c.getResponseCode();
+                    if (code == 304) {
+                        // на сайте ничего не поменялось — копия свежая, отмечаем это
+                        indexCacheFile().setLastModified(System.currentTimeMillis());
+                        return;
+                    }
+                    if (code != 200) { Log.w(TAG, "index refresh HTTP " + code); return; }
+                    InputStream is = c.getInputStream();
+                    java.io.FileOutputStream os = new java.io.FileOutputStream(tmp);
+                    byte[] buf = new byte[16384];
+                    int n; long total = 0;
+                    while ((n = is.read(buf)) != -1) { os.write(buf, 0, n); total += n; }
+                    os.close(); is.close();
+                    // проверка, что страница целая: размер и закрывающий </html> в конце
+                    if (total < 100000 || !endsWithHtml(tmp)) {
+                        Log.w(TAG, "index refresh incomplete: " + total);
+                        tmp.delete();
+                        return;
+                    }
+                    if (!tmp.renameTo(indexCacheFile())) { tmp.delete(); return; }
+                    sp.edit().putString(KEY_INDEX_ETAG, c.getHeaderField("ETag")).apply();
+                    Log.i(TAG, "index refreshed: " + total + " bytes");
+                } catch (Exception e) {
+                    Log.w(TAG, "index refresh failed", e);
+                    tmp.delete();
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+            }
+        }, "index-refresh").start();
+    }
+
+    private static boolean endsWithHtml(File f) {
+        try (java.io.RandomAccessFile r = new java.io.RandomAccessFile(f, "r")) {
+            long len = r.length();
+            int k = (int) Math.min(256, len);
+            byte[] b = new byte[k];
+            r.seek(len - k);
+            r.readFully(b);
+            return new String(b, "UTF-8").contains("</html>");
+        } catch (Exception e) {
+            return false;
         }
     }
 
