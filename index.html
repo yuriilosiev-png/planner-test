@@ -6260,6 +6260,7 @@ var HP_VID = {
   nadia:{ base:'v-base', idle:'v-idle', clips:{ wave:{f:'v-wave', ms:5050}, show_check:{f:'v-write', ms:5050}, celebrate:{f:'v-celebrate', ms:5050}, shrug:{f:'v-shrug', ms:5050} } }
 };
 var hpVidCache = {};
+var HP_VID_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';   // прозрачная заглушка вместо серого значка «play»
 function hpVidLoad(p){
   const vd=HP_VID[p]; if(!vd) return;
   const fs=Object.values(vd.clips).map(c=>c.f); if(vd.idle) fs.push(vd.idle);
@@ -6277,7 +6278,7 @@ function hpIdleHTML(p, imgCls){
   try{ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return ''; }catch(e){}
   hpVidLoad(p);
   const k=p+'-'+vd.idle, c=hpVidCache[k], src=(c && c!=='…') ? c : 'coach/'+k+'.webm';
-  return `<video class="hp-vid hp-idle" src="${src}" autoplay loop muted playsinline preload="auto" onclick="this.parentNode.querySelector('img').click()" onplaying="this.parentNode.querySelector('img').style.visibility='hidden'" onerror="this.parentNode.querySelector('img').style.visibility='';this.remove()"></video>`;
+  return `<video class="hp-vid hp-idle" src="${src}" poster="${HP_VID_POSTER}" style="opacity:0" autoplay loop muted playsinline preload="auto" onclick="this.parentNode.querySelector('img').click()" onplaying="this.style.opacity='';this.parentNode.querySelector('img').style.visibility='hidden'" onerror="this.parentNode.querySelector('img').style.visibility='';this.remove()"></video>`;
 }
 /* ===== 1.7.8: анимации эмоций — «как в CapCut», но прямо в приложении =====
    Персонаж — обёртка .hp-fw (поза: прыжок, наклон, оседание — один раз при появлении)
@@ -6436,13 +6437,15 @@ const hpChar = (()=>{
     const idle=g.querySelector('video.hp-idle');
     const v=document.createElement('video');
     v.className='hp-vid'; v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
+    // пока ролик не пошёл — он невидим, иначе WebView рисует серую заглушку с кнопкой «play»
+    v.poster=HP_VID_POSTER; v.style.opacity='0';   // opacity, не visibility: невидимый ролик браузер может не запустить
     v.src=(src && src!=='…') ? src : 'coach/'+key+'.webm';
     const end=()=>{
       if(idle && idle.isConnected){ idle.style.visibility=''; try{ idle.currentTime=0; idle.play(); }catch(e){} }
       else img.style.visibility='';
       v.remove();
     };
-    v.addEventListener('playing',()=>{ img.style.visibility='hidden'; if(idle){ idle.style.visibility='hidden'; idle.pause(); } },{once:true});
+    v.addEventListener('playing',()=>{ v.style.opacity=''; img.style.visibility='hidden'; if(idle){ idle.style.visibility='hidden'; idle.pause(); } },{once:true});
     v.addEventListener('ended',end); v.addEventListener('error',end);
     g.appendChild(v);
     const pr=v.play(); if(pr && pr.catch) pr.catch(end);
