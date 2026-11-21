@@ -9020,7 +9020,7 @@ function openGoalTemplate(k){
    (мост openStore появился в 1.7.4) — вместо кнопки текстовая подсказка.
    Браузер/PWA (нет AndroidBridge) — плашки нет. */
 const APP_RELEASES = [
-  { code:18, name:'1.7.9', live:false, notes:{
+  { code:18, name:'1.7.9', live:true, notes:{
     ru:['Помощник в одном чате: спросите, что у вас завтра, попросите перенести задачу, поставить контрольные точки или сменить оформление — он сделает после вашего «да», а изменение можно отменить',
         'AI-помощник теперь отвечает на модели Claude от Anthropic',
         'Надежда получила новые позы и эмоции: радуется, задумывается, подмигивает, записывает в ежедневник',
@@ -9051,7 +9051,7 @@ const APP_RELEASES = [
         'Nadia a de nouvelles poses et émotions : elle se réjouit, réfléchit, fait un clin d’œil et écrit dans son agenda',
         'Un rappel de l’assistant si tu n’as pas encore fixé d’objectif ou n’as pas ouvert l’app depuis un moment. Désactivable dans les réglages de l’assistant',
         'Démarrage avec une connexion faible : un indicateur de chargement au lieu d’un écran noir, et l’app s’ouvre plus vite'] }},
-  // 1.7.8 вышла в Play 5 ноября 2026 — live:true. Новый релиз: live:false до одобрения в Play; после выхода в прод — live:true (иначе старым версиям покажется «доступно обновление» раньше времени)
+  // 1.7.9 вышла в Play 21 ноября 2026, 1.7.8 — 5 ноября; обе live:true. Новый релиз: live:false до одобрения в Play; после выхода в прод — live:true (иначе старым версиям покажется «доступно обновление» раньше времени)
   { code:17, name:'1.7.8', live:true, notes:{
     ru:['Вкладка «Помощник»: четыре персонажа — Тренер Макс, Надежда, Гуру и Джин — с эмоциями и анимацией. «Незавершённые» переехали в «Историю»',
         'Новая цель в разговоре с помощником: 7 вопросов — и готовый план с нормой на каждый день. По желанию отвечает AI — открытая модель на серверах Cloudflare',
