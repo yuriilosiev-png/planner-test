@@ -26,7 +26,6 @@ import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
@@ -48,7 +47,9 @@ import android.content.pm.ResolveInfo;
 import android.speech.RecognizerIntent;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
@@ -152,15 +153,19 @@ public class MainActivity extends Activity {
         sInstance = new WeakReference<>(this);
 
         // ---- EDGE-TO-EDGE ----
-        getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
-            getWindow().setNavigationBarColor(Color.TRANSPARENT);
-        }
+        // 1.7.10: по замечанию Play Console убраны setStatusBarColor/setNavigationBarColor
+        // и setSystemUiVisibility — на Android 15+ они не работают и помечены как
+        // неподдерживаемые. Вместо них:
+        //   - WindowCompat.setDecorFitsSystemWindows(false) — WebView рисуется под
+        //     статусбаром и панелью навигации, как раньше (safe-area в index.html);
+        //   - прозрачные бары до Android 14 задаёт тема PlannerTheme (res/values/themes.xml),
+        //     на Android 15+ система делает их прозрачными сама;
+        //   - светлые значки в статусбаре и навигации, как было (фон приложения тёмный).
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat bars =
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        bars.setAppearanceLightStatusBars(false);
+        bars.setAppearanceLightNavigationBars(false);
 
         createNotificationChannel();
         requestNotificationPermission();

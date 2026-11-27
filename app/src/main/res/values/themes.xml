@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.7.10: тема приложения вместо системной Theme.DeviceDefault.Light.NoActionBar.
+     Делает статусбар и панель навигации прозрачными на Android 7–14 — раньше это
+     делали вызовы setStatusBarColor/setNavigationBarColor в MainActivity, которые
+     Play Console пометил как неподдерживаемые в Android 15. На Android 15+ система
+     и так рисует приложение от края до края, эти атрибуты там игнорируются. -->
+<resources>
+    <style name="PlannerTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

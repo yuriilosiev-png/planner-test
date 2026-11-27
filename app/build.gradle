@@ -30,6 +30,9 @@
 //   - versionCode=18, versionName="1.7.9": помощник в одном чате с изменением записей,
 //     напоминания помощника (NudgeReceiver, BootReceiver), индикатор загрузки и быстрый
 //     переход на офлайн-копию при слабом интернете.
+//   - versionCode=19, versionName="1.7.10": быстрый запуск из копии на телефоне;
+//     по замечаниям Play Console — R8 (proguard-rules.pro) и edge-to-edge без
+//     setStatusBarColor/setNavigationBarColor (тема PlannerTheme, WindowCompat).
 // 1.8 зарезервирован под миграцию на OnBackInvokedCallback (см. комментарий
 // enableOnBackInvokedCallback в AndroidManifest.xml) — поэтому здесь 1.7.x.
 // Тулчейн (compileSdk 36, minSdk 24, target 36, AGP 8.9.1, Gradle 8.11.1) — как в
@@ -83,7 +86,12 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            // 1.7.10: включён R8 по рекомендации Play Console (память и скорость).
+            // Классы приложения и мост AndroidBridge защищены в proguard-rules.pro —
+            // R8 оптимизирует только библиотеки. Тестовая сборка тоже release, так что
+            // проверка в planner-test идёт ровно на том, что уйдёт в Play.
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig plannerTest ? signingConfigs.test : signingConfigs.release
         }
         debug { minifyEnabled false }
