@@ -9020,6 +9020,26 @@ function openGoalTemplate(k){
    (мост openStore появился в 1.7.4) — вместо кнопки текстовая подсказка.
    Браузер/PWA (нет AndroidBridge) — плашки нет. */
 const APP_RELEASES = [
+  { code:19, name:'1.7.10', live:true, notes:{
+    ru:['Мгновенный запуск: приложение открывается сразу, даже при медленном интернете',
+        'Помощник отвечает быстрее — обычно за 2–4 секунды',
+        'Приложение стало легче и расходует меньше памяти'],
+    en:['Instant start: the app opens right away, even on a slow connection',
+        'The helper answers faster — usually in 2–4 seconds',
+        'The app is lighter and uses less memory'],
+    es:['Inicio instantáneo: la app se abre al momento, incluso con conexión lenta',
+        'El asistente responde más rápido, normalmente en 2–4 segundos',
+        'La app es más ligera y usa menos memoria'],
+    pt:['Início instantâneo: o app abre na hora, mesmo com internet lenta',
+        'O assistente responde mais rápido — normalmente em 2–4 segundos',
+        'O app ficou mais leve e usa menos memória'],
+    de:['Sofortstart: Die App öffnet sich sofort, auch bei langsamer Verbindung',
+        'Der Helfer antwortet schneller – meist in 2–4 Sekunden',
+        'Die App ist schlanker und braucht weniger Speicher'],
+    fr:['Démarrage instantané : l’app s’ouvre tout de suite, même avec une connexion lente',
+        'L’assistant répond plus vite, en général en 2 à 4 secondes',
+        'L’app est plus légère et utilise moins de mémoire'] }},
+  // 1.7.10 вышла в Play 28 ноября 2026 (live:true).
   { code:18, name:'1.7.9', live:true, notes:{
     ru:['Помощник в одном чате: спросите, что у вас завтра, попросите перенести задачу, поставить контрольные точки или сменить оформление — он сделает после вашего «да», а изменение можно отменить',
         'AI-помощник теперь отвечает на модели Claude от Anthropic',
