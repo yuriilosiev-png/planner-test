@@ -7787,12 +7787,16 @@ function nudgeTest(){
     toast(t('nudge.testOk'));
   }catch(e){}
 }
-/* тап по напоминанию: открыть помощника, а без цели — сразу разговор о цели */
+/* тап по напоминанию: открыть помощника, а без цели — сразу разговор о цели.
+   Наставник не выбран — напоминание писала Надежда, она и становится наставником
+   (как при выборе в приветствии, welHelper); сменить можно в настройках помощника. */
 window.onNativeOpen = function(what){
   if(what!=='helper') return;
   try{ closeModal(); }catch(e){}
+  try{ _welcomeOpen=false; }catch(e){}
+  if(!HP[state.coach]){ state.coach='nadia'; try{ hpInit(); }catch(e){} save(); }
   switchScreen('helper');
-  if(!nudgeHasGoal() && state.coach && typeof hpStart==='function') setTimeout(hpStart, 350);
+  if(!nudgeHasGoal() && typeof hpStart==='function') setTimeout(hpStart, 350);
 };
 function nudgeTakeOpen(){
   try{
